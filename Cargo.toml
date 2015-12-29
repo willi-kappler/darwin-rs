@@ -1,0 +1,9 @@
+[package]
+name = "darwin-rs"
+version = "0.1.0"
+authors = ["Willi Kappler"]
+
+[dependencies]
+time = "0.1"
+rand = "0.3"
+simple_parallel = "0.3"
