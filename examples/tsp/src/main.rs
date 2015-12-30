@@ -97,7 +97,7 @@ impl Individual for CityItem {
 }
 
 fn main() {
-    println!("Darwin test");
+    println!("Darwin test: traveling salesman problem");
 
     let tsp_builder = SimulationBuilder::<CityItem>::new()
         .iterations(10000)

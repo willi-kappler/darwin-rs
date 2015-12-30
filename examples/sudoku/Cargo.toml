@@ -1,0 +1,13 @@
+[package]
+name = "tsp"
+version = "0.1.0"
+authors = ["Willi Kappler"]
+
+[lib]
+name = "darwin_rs"
+path = "../../src/lib.rs"
+
+[dependencies]
+time = "0.1"
+rand = "0.3"
+simple_parallel = "0.3"

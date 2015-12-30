@@ -44,7 +44,7 @@ impl<T: Individual + Clone> Simulation<T> {
             self.population.sort_by(|a, b| a.fittness.partial_cmp(&b.fittness).unwrap());
 
             // If the fittness of the best has decreased, we need correct it:
-            if (fittest.fittness > 0.0) && (fittest.fittness < self.population[0].fittness) {
+            if fittest.fittness < self.population[0].fittness {
                 self.population[0] = fittest.clone();
             }
         }
@@ -123,7 +123,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
             new_population.push(
                 IndividualWrapper {
                     individual: individual,
-                    fittness: 0.0,
+                    fittness: core::f64::MAX,
                     num_of_mutations: 1
                 }
             )
@@ -142,7 +142,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
             new_population.push(
                 IndividualWrapper {
                     individual: individual,
-                    fittness: 0.0,
+                    fittness: core::f64::MAX,
                     num_of_mutations: num_of_mutation
                 }
             )
@@ -159,7 +159,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
             self.simulation.population.push(
                 IndividualWrapper {
                     individual: individual.clone(),
-                    fittness: 0.0,
+                    fittness: core::f64::MAX,
                     num_of_mutations: 1
                 }
             );
@@ -172,7 +172,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
             self.simulation.population.push(
                 IndividualWrapper {
                     individual: individual.clone(),
-                    fittness: 0.0,
+                    fittness: core::f64::MAX,
                     num_of_mutations: num_of_mutations
                 }
             );
