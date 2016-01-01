@@ -44,6 +44,7 @@ impl<T: Individual + Clone> Simulation<T> {
             self.population.sort_by(|a, b| a.fittness.partial_cmp(&b.fittness).unwrap());
 
             // If the fittness of the best has decreased, we need correct it:
+            // (that is: set it back to the stored value)
             if fittest.fittness < self.population[0].fittness {
                 self.population[0] = fittest.clone();
             }

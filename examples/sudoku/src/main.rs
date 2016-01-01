@@ -11,17 +11,17 @@ use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 fn initialize_sudoku() -> Sudoku {
     Sudoku {
         original: vec![
-            1,0,0,   0,0,0,   0,0,0,
-            0,0,0,   0,0,0,   0,0,0,
-            0,0,0,   0,0,0,   0,0,0,
+            5,3,0,   0,7,0,   0,0,0,
+            6,0,0,   1,9,5,   0,0,0,
+            0,9,8,   0,0,0,   0,6,0,
 
-            0,0,0,   0,0,0,   0,0,0,
-            0,0,0,   0,0,0,   0,0,0,
-            0,0,0,   0,0,0,   0,0,0,
+            8,0,0,   0,6,0,   0,0,3,
+            4,0,0,   8,0,3,   0,0,1,
+            7,0,0,   0,2,0,   0,0,6,
 
-            0,0,0,   0,0,0,   0,0,0,
-            0,0,0,   0,0,0,   0,0,0,
-            0,0,0,   0,0,0,   0,0,0
+            0,6,0,   0,0,0,   2,8,0,
+            0,0,0,   4,1,9,   0,0,5,
+            0,0,0,   0,8,0,   0,7,9
         ],
         solved: vec![
             0,0,0,   0,0,0,   0,0,0,
@@ -39,16 +39,54 @@ fn initialize_sudoku() -> Sudoku {
     }
 }
 
-fn fitness_of_one_cell(sudoku: &Vec<u8>, cell: u8) -> f64 {
-    0.0
+// A cell is a 3x3 sub field inside the 9x9 sudoku field
+fn fitness_of_one_cell(sudoku: &Vec<u8>, row: usize, col: usize) -> f64 {
+    let number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let mut error = 0.0;
+
+    error
 }
 
-fn fittness_of_one_row(sudoku: &Vec<u8>, row: u8) -> f64 {
-    0.0
+fn fittness_of_one_row(sudoku: &Vec<u8>, row: usize) -> f64 {
+    let mut number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let mut error = 0.0;
+
+    for col in 0..8 {
+        let number = sudoku[(row * 9) + col];
+        if number > 0 && number < 10 {
+            number_occurence[number as usize] = number_occurence[number as usize] + 1;
+        } else {
+            error = error + 1.0;
+        }
+    }
+
+    // Each number must be unique, otherwise increase error
+    for number in number_occurence {
+        if number != 1 { error = error + 1.0; }
+    }
+
+    error
 }
 
-fn fittness_of_one_col(sudoku: &Vec<u8>, col: u8) -> f64 {
-    0.0
+fn fittness_of_one_col(sudoku: &Vec<u8>, col: usize) -> f64 {
+    let mut number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let mut error = 0.0;
+
+    for row in 0..8 {
+        let number = sudoku[(row * 9) + col];
+        if number > 0 && number < 10 {
+            number_occurence[number as usize] = number_occurence[number as usize] + 1;
+        } else {
+            error = error + 1.0;
+        }
+    }
+
+    // Each number must be unique, otherwise increase error
+    for number in number_occurence {
+        if number != 1 { error = error + 1.0; }
+    }
+
+    error
 }
 
 #[derive(Debug, Clone)]
