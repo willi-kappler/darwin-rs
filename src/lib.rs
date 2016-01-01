@@ -67,7 +67,7 @@ impl<T: Individual + Clone> Simulation<T> {
 
 #[derive(Debug,Clone)]
 pub struct IndividualWrapper<T: Individual> {
-    individual: T,
+    pub individual: T,
     fittness: f64,
     num_of_mutations: u32
 }
@@ -123,7 +123,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
             new_population.push(
                 IndividualWrapper {
                     individual: individual,
-                    fittness: core::f64::MAX,
+                    fittness: std::f64::MAX,
                     num_of_mutations: 1
                 }
             )
@@ -142,7 +142,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
             new_population.push(
                 IndividualWrapper {
                     individual: individual,
-                    fittness: core::f64::MAX,
+                    fittness: std::f64::MAX,
                     num_of_mutations: num_of_mutation
                 }
             )
@@ -159,7 +159,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
             self.simulation.population.push(
                 IndividualWrapper {
                     individual: individual.clone(),
-                    fittness: core::f64::MAX,
+                    fittness: std::f64::MAX,
                     num_of_mutations: 1
                 }
             );
@@ -172,11 +172,22 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
             self.simulation.population.push(
                 IndividualWrapper {
                     individual: individual.clone(),
-                    fittness: core::f64::MAX,
+                    fittness: std::f64::MAX,
                     num_of_mutations: num_of_mutations
                 }
             );
         }
+        self
+    }
+
+    pub fn increasing_mutation_rate(mut self) -> SimulationBuilder<T> {
+        let mut mutation_rate = 1;
+
+        for wrapper in self.simulation.population.iter_mut() {
+            wrapper.num_of_mutations = mutation_rate;
+            mutation_rate = mutation_rate + 1;
+        }
+
         self
     }
 
