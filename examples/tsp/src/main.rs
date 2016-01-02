@@ -41,10 +41,10 @@ fn load_data(file_name: &str) -> Vec<(CityItem, u32)> {
     for i in 0..20 {
         result.push((
             CityItem {
-                city_position: city_positions.clone(),
+                city_positions: city_positions.clone(),
                 path: path.clone()
             },
-            if i == 0 { 1 } else { i }
+            (i % 3) + 1
         ));
     }
 
@@ -62,7 +62,7 @@ fn city_distance(city: &Vec<(f64, f64)>, index1: usize, index2: usize) -> f64 {
 
 #[derive(Debug, Clone)]
 struct CityItem {
-    city_position: Box<Vec<(f64, f64)>>,
+    city_positions: Box<Vec<(f64, f64)>>,
     path: Vec<usize>
 }
 
@@ -71,11 +71,11 @@ impl Individual for CityItem {
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
         // Keep stating position always the same:
-        let index1: usize = rng.gen_range(1, self.city_position.len());
-        let mut index2: usize = rng.gen_range(1, self.city_position.len());
+        let index1: usize = rng.gen_range(1, self.city_positions.len());
+        let mut index2: usize = rng.gen_range(1, self.city_positions.len());
 
         while index1 == index2 {
-            index2 = rng.gen_range(1, self.city_position.len());
+            index2 = rng.gen_range(1, self.city_positions.len());
         }
 
         self.path.swap(index1, index2);
@@ -83,11 +83,11 @@ impl Individual for CityItem {
 
     // fittness means here: the length of the route
     fn calculate_fittness(&self) -> f64 {
-        let mut prev_index = &(self.city_position.len() - 1);
+        let mut prev_index = &(self.city_positions.len() - 1);
         let mut length : f64 = 0.0;
 
         for index in &self.path {
-            length = length + city_distance(&self.city_position, *prev_index, *index);
+            length = length + city_distance(&self.city_positions, *prev_index, *index);
 
             prev_index = index;
         }
@@ -100,7 +100,7 @@ fn main() {
     println!("Darwin test: traveling salesman problem");
 
     let tsp_builder = SimulationBuilder::<CityItem>::new()
-        .iterations(10000)
+        .iterations(100000)
         .initial_population_num_mut(load_data("tsp_data.txt"))
         .finalize();
 
@@ -114,6 +114,12 @@ fn main() {
             println!("improvement factor: {}", tsp_simulation.improvement_factor);
 
             tsp_simulation.print_fittness();
+
+            let cities = &tsp_simulation.population[0].individual.city_positions;
+            for index in tsp_simulation.population[0].individual.path.iter() {
+                let (x, y) = cities[*index];
+                println!("{} {}", x, y);
+            }
         }
     }
 }

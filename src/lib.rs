@@ -19,18 +19,11 @@ impl<T: Individual + Clone> Simulation<T> {
 
         let original_fittness = self.population[0].individual.calculate_fittness();
 
+        // Initialize
+        let mut fittest = self.population[0].clone();
+
         for _ in 0..self.num_of_iterations {
             // TODO: use simple_parallel
-
-            // Merge information about fittest individual back to the rest of the population
-            let fittest = self.population[0].clone();
-
-            // No need to set self.population[0] since this is already the fittest
-            // No need to set self.population[1] since we want keep one total random individual to
-            // escape local minimum or maximum
-            for i in 2..self.population.len() {
-                self.population[i].individual = fittest.individual.clone();
-            }
 
             // mutate all individuals and recalculate fittness
             for wrapper in self.population.iter_mut() {
@@ -40,15 +33,23 @@ impl<T: Individual + Clone> Simulation<T> {
                 wrapper.fittness = wrapper.individual.calculate_fittness();
             }
 
-            // sort all individuals by fittness
-            self.population.sort_by(|a, b| a.fittness.partial_cmp(&b.fittness).unwrap());
-
-            // If the fittness of the best has decreased, we need correct it:
-            // (that is: set it back to the stored value)
-            if fittest.fittness < self.population[0].fittness {
-                self.population[0] = fittest.clone();
+            // Find fittest individual...
+            for wrapper in self.population.iter() {
+                if wrapper.fittness < fittest.fittness {
+                    fittest = wrapper.clone();
+                }
             }
+
+            // ...  and copy it to the others (except the last one, to avoid local minimum or maximum)
+            for i in 0..(self.population.len() - 1) {
+                self.population[i].individual = fittest.individual.clone();
+            }
+
         }
+
+        // sort all individuals by fittness
+        self.population.sort_by(|a, b| a.fittness.partial_cmp(&b.fittness).unwrap());
+
         let end_time = precise_time_ns();
 
         let best_individual = &self.population[0];
@@ -125,7 +126,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
                 IndividualWrapper {
                     individual: individual,
                     fittness: std::f64::MAX,
-                    num_of_mutations: 1
+                    num_of_mutations: 1,
                 }
             )
         }
@@ -144,7 +145,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
                 IndividualWrapper {
                     individual: individual,
                     fittness: std::f64::MAX,
-                    num_of_mutations: num_of_mutation
+                    num_of_mutations: num_of_mutation,
                 }
             )
         }
@@ -161,7 +162,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
                 IndividualWrapper {
                     individual: individual.clone(),
                     fittness: std::f64::MAX,
-                    num_of_mutations: 1
+                    num_of_mutations: 1,
                 }
             );
         }
@@ -174,7 +175,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
                 IndividualWrapper {
                     individual: individual.clone(),
                     fittness: std::f64::MAX,
-                    num_of_mutations: num_of_mutations
+                    num_of_mutations: num_of_mutations,
                 }
             );
         }
