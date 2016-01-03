@@ -4,47 +4,92 @@ extern crate simple_parallel;
 // external modules
 use time::precise_time_ns;
 
+#[derive(Debug,Clone)]
+pub enum SimulationType {
+    EndIteration(u32),
+    EndFittness(f64),
+    EndFactor(f64)
+}
+
 #[derive(Debug)]
 pub struct Simulation<T: Individual> {
-    pub num_of_iterations: u32,
+    pub type_of_simulation: SimulationType,
     pub num_of_individuals: u32,
     pub num_of_threads: u32,
     pub improvement_factor: f64,
-    pub population: Vec<IndividualWrapper<T>>
+    pub original_fittness: f64,
+    pub population: Vec<IndividualWrapper<T>>,
+    pub total_time_in_ms: f64,
+    pub iteration_counter: u32,
+    pub output_new_fittest: bool
+}
+
+fn run_body<T: Individual + Clone>(simulation: &mut Simulation<T>, fittest: IndividualWrapper<T>) -> IndividualWrapper<T> {
+    // TODO: use simple_parallel
+
+    let mut fittest = fittest;
+
+    // mutate all individuals and recalculate fittness
+    for wrapper in simulation.population.iter_mut() {
+        for _ in 0..wrapper.num_of_mutations {
+            wrapper.individual.mutate();
+        }
+        wrapper.fittness = wrapper.individual.calculate_fittness();
+    }
+
+    // Find fittest individual...
+    for wrapper in simulation.population.iter() {
+        if wrapper.fittness < fittest.fittness {
+            fittest = wrapper.clone();
+            if simulation.output_new_fittest {
+                println!("new fittest: {}", fittest.fittness);
+            }
+        }
+    }
+
+    simulation.improvement_factor = fittest.fittness / simulation.original_fittness;
+
+    // ...  and copy it to the others (except the last one, to avoid local minimum or maximum)
+    for i in 0..(simulation.population.len() - 1) {
+        simulation.population[i].individual = fittest.individual.clone();
+    }
+
+    simulation.population[0].fittness = fittest.fittness;
+
+    fittest
 }
 
 impl<T: Individual + Clone> Simulation<T> {
-    pub fn run(&mut self) -> f64 {
+    pub fn run(&mut self) {
         let start_time = precise_time_ns();
 
-        let original_fittness = self.population[0].individual.calculate_fittness();
+        self.original_fittness = self.population[0].individual.calculate_fittness();
 
         // Initialize
         let mut fittest = self.population[0].clone();
+        let mut iteration_counter = 0;
 
-        for _ in 0..self.num_of_iterations {
-            // TODO: use simple_parallel
-
-            // mutate all individuals and recalculate fittness
-            for wrapper in self.population.iter_mut() {
-                for _ in 0..wrapper.num_of_mutations {
-                    wrapper.individual.mutate();
+        match self.type_of_simulation {
+            SimulationType::EndIteration(end_iteration) => {
+                for _ in 0..end_iteration {
+                    fittest = run_body(self, fittest);
                 }
-                wrapper.fittness = wrapper.individual.calculate_fittness();
-            }
-
-            // Find fittest individual...
-            for wrapper in self.population.iter() {
-                if wrapper.fittness < fittest.fittness {
-                    fittest = wrapper.clone();
+                iteration_counter = end_iteration;
+            },
+            SimulationType::EndFactor(end_factor) => {
+                loop {
+                    if self.improvement_factor <= end_factor { break }
+                    fittest = run_body(self, fittest);
+                    iteration_counter = iteration_counter + 1;
+                }
+            },
+            SimulationType::EndFittness(end_fittness) => {
+                loop {
+                    if fittest.fittness <= end_fittness { break }
+                    fittest = run_body(self, fittest);
+                    iteration_counter = iteration_counter + 1;
                 }
             }
-
-            // ...  and copy it to the others (except the last one, to avoid local minimum or maximum)
-            for i in 0..(self.population.len() - 1) {
-                self.population[i].individual = fittest.individual.clone();
-            }
-
         }
 
         // sort all individuals by fittness
@@ -52,12 +97,8 @@ impl<T: Individual + Clone> Simulation<T> {
 
         let end_time = precise_time_ns();
 
-        let best_individual = &self.population[0];
-        self.improvement_factor = best_individual.fittness / original_fittness;
-
-        let total_time_in_ms = ((end_time - start_time) as f64) / (1000.0 * 1000.0);
-
-        total_time_in_ms
+        self.total_time_in_ms = ((end_time - start_time) as f64) / (1000.0 * 1000.0);
+        self.iteration_counter = iteration_counter;
     }
 
     pub fn print_fittness(&self) {
@@ -94,17 +135,31 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
     pub fn new() -> SimulationBuilder<T> {
         SimulationBuilder {
             simulation: Simulation {
-                num_of_iterations: 10,
+                type_of_simulation: SimulationType::EndIteration(10),
                 num_of_individuals: 10,
                 num_of_threads: 1,
-                improvement_factor: 0.0,
-                population: Vec::new()
+                improvement_factor: std::f64::MAX,
+                original_fittness: std::f64::MAX,
+                population: Vec::new(),
+                total_time_in_ms: 0.0,
+                iteration_counter: 0,
+                output_new_fittest: true
             }
         }
     }
 
     pub fn iterations(mut self, iterations: u32) -> SimulationBuilder<T> {
-        self.simulation.num_of_iterations = iterations;
+        self.simulation.type_of_simulation = SimulationType::EndIteration(iterations);
+        self
+    }
+
+    pub fn factor(mut self, factor: f64) -> SimulationBuilder<T> {
+        self.simulation.type_of_simulation = SimulationType::EndFactor(factor);
+        self
+    }
+
+    pub fn fittness(mut self, fittness: f64) -> SimulationBuilder<T> {
+        self.simulation.type_of_simulation = SimulationType::EndFittness(fittness);
         self
     }
 
@@ -115,6 +170,11 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
 
     pub fn threads(mut self, threads: u32) -> SimulationBuilder<T> {
         self.simulation.num_of_threads = threads;
+        self
+    }
+
+    pub fn output_new_fittest(mut self, output_new_fittest: bool) -> SimulationBuilder<T> {
+        self.simulation.output_new_fittest = output_new_fittest;
         self
     }
 
@@ -195,15 +255,23 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
 
     pub fn finalize(self) -> BuilderResult<T> {
         let result = Simulation {
-            num_of_iterations: self.simulation.num_of_iterations,
+            type_of_simulation: self.simulation.type_of_simulation.clone(),
             num_of_individuals: self.simulation.num_of_individuals,
             num_of_threads: self.simulation.num_of_threads,
             improvement_factor: self.simulation.improvement_factor,
-            population: self.simulation.population
+            original_fittness: self.simulation.original_fittness,
+            population: self.simulation.population,
+            total_time_in_ms: self.simulation.total_time_in_ms,
+            iteration_counter: self.simulation.iteration_counter,
+            output_new_fittest: self.simulation.output_new_fittest
         };
 
-        if self.simulation.num_of_iterations < 10 { BuilderResult::LowIterration }
-        else if self.simulation.num_of_individuals < 3 { BuilderResult::LowIndividuals }
-        else { BuilderResult::Ok(result) }
+        if self.simulation.num_of_individuals < 3 { return BuilderResult::LowIndividuals }
+
+        if let SimulationType::EndIteration(end_iteration) = self.simulation.type_of_simulation {
+            if end_iteration < 10 { return BuilderResult::LowIterration }
+        }
+
+        BuilderResult::Ok(result)
     }
 }

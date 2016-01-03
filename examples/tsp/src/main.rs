@@ -34,7 +34,8 @@ fn load_data(file_name: &str) -> Vec<(CityItem, u32)> {
         (55.760857794890796, 26.95947234362994)
     ]);
 
-    let path : Vec<usize> = (0..city_positions.len()).map(|x| x as usize).collect();
+    let mut path : Vec<usize> = (0..city_positions.len()).map(|x| x as usize).collect();
+    path.push(0); // Add start position to end of path
 
     let mut result = Vec::new();
 
@@ -100,7 +101,8 @@ fn main() {
     println!("Darwin test: traveling salesman problem");
 
     let tsp_builder = SimulationBuilder::<CityItem>::new()
-        .iterations(100000)
+        //.iterations(1000000)
+        .factor(0.35)
         .initial_population_num_mut(load_data("tsp_data.txt"))
         .finalize();
 
@@ -108,12 +110,15 @@ fn main() {
         BuilderResult::LowIterration => { println!("more than 10 iteratons needed") },
         BuilderResult::LowIndividuals => { println!("more than 2 individuals needed") },
         BuilderResult::Ok(mut tsp_simulation) => {
-            let total_run_time = tsp_simulation.run();
+            tsp_simulation.run();
 
-            println!("total run time: {} ms", total_run_time);
+            println!("total run time: {} ms", tsp_simulation.total_time_in_ms);
             println!("improvement factor: {}", tsp_simulation.improvement_factor);
+            println!("number of iterations: {}", tsp_simulation.iteration_counter);
 
             tsp_simulation.print_fittness();
+
+            println!("Path and coordinates: ");
 
             let cities = &tsp_simulation.population[0].individual.city_positions;
             for index in tsp_simulation.population[0].individual.path.iter() {

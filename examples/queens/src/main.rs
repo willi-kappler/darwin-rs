@@ -136,7 +136,7 @@ fn main() {
 
     let queens_builder = SimulationBuilder::<Queens>::new()
         .iterations(10000)
-        .individuals(30)
+        .individuals(20)
         .one_individual(initialize_queens())
         .finalize();
 
