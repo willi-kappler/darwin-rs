@@ -8,9 +8,7 @@ use rand::Rng;
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
-fn load_data(file_name: &str) -> Vec<(CityItem, u32)> {
-    println!("Loading file: '{}'", file_name);
-
+fn initialize_tsp() -> Vec<(CityItem, u32)> {
     let city_positions = Box::new(vec![
         (2.852197810188428, 90.31966506130796),
         (33.62874999956513, 44.9790462485413),
@@ -103,7 +101,7 @@ fn main() {
     let tsp_builder = SimulationBuilder::<CityItem>::new()
         //.iterations(1000000)
         .factor(0.35)
-        .initial_population_num_mut(load_data("tsp_data.txt"))
+        .initial_population_num_mut(initialize_tsp())
         .finalize();
 
     match tsp_builder {

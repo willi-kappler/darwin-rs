@@ -125,9 +125,9 @@ fn main() {
         BuilderResult::LowIterration => { println!("more than 10 iteratons needed") },
         BuilderResult::LowIndividuals => { println!("more than 2 individuals needed") },
         BuilderResult::Ok(mut sudoku_simulation) => {
-            let total_run_time = sudoku_simulation.run();
+            sudoku_simulation.run();
 
-            println!("total run time: {} ms", total_run_time);
+            println!("total run time: {} ms", sudoku_simulation.total_time_in_ms);
             println!("improvement factor: {}", sudoku_simulation.improvement_factor);
 
             sudoku_simulation.print_fittness();

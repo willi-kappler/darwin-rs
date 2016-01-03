@@ -18,20 +18,28 @@ use rand::Rng;
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
-fn initialize_queens() -> Queens {
-    Queens {
-        // Start with all queens in one row
-        board: vec![
-            1,1,1,1,1,1,1,1,
-            0,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,
-        ]
-    }
+fn initialize_queens() -> Vec<(Queens, u32)> {
+    let mut result = Vec::new();
+
+    for i in 0..20 {
+        result.push((
+            Queens {
+                // Start with all queens in one row
+                board: vec![
+                    1,1,1,1,1,1,1,1,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                ]
+            },
+            if i == 0 { 1 } else { i * 100 }
+        ))}
+
+    result
 }
 
 #[derive(Debug,Clone)]
@@ -135,19 +143,20 @@ fn main() {
     println!("Darwin test: queens problem");
 
     let queens_builder = SimulationBuilder::<Queens>::new()
-        .iterations(10000)
-        .individuals(20)
-        .one_individual(initialize_queens())
+        //.iterations(10000)
+        .factor(0.0)
+        .initial_population_num_mut(initialize_queens())
         .finalize();
 
     match queens_builder {
         BuilderResult::LowIterration => { println!("more than 10 iteratons needed") },
         BuilderResult::LowIndividuals => { println!("more than 2 individuals needed") },
         BuilderResult::Ok(mut queens_simulation) => {
-            let total_run_time = queens_simulation.run();
+            queens_simulation.run();
 
-            println!("total run time: {} ms", total_run_time);
+            println!("total run time: {} ms", queens_simulation.total_time_in_ms);
             println!("improvement factor: {}", queens_simulation.improvement_factor);
+            println!("number of iterations: {}", queens_simulation.iteration_counter);
 
             // A fittness of zero means a solution was found. Otherwise there are stll some collsisions
             // Just re-run the programm a few times or increase the number of iterations
