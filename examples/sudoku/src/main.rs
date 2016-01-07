@@ -118,6 +118,7 @@ fn main() {
 
     let sudoku_builder = SimulationBuilder::<Sudoku>::new()
         .iterations(10000)
+        .threads(2)        
         .one_individual(initialize_sudoku())
         .finalize();
 

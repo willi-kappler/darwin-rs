@@ -3,6 +3,7 @@ extern crate simple_parallel;
 
 // external modules
 use time::precise_time_ns;
+use simple_parallel::Pool;
 
 #[derive(Debug,Clone)]
 pub enum SimulationType {
@@ -15,7 +16,7 @@ pub enum SimulationType {
 pub struct Simulation<T: Individual> {
     pub type_of_simulation: SimulationType,
     pub num_of_individuals: u32,
-    pub num_of_threads: u32,
+    pub num_of_threads: usize,
     pub improvement_factor: f64,
     pub original_fittness: f64,
     pub population: Vec<IndividualWrapper<T>>,
@@ -24,18 +25,27 @@ pub struct Simulation<T: Individual> {
     pub output_new_fittest: bool
 }
 
-fn run_body<T: Individual + Clone>(simulation: &mut Simulation<T>, fittest: IndividualWrapper<T>) -> IndividualWrapper<T> {
-    // TODO: use simple_parallel
-
+fn run_body<T: Individual + Clone + Send>(simulation: &mut Simulation<T>, fittest: IndividualWrapper<T>, pool: &mut Pool) -> IndividualWrapper<T> {
     let mut fittest = fittest;
 
     // mutate all individuals and recalculate fittness
+    /*
     for wrapper in simulation.population.iter_mut() {
         for _ in 0..wrapper.num_of_mutations {
             wrapper.individual.mutate();
         }
         wrapper.fittness = wrapper.individual.calculate_fittness();
     }
+    */
+
+    pool.for_(simulation.population.iter_mut(), |wrapper|
+        {
+            for _ in 0..wrapper.num_of_mutations {
+                wrapper.individual.mutate();
+            }
+            wrapper.fittness = wrapper.individual.calculate_fittness();
+        }
+    );
 
     // Find fittest individual...
     for wrapper in simulation.population.iter() {
@@ -54,12 +64,13 @@ fn run_body<T: Individual + Clone>(simulation: &mut Simulation<T>, fittest: Indi
         simulation.population[i].individual = fittest.individual.clone();
     }
 
+    // Set fittness of first individual, since vector will be sorted (by fittness) after the loop
     simulation.population[0].fittness = fittest.fittness;
 
     fittest
 }
 
-impl<T: Individual + Clone> Simulation<T> {
+impl<T: Individual + Clone + Send> Simulation<T> {
     pub fn run(&mut self) {
         let start_time = precise_time_ns();
 
@@ -68,25 +79,26 @@ impl<T: Individual + Clone> Simulation<T> {
         // Initialize
         let mut fittest = self.population[0].clone();
         let mut iteration_counter = 0;
+        let mut pool = simple_parallel::Pool::new(self.num_of_threads);
 
         match self.type_of_simulation {
             SimulationType::EndIteration(end_iteration) => {
                 for _ in 0..end_iteration {
-                    fittest = run_body(self, fittest);
+                    fittest = run_body(self, fittest, &mut pool);
                 }
                 iteration_counter = end_iteration;
             },
             SimulationType::EndFactor(end_factor) => {
                 loop {
                     if self.improvement_factor <= end_factor { break }
-                    fittest = run_body(self, fittest);
+                    fittest = run_body(self, fittest, &mut pool);
                     iteration_counter = iteration_counter + 1;
                 }
             },
             SimulationType::EndFittness(end_fittness) => {
                 loop {
                     if fittest.fittness <= end_fittness { break }
-                    fittest = run_body(self, fittest);
+                    fittest = run_body(self, fittest, &mut pool);
                     iteration_counter = iteration_counter + 1;
                 }
             }
@@ -137,7 +149,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
             simulation: Simulation {
                 type_of_simulation: SimulationType::EndIteration(10),
                 num_of_individuals: 10,
-                num_of_threads: 1,
+                num_of_threads: 2,
                 improvement_factor: std::f64::MAX,
                 original_fittness: std::f64::MAX,
                 population: Vec::new(),
@@ -168,7 +180,7 @@ impl<T: Individual + Clone> SimulationBuilder<T> {
         self
     }
 
-    pub fn threads(mut self, threads: u32) -> SimulationBuilder<T> {
+    pub fn threads(mut self, threads: usize) -> SimulationBuilder<T> {
         self.simulation.num_of_threads = threads;
         self
     }

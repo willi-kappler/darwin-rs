@@ -1,5 +1,5 @@
 [package]
-name = "tsp"
+name = "queens"
 version = "0.1.0"
 authors = ["Willi Kappler"]
 

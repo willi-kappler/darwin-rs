@@ -101,6 +101,7 @@ fn main() {
     let tsp_builder = SimulationBuilder::<CityItem>::new()
         //.iterations(1000000)
         .factor(0.35)
+        .threads(2)
         .initial_population_num_mut(initialize_tsp())
         .finalize();
 

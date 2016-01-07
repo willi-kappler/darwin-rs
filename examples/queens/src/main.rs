@@ -36,7 +36,7 @@ fn initialize_queens() -> Vec<(Queens, u32)> {
                     0,0,0,0,0,0,0,0,
                 ]
             },
-            if i == 0 { 1 } else { i * 100 }
+            if i < 5 { 1 } else { 20 }
         ))}
 
     result
@@ -143,8 +143,8 @@ fn main() {
     println!("Darwin test: queens problem");
 
     let queens_builder = SimulationBuilder::<Queens>::new()
-        //.iterations(10000)
-        .factor(0.0)
+        .iterations(100000)
+        .threads(2)
         .initial_population_num_mut(initialize_queens())
         .finalize();
 
