@@ -104,18 +104,18 @@ impl Individual for Queens {
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
-        let mut index1: usize = rng.gen_range(1, self.board.len());
-        let mut index2: usize = rng.gen_range(1, self.board.len());
+        let mut index1: usize = rng.gen_range(0, self.board.len());
+        let mut index2: usize = rng.gen_range(0, self.board.len());
 
         // Pick a position where a queen is placed.
         // Try random position until it finds a queen
         while self.board[index1] != 1 {
-            index1 = rng.gen_range(1, self.board.len());
+            index1 = rng.gen_range(0, self.board.len());
         }
 
         // Pick a position where no queen is placed and this index is different from the other
         while (index1 == index2) && (self.board[index2] != 0) {
-            index2 = rng.gen_range(1, self.board.len());
+            index2 = rng.gen_range(0, self.board.len());
         }
 
         // Move queen onto an empty position
@@ -143,8 +143,9 @@ fn main() {
     println!("Darwin test: queens problem");
 
     let queens_builder = SimulationBuilder::<Queens>::new()
-        .iterations(100000)
-        .threads(2)
+        .fittness(0.0)
+        .threads(1)
+        .global_fittest(false)
         .initial_population_num_mut(initialize_queens())
         .finalize();
 
