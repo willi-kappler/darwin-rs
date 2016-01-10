@@ -8,48 +8,6 @@ use rand::Rng;
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
-fn initialize_tsp() -> Vec<(CityItem, u32)> {
-    let city_positions = Box::new(vec![
-        (2.852197810188428, 90.31966506130796),
-        (33.62874999956513, 44.9790462485413),
-        (22.064901432163996, 83.9172876840628),
-        (20.595912954825923, 12.798762916676043),
-        (42.2234133639806, 88.41646877787616),
-        (94.18533963242542, 21.151217108254627),
-        (25.84671166792939, 63.707153428189514),
-        (13.051898250315553, 89.61945656056766),
-        (76.41370000896038, 97.20491253636689),
-        (18.832993288649792, 6.006559110093601),
-        (96.98045791932294, 72.23019966333018),
-        (71.93203564171793, 93.03998204972012),
-        (33.39161715459793, 5.13372283892819),
-        (25.23072873231501, 67.1123015383591),
-        (84.38812085016241, 90.80055533944926),
-        (29.20345964254656, 21.17642854392676),
-        (58.11390834674495, 66.93322778502613),
-        (22.070195932187254, 59.73489434853766),
-        (86.29060211377086, 83.14129496517567),
-        (55.760857794890796, 26.95947234362994)
-    ]);
-
-    let mut path : Vec<usize> = (0..city_positions.len()).map(|x| x as usize).collect();
-    path.push(0); // Add start position to end of path
-
-    let mut result = Vec::new();
-
-    for i in 0..50 {
-        result.push((
-            CityItem {
-                city_positions: city_positions.clone(),
-                path: path.clone()
-            },
-            (i % 10) + 1
-        ));
-    }
-
-    result
-}
-
 fn city_distance(city: &Vec<(f64, f64)>, index1: usize, index2: usize) -> f64 {
     let (x1, y1) = city[index1];
     let (x2, y2) = city[index2];
@@ -61,12 +19,45 @@ fn city_distance(city: &Vec<(f64, f64)>, index1: usize, index2: usize) -> f64 {
 
 #[derive(Debug, Clone)]
 struct CityItem {
-    city_positions: Box<Vec<(f64, f64)>>,
+    city_positions: Vec<(f64, f64)>,
     path: Vec<usize>
 }
 
 // implement trait functions mutate and calculate_fittness:
 impl Individual for CityItem {
+    fn new() -> CityItem {
+        let city_positions = vec![
+            (2.852197810188428, 90.31966506130796),
+            (33.62874999956513, 44.9790462485413),
+            (22.064901432163996, 83.9172876840628),
+            (20.595912954825923, 12.798762916676043),
+            (42.2234133639806, 88.41646877787616),
+            (94.18533963242542, 21.151217108254627),
+            (25.84671166792939, 63.707153428189514),
+            (13.051898250315553, 89.61945656056766),
+            (76.41370000896038, 97.20491253636689),
+            (18.832993288649792, 6.006559110093601),
+            (96.98045791932294, 72.23019966333018),
+            (71.93203564171793, 93.03998204972012),
+            (33.39161715459793, 5.13372283892819),
+            (25.23072873231501, 67.1123015383591),
+            (84.38812085016241, 90.80055533944926),
+            (29.20345964254656, 21.17642854392676),
+            (58.11390834674495, 66.93322778502613),
+            (22.070195932187254, 59.73489434853766),
+            (86.29060211377086, 83.14129496517567),
+            (55.760857794890796, 26.95947234362994)
+        ];
+
+        let mut path : Vec<usize> = (0..city_positions.len()).map(|x| x as usize).collect();
+        path.push(0); // Add start position to end of path
+
+        CityItem {
+            city_positions: city_positions,
+            path: path
+        }
+    }
+
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
         // Keep stating position always the same:
@@ -101,8 +92,9 @@ fn main() {
     let tsp_builder = SimulationBuilder::<CityItem>::new()
         .factor(0.36)
         .threads(2)
+        .individuals(50)
         .global_fittest()
-        .initial_population_num_mut(initialize_tsp())
+        .mutation_rate((0..50).map(|n| (n % 10) + 1 ).collect())
         .finalize();
 
     match tsp_builder {

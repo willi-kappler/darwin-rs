@@ -18,30 +18,6 @@ use rand::Rng;
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
-fn initialize_queens() -> Vec<(Queens, u32)> {
-    let mut result = Vec::new();
-
-    for i in 0..50 {
-        result.push((
-            Queens {
-                // Start with all queens in one row
-                board: vec![
-                    1,1,1,1,1,1,1,1,
-                    0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,
-                ]
-            },
-            if i < 10 { 1 } else { 30 }
-        ))}
-
-    result
-}
-
 #[derive(Debug,Clone)]
 struct Queens {
     board: Vec<u8>
@@ -101,6 +77,22 @@ fn find_collisions(board: &Vec<u8>, row: usize, col: usize) -> u8 {
 
 // implement trait functions mutate and calculate_fittness:
 impl Individual for Queens {
+    fn new() -> Queens {
+        Queens {
+            // Start with all queens in one row
+            board: vec![
+                1,1,1,1,1,1,1,1,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+            ]
+        }
+    }
+
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
@@ -145,8 +137,9 @@ fn main() {
     let queens_builder = SimulationBuilder::<Queens>::new()
         .fittness(0.0)
         .threads(2)
+        .individuals(50)
         .local_fittest()
-        .initial_population_num_mut(initialize_queens())
+        .mutation_rate((0..50).map(|n| if n < 10 { 1 } else { 30 } ).collect())
         .finalize();
 
     match queens_builder {

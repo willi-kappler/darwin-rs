@@ -238,6 +238,7 @@ pub struct IndividualWrapper<T: Individual> {
 }
 
 pub trait Individual {
+    fn new() -> Self;
     fn mutate(&mut self);
     fn calculate_fittness(&self) -> f64;
 }
@@ -291,6 +292,17 @@ impl<T: Individual + Clone + Send> SimulationBuilder<T> {
 
     pub fn individuals(mut self, individuals: u32) -> SimulationBuilder<T> {
         self.simulation.num_of_individuals = individuals;
+
+        for _ in 0..individuals {
+            self.simulation.population.push(
+                IndividualWrapper {
+                    individual: Individual::new(),
+                    fittness: std::f64::MAX,
+                    num_of_mutations: 1
+                }
+            );
+        }
+
         self
     }
 
@@ -323,76 +335,23 @@ impl<T: Individual + Clone + Send> SimulationBuilder<T> {
         self
     }
 
-    pub fn initial_population(mut self, initial_population: Vec<T>) -> SimulationBuilder<T>  {
-        let mut new_population = Vec::new();
-
-        for individual in initial_population {
-            new_population.push(
-                IndividualWrapper {
-                    individual: individual,
-                    fittness: std::f64::MAX,
-                    num_of_mutations: 1,
-                }
-            )
-        }
-
-        let num_of_individuals = new_population.len() as u32;
-        self.simulation.population = new_population;
-        self.simulation.num_of_individuals = num_of_individuals;
-        self
-    }
-
-    pub fn initial_population_num_mut(mut self, initial_population: Vec<(T, u32)>) -> SimulationBuilder<T>  {
-        let mut new_population = Vec::new();
-
-        for (individual, num_of_mutation) in initial_population {
-            new_population.push(
-                IndividualWrapper {
-                    individual: individual,
-                    fittness: std::f64::MAX,
-                    num_of_mutations: num_of_mutation,
-                }
-            )
-        }
-
-        let num_of_individuals = new_population.len() as u32;
-        self.simulation.population = new_population;
-        self.simulation.num_of_individuals = num_of_individuals;
-        self
-    }
-
-    pub fn one_individual(mut self, individual: T) -> SimulationBuilder<T> {
-        for _ in 0..self.simulation.num_of_individuals {
-            self.simulation.population.push(
-                IndividualWrapper {
-                    individual: individual.clone(),
-                    fittness: std::f64::MAX,
-                    num_of_mutations: 1,
-                }
-            );
-        }
-        self
-    }
-
-    pub fn one_individual_num_mut(mut self, individual: T, num_of_mutations: u32) -> SimulationBuilder<T> {
-        for _ in 0..self.simulation.num_of_individuals {
-            self.simulation.population.push(
-                IndividualWrapper {
-                    individual: individual.clone(),
-                    fittness: std::f64::MAX,
-                    num_of_mutations: num_of_mutations,
-                }
-            );
-        }
-        self
-    }
-
     pub fn increasing_mutation_rate(mut self) -> SimulationBuilder<T> {
         let mut mutation_rate = 1;
 
         for wrapper in self.simulation.population.iter_mut() {
             wrapper.num_of_mutations = mutation_rate;
             mutation_rate = mutation_rate + 1;
+        }
+
+        self
+    }
+
+    pub fn mutation_rate(mut self, mutation_rate: Vec<u32>) -> SimulationBuilder<T> {
+        // TODO: better error handling
+        assert!(self.simulation.population.len() == mutation_rate.len());
+
+        for i in 0..self.simulation.population.len() {
+            self.simulation.population[i].num_of_mutations = mutation_rate[i];
         }
 
         self

@@ -8,30 +8,6 @@ use rand::Rng;
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
-fn initialize_sudoku() -> Sudoku {
-    let mut sudoku = Sudoku {
-        // Taken from Wikipedia: https://en.wikipedia.org/wiki/Sudoku
-        original: vec![
-            5,3,4,   6,7,8,   9,1,2,
-            6,7,2,   1,9,5,   3,4,8,
-            1,9,8,   3,4,2,   5,6,7,
-
-            8,5,9,   7,6,1,   4,2,3,
-            4,2,6,   8,5,3,   7,9,1,
-            7,1,3,   9,2,4,   8,5,6,
-
-            0,6,0,   0,0,0,   2,8,0,
-            0,0,0,   4,1,9,   0,0,5,
-            0,0,0,   0,8,0,   0,7,9
-        ],
-        solved: Vec::new()
-    };
-
-    sudoku.solved = sudoku.original.clone();
-
-    sudoku
-}
-
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
 fn fittness_of_one_cell(sudoku: &Vec<u8>, row: usize, col: usize) -> f64 {
     let mut number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -108,6 +84,30 @@ struct Sudoku {
 
 // implement trait functions mutate and calculate_fittness:
 impl Individual for Sudoku {
+    fn new() -> Sudoku {
+        let mut sudoku = Sudoku {
+            // Taken from Wikipedia: https://en.wikipedia.org/wiki/Sudoku
+            original: vec![
+                5,3,4,   6,7,8,   9,1,2,
+                6,7,2,   1,9,5,   3,4,8,
+                1,9,8,   3,4,2,   5,6,7,
+
+                8,5,9,   7,6,1,   4,2,3,
+                4,2,6,   8,5,3,   7,9,1,
+                7,1,3,   9,2,4,   8,5,6,
+
+                0,6,0,   0,0,0,   2,8,0,
+                0,0,0,   4,1,9,   0,0,5,
+                0,0,0,   0,8,0,   0,7,9
+            ],
+            solved: Vec::new()
+        };
+
+        sudoku.solved = sudoku.original.clone();
+
+        sudoku
+    }
+
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
@@ -159,7 +159,6 @@ fn main() {
         .fittness(0.0)
         .threads(2)
         .individuals(50)
-        .one_individual(initialize_sudoku())
         .random_fittest(5)
         .increasing_mutation_rate()
         .finalize();
