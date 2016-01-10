@@ -138,8 +138,9 @@ fn main() {
         .fittness(0.0)
         .threads(2)
         .individuals(50)
-        .local_fittest()
-        .mutation_rate((0..50).map(|n| if n < 10 { 1 } else { 30 } ).collect())
+        .global_fittest()
+        //.mutation_rate((0..50).map(|n| if n < 10 { 1 } else { 40 } ).collect())
+        .increasing_mutation_rate()
         .finalize();
 
     match queens_builder {

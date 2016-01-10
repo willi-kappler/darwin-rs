@@ -78,9 +78,9 @@ fn run_body_global_fittest<T: Individual + Clone + Send>(simulation: &mut Simula
 }
 
 fn run_body_local_fittest<T: Individual + Clone + Send>(simulation: &mut Simulation<T>) {
-    simulation.fittest = simulation.population[0].clone();
-
     mutate_population(simulation);
+
+    simulation.fittest = simulation.population[0].clone();
 
     // Find fittest individual only for this function call...
     find_fittest(simulation);

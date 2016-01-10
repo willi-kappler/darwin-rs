@@ -93,7 +93,6 @@ fn main() {
         .factor(0.36)
         .threads(2)
         .individuals(50)
-        .global_fittest()
         .mutation_rate((0..50).map(|n| (n % 10) + 1 ).collect())
         .finalize();
 
