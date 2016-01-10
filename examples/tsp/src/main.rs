@@ -37,13 +37,13 @@ fn initialize_tsp() -> Vec<(CityItem, u32)> {
 
     let mut result = Vec::new();
 
-    for i in 0..20 {
+    for i in 0..50 {
         result.push((
             CityItem {
                 city_positions: city_positions.clone(),
                 path: path.clone()
             },
-            (i % 6) + 1
+            (i % 10) + 1
         ));
     }
 

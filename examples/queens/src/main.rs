@@ -21,7 +21,7 @@ use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 fn initialize_queens() -> Vec<(Queens, u32)> {
     let mut result = Vec::new();
 
-    for i in 0..20 {
+    for i in 0..50 {
         result.push((
             Queens {
                 // Start with all queens in one row
@@ -36,7 +36,7 @@ fn initialize_queens() -> Vec<(Queens, u32)> {
                     0,0,0,0,0,0,0,0,
                 ]
             },
-            if i < 5 { 1 } else { 30 }
+            if i < 10 { 1 } else { 30 }
         ))}
 
     result

@@ -33,7 +33,8 @@ pub struct Simulation<T: 'static + Individual + Send> {
     pub output_new_fittest: bool,
     pub random_fittest: u32,
     pub type_of_fittest: FittestType,
-    pub run_body: Box<Fn(&mut Simulation<T>, IndividualWrapper<T>, &mut Pool) -> IndividualWrapper<T>>
+    pub pool: Pool,
+    pub run_body: Box<Fn(&mut Simulation<T>, IndividualWrapper<T>) -> IndividualWrapper<T>>
 }
 
 fn find_fittest<T: Individual + Clone + Send>(simulation: &mut Simulation<T>, fittest: IndividualWrapper<T>) -> IndividualWrapper<T> {
@@ -51,11 +52,8 @@ fn find_fittest<T: Individual + Clone + Send>(simulation: &mut Simulation<T>, fi
     fittest
 }
 
-fn run_body_global_fittest<T: Individual + Clone + Send>(simulation: &mut Simulation<T>,
-    global_fittest: IndividualWrapper<T>, pool: &mut Pool) -> IndividualWrapper<T> {
-    let mut fittest = global_fittest;
-
-    pool.for_(simulation.population.iter_mut(), |wrapper|
+fn mutate_population<T: Individual + Clone + Send>(simulation: &mut Simulation<T>) {
+    simulation.pool.for_(simulation.population.iter_mut(), |wrapper|
         {
             for _ in 0..wrapper.num_of_mutations {
                 wrapper.individual.mutate();
@@ -63,6 +61,13 @@ fn run_body_global_fittest<T: Individual + Clone + Send>(simulation: &mut Simula
             wrapper.fittness = wrapper.individual.calculate_fittness();
         }
     );
+}
+
+fn run_body_global_fittest<T: Individual + Clone + Send>(simulation: &mut Simulation<T>,
+    global_fittest: IndividualWrapper<T>) -> IndividualWrapper<T> {
+    let mut fittest = global_fittest;
+
+    mutate_population(simulation);
 
     // Find fittest individual for whole simulation...
     fittest = find_fittest(simulation, fittest);
@@ -79,17 +84,10 @@ fn run_body_global_fittest<T: Individual + Clone + Send>(simulation: &mut Simula
 }
 
 fn run_body_local_fittest<T: Individual + Clone + Send>(simulation: &mut Simulation<T>,
-    global_fittest: IndividualWrapper<T>, pool: &mut Pool) -> IndividualWrapper<T> {
+    global_fittest: IndividualWrapper<T>) -> IndividualWrapper<T> {
     let mut fittest = simulation.population[0].clone();
 
-    pool.for_(simulation.population.iter_mut(), |wrapper|
-        {
-            for _ in 0..wrapper.num_of_mutations {
-                wrapper.individual.mutate();
-            }
-            wrapper.fittness = wrapper.individual.calculate_fittness();
-        }
-    );
+    mutate_population(simulation);
 
     // Find fittest individual only for this function call...
     fittest = find_fittest(simulation, fittest);
@@ -108,24 +106,17 @@ fn run_body_local_fittest<T: Individual + Clone + Send>(simulation: &mut Simulat
 }
 
 fn run_body_random_fittest<T: Individual + Clone + Send>(simulation: &mut Simulation<T>,
-    global_fittest: IndividualWrapper<T>, pool: &mut Pool) -> IndividualWrapper<T> {
+    global_fittest: IndividualWrapper<T>) -> IndividualWrapper<T> {
     let mut fittest = global_fittest;
 
-    pool.for_(simulation.population.iter_mut(), |wrapper|
-        {
-            for _ in 0..wrapper.num_of_mutations {
-                wrapper.individual.mutate();
-            }
-            wrapper.fittness = wrapper.individual.calculate_fittness();
-        }
-    );
+    mutate_population(simulation);
 
     // Find fittest individual for whole simulation...
     fittest = find_fittest(simulation, fittest);
 
     simulation.improvement_factor = fittest.fittness / simulation.original_fittness;
 
-    // ... and choose one random individual to set it back to the fittest
+    // ... and choose some random individual to set it back to the fittest
     let mut rng = rand::thread_rng();
 
     for _ in 0..simulation.random_fittest {
@@ -145,24 +136,24 @@ impl<T: Individual + Clone + Send> Simulation<T> {
         // Initialize
         let mut fittest = self.population[0].clone();
         let mut iteration_counter = 0;
-        let mut pool = simple_parallel::Pool::new(self.num_of_threads);
+        self.pool = simple_parallel::Pool::new(self.num_of_threads);
 
         match self.type_of_simulation {
             SimulationType::EndIteration(end_iteration) => {
                 match self.type_of_fittest {
                     FittestType::GlobalFittest => {
                         for _ in 0..end_iteration {
-                            fittest = run_body_global_fittest(self, fittest, &mut pool);
+                            fittest = run_body_global_fittest(self, fittest);
                         }
                     },
                     FittestType::LocalFittest => {
                         for _ in 0..end_iteration {
-                            fittest = run_body_local_fittest(self, fittest, &mut pool);
+                            fittest = run_body_local_fittest(self, fittest);
                         }
                     },
                     FittestType::RandomFittest => {
                         for _ in 0..end_iteration {
-                            fittest = run_body_random_fittest(self, fittest, &mut pool);
+                            fittest = run_body_random_fittest(self, fittest);
                         }
                     }
                 }
@@ -174,21 +165,21 @@ impl<T: Individual + Clone + Send> Simulation<T> {
                     FittestType::GlobalFittest => {
                         loop {
                             if self.improvement_factor <= end_factor { break }
-                            fittest = run_body_global_fittest (self, fittest, &mut pool);
+                            fittest = run_body_global_fittest (self, fittest);
                             iteration_counter = iteration_counter + 1;
                         }
                     },
                     FittestType::LocalFittest => {
                         loop {
                             if self.improvement_factor <= end_factor { break }
-                            fittest = run_body_local_fittest(self, fittest, &mut pool);
+                            fittest = run_body_local_fittest(self, fittest);
                             iteration_counter = iteration_counter + 1;
                         }
                     },
                     FittestType::RandomFittest => {
                         loop {
                             if self.improvement_factor <= end_factor { break }
-                            fittest = run_body_random_fittest (self, fittest, &mut pool);
+                            fittest = run_body_random_fittest (self, fittest);
                             iteration_counter = iteration_counter + 1;
                         }
                     }
@@ -199,21 +190,21 @@ impl<T: Individual + Clone + Send> Simulation<T> {
                     FittestType::GlobalFittest => {
                         loop {
                             if fittest.fittness <= end_fittness { break }
-                            fittest = run_body_global_fittest(self, fittest, &mut pool);
+                            fittest = run_body_global_fittest(self, fittest);
                             iteration_counter = iteration_counter + 1;
                         }
                     },
                     FittestType::LocalFittest => {
                         loop {
                             if self.population[0].fittness <= end_fittness { break }
-                            fittest = run_body_local_fittest(self, fittest, &mut pool);
+                            fittest = run_body_local_fittest(self, fittest);
                             iteration_counter = iteration_counter + 1;
                         }
                     },
                     FittestType::RandomFittest => {
                         loop {
                             if fittest.fittness <= end_fittness { break }
-                            fittest = run_body_random_fittest(self, fittest, &mut pool);
+                            fittest = run_body_random_fittest(self, fittest);
                             iteration_counter = iteration_counter + 1;
                         }
                     }
@@ -275,6 +266,7 @@ impl<T: Individual + Clone + Send> SimulationBuilder<T> {
                 output_new_fittest: true,
                 random_fittest: 1,
                 run_body: Box::new(run_body_global_fittest),
+                pool: simple_parallel::Pool::new(2),
                 type_of_fittest: FittestType::GlobalFittest
             }
         }
@@ -417,6 +409,7 @@ impl<T: Individual + Clone + Send> SimulationBuilder<T> {
             output_new_fittest: self.simulation.output_new_fittest,
             random_fittest: self.simulation.random_fittest,
             run_body: self.simulation.run_body,
+            pool: self.simulation.pool,
             type_of_fittest: self.simulation.type_of_fittest
         };
 
