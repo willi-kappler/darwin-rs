@@ -173,6 +173,7 @@ fn main() {
 
             println!("total run time: {} ms", sudoku_simulation.total_time_in_ms);
             println!("improvement factor: {}", sudoku_simulation.improvement_factor);
+            println!("number of iterations: {}", sudoku_simulation.iteration_counter);
 
             sudoku_simulation.print_fittness();
 

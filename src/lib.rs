@@ -72,6 +72,8 @@ fn run_body_global_fittest<T: Individual + Clone + Send>(simulation: &mut Simula
     // Find fittest individual for whole simulation...
     fittest = find_fittest(simulation, fittest);
 
+    simulation.improvement_factor = fittest.fittness / simulation.original_fittness;
+
     // ...  and copy it to the others (except the last one, to avoid local minimum or maximum)
     for i in 0..(simulation.population.len() - 1) {
         simulation.population[i].individual = fittest.individual.clone();

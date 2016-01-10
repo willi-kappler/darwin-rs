@@ -99,7 +99,7 @@ fn main() {
     println!("Darwin test: traveling salesman problem");
 
     let tsp_builder = SimulationBuilder::<CityItem>::new()
-        .factor(0.35)
+        .factor(0.36)
         .threads(2)
         .global_fittest()
         .initial_population_num_mut(initialize_tsp())
