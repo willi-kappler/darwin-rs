@@ -102,6 +102,7 @@ fn main() {
         //.iterations(1000000)
         .factor(0.35)
         .threads(2)
+        .global_fittest()
         .initial_population_num_mut(initialize_tsp())
         .finalize();
 

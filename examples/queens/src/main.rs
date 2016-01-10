@@ -144,8 +144,8 @@ fn main() {
 
     let queens_builder = SimulationBuilder::<Queens>::new()
         .fittness(0.0)
-        .threads(1)
-        .global_fittest(false)
+        .threads(2)
+        .local_fittest()
         .initial_population_num_mut(initialize_queens())
         .finalize();
 
