@@ -36,7 +36,7 @@ fn initialize_queens() -> Vec<(Queens, u32)> {
                     0,0,0,0,0,0,0,0,
                 ]
             },
-            if i < 5 { 1 } else { 20 }
+            if i < 5 { 1 } else { 30 }
         ))}
 
     result
@@ -150,8 +150,9 @@ fn main() {
         .finalize();
 
     match queens_builder {
-        BuilderResult::LowIterration => { println!("more than 10 iteratons needed") },
-        BuilderResult::LowIndividuals => { println!("more than 2 individuals needed") },
+        BuilderResult::TooLowEndIterration => { println!("more than 10 iteratons needed") },
+        BuilderResult::TooLowIndividuals => { println!("more than 2 individuals needed") },
+        BuilderResult::InvalidFittestCount => { println!("number of random fittest count > number of individuals") },
         BuilderResult::Ok(mut queens_simulation) => {
             queens_simulation.run();
 

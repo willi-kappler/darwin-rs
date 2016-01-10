@@ -14,7 +14,7 @@ pub enum SimulationType {
     EndFactor(f64)
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub enum FittestType {
     GlobalFittest,
     LocalFittest,
@@ -31,6 +31,7 @@ pub struct Simulation<T: 'static + Individual + Send> {
     pub total_time_in_ms: f64,
     pub iteration_counter: u32,
     pub output_new_fittest: bool,
+    pub random_fittest: u32,
     pub type_of_fittest: FittestType,
     pub run_body: Box<Fn(&mut Simulation<T>, IndividualWrapper<T>, &mut Pool) -> IndividualWrapper<T>>
 }
@@ -127,9 +128,10 @@ fn run_body_random_fittest<T: Individual + Clone + Send>(simulation: &mut Simula
     // ... and choose one random individual to set it back to the fittest
     let mut rng = rand::thread_rng();
 
-    let index: usize = rng.gen_range(0, simulation.population.len());
-
-    simulation.population[index].individual = fittest.individual.clone();
+    for _ in 0..simulation.random_fittest {
+        let index: usize = rng.gen_range(0, simulation.population.len());
+        simulation.population[index].individual = fittest.individual.clone();
+    }
 
     fittest
 }
@@ -252,8 +254,9 @@ pub struct SimulationBuilder<T: 'static + Individual + Send> {
 }
 
 pub enum BuilderResult<T: 'static + Individual + Send> {
-        LowIterration,
-        LowIndividuals,
+        TooLowEndIterration,
+        TooLowIndividuals,
+        InvalidFittestCount,
         Ok(Simulation<T>)
 }
 
@@ -270,6 +273,7 @@ impl<T: Individual + Clone + Send> SimulationBuilder<T> {
                 total_time_in_ms: 0.0,
                 iteration_counter: 0,
                 output_new_fittest: true,
+                random_fittest: 1,
                 run_body: Box::new(run_body_global_fittest),
                 type_of_fittest: FittestType::GlobalFittest
             }
@@ -318,8 +322,9 @@ impl<T: Individual + Clone + Send> SimulationBuilder<T> {
         self
     }
 
-    pub fn random_fittest(mut self) -> SimulationBuilder<T> {
+    pub fn random_fittest(mut self, count: u32) -> SimulationBuilder<T> {
         self.simulation.type_of_fittest = FittestType::RandomFittest;
+        self.simulation.random_fittest = count;
         self.simulation.run_body = Box::new(run_body_random_fittest);
         self
     }
@@ -410,14 +415,20 @@ impl<T: Individual + Clone + Send> SimulationBuilder<T> {
             total_time_in_ms: self.simulation.total_time_in_ms,
             iteration_counter: self.simulation.iteration_counter,
             output_new_fittest: self.simulation.output_new_fittest,
+            random_fittest: self.simulation.random_fittest,
             run_body: self.simulation.run_body,
             type_of_fittest: self.simulation.type_of_fittest
         };
 
-        if self.simulation.num_of_individuals < 3 { return BuilderResult::LowIndividuals }
+        if self.simulation.num_of_individuals < 3 { return BuilderResult::TooLowIndividuals }
 
         if let SimulationType::EndIteration(end_iteration) = self.simulation.type_of_simulation {
-            if end_iteration < 10 { return BuilderResult::LowIterration }
+            if end_iteration < 10 { return BuilderResult::TooLowEndIterration }
+        }
+
+        if result.type_of_fittest == FittestType::RandomFittest {
+            if result.random_fittest >= result.num_of_individuals ||
+               result.random_fittest == 0 { return BuilderResult::InvalidFittestCount }
         }
 
         BuilderResult::Ok(result)

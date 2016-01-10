@@ -43,7 +43,7 @@ fn initialize_tsp() -> Vec<(CityItem, u32)> {
                 city_positions: city_positions.clone(),
                 path: path.clone()
             },
-            (i % 3) + 1
+            (i % 6) + 1
         ));
     }
 
@@ -99,7 +99,6 @@ fn main() {
     println!("Darwin test: traveling salesman problem");
 
     let tsp_builder = SimulationBuilder::<CityItem>::new()
-        //.iterations(1000000)
         .factor(0.35)
         .threads(2)
         .global_fittest()
@@ -107,8 +106,9 @@ fn main() {
         .finalize();
 
     match tsp_builder {
-        BuilderResult::LowIterration => { println!("more than 10 iteratons needed") },
-        BuilderResult::LowIndividuals => { println!("more than 2 individuals needed") },
+        BuilderResult::TooLowEndIterration => { println!("more than 10 iteratons needed") },
+        BuilderResult::TooLowIndividuals => { println!("more than 2 individuals needed") },
+        BuilderResult::InvalidFittestCount => { println!("number of random fittest count > number of individuals") },
         BuilderResult::Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 

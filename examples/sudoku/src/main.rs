@@ -158,15 +158,16 @@ fn main() {
     let sudoku_builder = SimulationBuilder::<Sudoku>::new()
         .fittness(0.0)
         .threads(2)
-        .individuals(20)
+        .individuals(50)
         .one_individual(initialize_sudoku())
-        .random_fittest()
+        .random_fittest(5)
         .increasing_mutation_rate()
         .finalize();
 
     match sudoku_builder {
-        BuilderResult::LowIterration => { println!("more than 10 iteratons needed") },
-        BuilderResult::LowIndividuals => { println!("more than 2 individuals needed") },
+        BuilderResult::TooLowEndIterration => { println!("more than 10 iteratons needed") },
+        BuilderResult::TooLowIndividuals => { println!("more than 2 individuals needed") },
+        BuilderResult::InvalidFittestCount => { println!("number of random fittest count > number of individuals") },
         BuilderResult::Ok(mut sudoku_simulation) => {
             sudoku_simulation.run();
 
