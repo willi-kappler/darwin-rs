@@ -137,8 +137,9 @@ fn main() {
     let queens_builder = SimulationBuilder::<Queens>::new()
         .fittness(0.0)
         .threads(2)
-        .individuals(50)
-        .increasing_mutation_rate()
+        .individuals(100)
+        .increasing_exp_mutation_rate(1.05)
+        .sorting_fittest()
         .finalize();
 
     match queens_builder {

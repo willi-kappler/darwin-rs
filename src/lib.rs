@@ -18,7 +18,8 @@ pub enum SimulationType {
 pub enum FittestType {
     GlobalFittest,
     LocalFittest,
-    RandomFittest
+    RandomFittest,
+    SortingFittest,
 }
 
 pub struct Simulation<T: Individual + Send + Sync> {
@@ -113,6 +114,26 @@ fn run_body_random_fittest<T: Individual + Clone + Send + Sync>(simulation: &mut
     }
 }
 
+fn run_body_sorting_fittest<T: Individual + Clone + Send + Sync>(simulation: &mut Simulation<T>) {
+    // Keep original population
+    let orig_population = simulation.population.clone();
+
+    // Mutate population
+    mutate_population(simulation);
+
+    // Append original (unmutated) population to new (mutated) population
+    simulation.population.extend(orig_population.iter().cloned());
+
+    // Sort by fitness
+    simulation.population.sort_by(|a, b| a.fittness.partial_cmp(&b.fittness).unwrap());
+
+    // Remove the upper half of the population and keep only the fittest lower half
+    simulation.population.truncate(orig_population.len());
+
+    find_fittest(simulation);
+    simulation.improvement_factor = simulation.fittest.fittness / simulation.original_fittness;
+}
+
 impl<T: Individual + Clone + Send + Sync> Simulation<T> {
     pub fn run(&mut self) {
         let start_time = precise_time_ns();
@@ -139,6 +160,11 @@ impl<T: Individual + Clone + Send + Sync> Simulation<T> {
                     FittestType::RandomFittest => {
                         for _ in 0..end_iteration {
                             run_body_random_fittest(self);
+                        }
+                    },
+                    FittestType::SortingFittest => {
+                        for _ in 0..end_iteration {
+                            run_body_sorting_fittest(self);
                         }
                     }
                 }
@@ -167,6 +193,13 @@ impl<T: Individual + Clone + Send + Sync> Simulation<T> {
                             run_body_random_fittest (self);
                             iteration_counter = iteration_counter + 1;
                         }
+                    },
+                    FittestType::SortingFittest => {
+                        loop {
+                            if self.improvement_factor <= end_factor { break }
+                            run_body_sorting_fittest (self);
+                            iteration_counter = iteration_counter + 1;
+                        }
                     }
                 }
             },
@@ -190,6 +223,13 @@ impl<T: Individual + Clone + Send + Sync> Simulation<T> {
                         loop {
                             if self.fittest.fittness <= end_fittness { break }
                             run_body_random_fittest(self);
+                            iteration_counter = iteration_counter + 1;
+                        }
+                    },
+                    FittestType::SortingFittest => {
+                        loop {
+                            if self.fittest.fittness <= end_fittness { break }
+                            run_body_sorting_fittest(self);
                             iteration_counter = iteration_counter + 1;
                         }
                     }
@@ -313,6 +353,11 @@ impl<T: Individual + Clone + Send + Sync> SimulationBuilder<T> {
         self
     }
 
+    pub fn sorting_fittest(mut self) -> SimulationBuilder<T> {
+        self.simulation.type_of_fittest = FittestType::SortingFittest;
+        self
+    }
+
     pub fn random_fittest(mut self, count: u32) -> SimulationBuilder<T> {
         self.simulation.type_of_fittest = FittestType::RandomFittest;
         self.simulation.random_fittest = count;
@@ -324,6 +369,17 @@ impl<T: Individual + Clone + Send + Sync> SimulationBuilder<T> {
 
         for wrapper in self.simulation.population.iter_mut() {
             wrapper.num_of_mutations = mutation_rate;
+            mutation_rate = mutation_rate + 1;
+        }
+
+        self
+    }
+
+    pub fn increasing_exp_mutation_rate(mut self, base: f64) -> SimulationBuilder<T> {
+        let mut mutation_rate = 1;
+
+        for wrapper in self.simulation.population.iter_mut() {
+            wrapper.num_of_mutations = base.powi(mutation_rate).floor() as u32;
             mutation_rate = mutation_rate + 1;
         }
 

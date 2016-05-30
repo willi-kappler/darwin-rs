@@ -158,9 +158,9 @@ fn main() {
     let sudoku_builder = SimulationBuilder::<Sudoku>::new()
         .fittness(0.0)
         .threads(2)
-        .individuals(50)
-        .random_fittest(5)
-        .increasing_mutation_rate()
+        .individuals(100)
+        .sorting_fittest()
+        .increasing_exp_mutation_rate(1.01)
         .finalize();
 
     match sudoku_builder {
