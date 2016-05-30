@@ -89,11 +89,13 @@ impl Individual for CityItem {
 fn main() {
     println!("Darwin test: traveling salesman problem");
 
+    let num_of_individuals = 50;
+
     let tsp_builder = SimulationBuilder::<CityItem>::new()
         .factor(0.36)
         .threads(2)
-        .individuals(50)
-        .mutation_rate((0..50).map(|n| (n % 10) + 1 ).collect())
+        .individuals(num_of_individuals)
+        .mutation_rate((0..num_of_individuals).map(|n| (n % 10) + 1 ).collect())
         .finalize();
 
     match tsp_builder {
