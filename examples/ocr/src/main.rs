@@ -1,10 +1,10 @@
 extern crate rand;
 extern crate image;
+extern crate imageproc;
+extern crate freetype;
 
 // internal crates
 extern crate darwin_rs;
-extern crate imageproc;
-extern crate freetype;
 
 use rand::Rng;
 use std::fs::File;
@@ -62,21 +62,21 @@ fn main() {
             }
         }
 
-        let img1 = image::open(&Path::new("ocr1.png")).unwrap();
-        let img2 = image::open(&Path::new("ocr2.png")).unwrap();
+//        let img1 = image::open(&Path::new("ocr1.png")).unwrap();
+//        let img2 = image::open(&Path::new("ocr2.png")).unwrap();
         let mut img3: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(640, 480);
 
-        println!("dimensions1 {:?}", img1.dimensions());
-        println!("dimensions2 {:?}", img2.dimensions());
+//        println!("dimensions1 {:?}", img1.dimensions());
+//        println!("dimensions2 {:?}", img2.dimensions());
         println!("dimensions3 {:?}", img3.dimensions());
 
-        println!("color1: {:?}", img1.color());
-        println!("color2: {:?}", img2.color());
+//        println!("color1: {:?}", img1.color());
+//        println!("color2: {:?}", img2.color());
         // println!("color3: {:?}", img3.color());
 
-        let error = root_mean_squared_error(&img1, &img2);
+//        let error = root_mean_squared_error(&img1, &img2);
 
-        println!("error1: {}", error);
+//        println!("error1: {}", error);
 
         let ft_library = freetype::Library::init().unwrap();
         let face = ft_library.new_face("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 0).unwrap();
@@ -92,5 +92,7 @@ fn main() {
         println!("x: {}, y: {}, width: {}, rows: {}, len: {}, pitch: {}", x, y, bm.width(), bm.rows(), bm_slice.len(), bm.pitch());
         println!("pixel mode: {:?}", bm.pixel_mode());
 
-        let img4: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_vec(128, 128, bm_slice ).unwrap();
+        let img4: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_vec(17, 16, bm_slice ).unwrap();
+        let fout = Path::new("char1.png");
+        let _ = img4.save(&fout);
 }
