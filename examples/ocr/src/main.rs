@@ -9,9 +9,9 @@ extern crate darwin_rs;
 use rand::Rng;
 use std::fs::File;
 use std::path::Path;
-use image::{GenericImage, ImageBuffer, Rgb, Luma};
+use image::{GenericImage, ImageBuffer, Luma};
+use image::imageops::replace;
 use imageproc::stats::root_mean_squared_error;
-use freetype::RenderMode;
 
 #[derive(Debug, Clone)]
 struct OCRItem {
@@ -34,8 +34,44 @@ impl Individual for OCRItem {
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
+fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>, face: &freetype::Face, x: u32, y: u32, text: &str) {
+    let mut pos_x = x;
+    let pos_y = y;
+
+    for char in text.chars() {
+        // println!("processing char: {}, pos_x: {}", char, pos_x);
+        face.load_char(char as usize, freetype::face::RENDER).unwrap();
+        let glyph = face.glyph();
+        let bm = glyph.bitmap();
+
+        if !char.is_whitespace() {
+            let bm_slice = bm.buffer().to_vec();
+
+            let rendered_char: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::from_vec(bm.pitch() as u32, bm.rows() as u32, bm_slice).unwrap();
+            replace(canvas, &rendered_char, pos_x + (glyph.bitmap_left() as u32), pos_y - (glyph.bitmap_top() as u32));
+        }
+
+        let step_x = ((glyph.get_glyph().unwrap().advance_x()) >> 16) as u32;
+
+        pos_x = pos_x + step_x;
+    }
+}
+
 fn main() {
     println!("Darwin test: optical character recognition");
+
+    let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
+    let mut contructed_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
+
+    let ft_library = freetype::Library::init().unwrap();
+    let face = ft_library.new_face("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 0).unwrap();
+    face.set_char_size(40 * 64, 0, 50, 0).unwrap();
+
+    draw_text_line(&mut original_img, &face, 10, 30, "This is a test text!");
+    draw_text_line(&mut original_img, &face, 10, 60, "Just to see how good ocr works...");
+
+    let fout = Path::new("rendered_text.png");
+    let _ = original_img.save(&fout);
 
     let tsp_builder = SimulationBuilder::<OCRItem>::new()
         .factor(0.34)
@@ -61,37 +97,4 @@ fn main() {
                 */
             }
         }
-
-//        let img1 = image::open(&Path::new("ocr1.png")).unwrap();
-//        let img2 = image::open(&Path::new("ocr2.png")).unwrap();
-        let mut img3: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(640, 480);
-
-//        println!("dimensions1 {:?}", img1.dimensions());
-//        println!("dimensions2 {:?}", img2.dimensions());
-        println!("dimensions3 {:?}", img3.dimensions());
-
-//        println!("color1: {:?}", img1.color());
-//        println!("color2: {:?}", img2.color());
-        // println!("color3: {:?}", img3.color());
-
-//        let error = root_mean_squared_error(&img1, &img2);
-
-//        println!("error1: {}", error);
-
-        let ft_library = freetype::Library::init().unwrap();
-        let face = ft_library.new_face("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 0).unwrap();
-        face.set_char_size(40 * 64, 0, 50, 0).unwrap();
-        face.load_char(65, freetype::face::RENDER).unwrap();
-        let glyph = face.glyph();
-        let x = glyph.bitmap_left() as usize;
-        let y = glyph.bitmap_top() as usize;
-        let bm = glyph.bitmap();
-        let bm_slice = bm.buffer().to_vec();
-
-        println!("x: {}, y: {}, width: {}, rows: {}, len: {}, pitch: {}", x, y, bm.width(), bm.rows(), bm_slice.len(), bm.pitch());
-        println!("pixel mode: {:?}", bm.pixel_mode());
-
-        let img4: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::from_vec(17, 16, bm_slice ).unwrap();
-        let fout = Path::new("char1.png");
-        let _ = img4.save(&fout);
 }
