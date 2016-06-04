@@ -9,7 +9,7 @@ extern crate darwin_rs;
 use rand::Rng;
 use std::fs::File;
 use std::path::Path;
-use image::{GenericImage, ImageBuffer, Rgb};
+use image::{GenericImage, ImageBuffer, Rgb, Luma};
 use imageproc::stats::root_mean_squared_error;
 use freetype::RenderMode;
 
@@ -81,9 +81,8 @@ fn main() {
         let ft_library = freetype::Library::init().unwrap();
         let face = ft_library.new_face("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 0).unwrap();
         face.set_char_size(40 * 64, 0, 50, 0).unwrap();
-        face.load_char(65, freetype::face::RENDER | freetype::face::TARGET_LCD).unwrap();
+        face.load_char(65, freetype::face::RENDER).unwrap();
         let glyph = face.glyph();
-        // glyph.render_glyph(RenderMode::Lcd);
         let x = glyph.bitmap_left() as usize;
         let y = glyph.bitmap_top() as usize;
         let bm = glyph.bitmap();
@@ -92,7 +91,7 @@ fn main() {
         println!("x: {}, y: {}, width: {}, rows: {}, len: {}, pitch: {}", x, y, bm.width(), bm.rows(), bm_slice.len(), bm.pitch());
         println!("pixel mode: {:?}", bm.pixel_mode());
 
-        let img4: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_vec(17, 16, bm_slice ).unwrap();
+        let img4: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::from_vec(17, 16, bm_slice ).unwrap();
         let fout = Path::new("char1.png");
         let _ = img4.save(&fout);
 }
