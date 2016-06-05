@@ -1,11 +1,14 @@
 # darwin-rs
-darwin-rs, evolutionary algorithms with [Rust](https://www.rust-lang.org/)
-
-This library allows you to write evolutionary algorithms (EA) using the Rust programming language.
+This library allows you to write evolutionary algorithms (EA) using the [Rust](https://www.rust-lang.org/) programming language.
 
 Written by Willi Kappler, License: MIT - Version 0.1 (2016.06.05)
 
-The example folders contain three examples:
+
+![tsp start](tsp_start.png)
+
+![tsp end](tsp_end.png)
+
+The example folder contains three examples:
 
 - TSP (traveling salesman problem): the classic type of problem for EA
 - Sudoku: a sudoku solver using EA
@@ -96,7 +99,7 @@ let my_builder = SimulationBuilder::<MyStruct>::new()
 
 **finalize()**: Finish setup and do sanity check. Returns ```Ok(Simulation)``` if there are no errors in the configuration.
 
-Then just do a match on the result of ```finalize()``` and call ```simulation.run()``` to start the simulation. After the finishing it, you can access some statistics (total_time_in_ms, improvement_factor, iteration_counter) and the population of course:
+Then just do a match on the result of ```finalize()``` and call ```simulation.run()``` to start the simulation. After the finishing it, you can access some statistics (```total_time_in_ms```, ```improvement_factor```, ```iteration_counter```) and the population of course:
 
 ```rust
     for individual in my_simulation.population {...}

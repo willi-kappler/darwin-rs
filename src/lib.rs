@@ -53,6 +53,9 @@ fn run_body_sorting_fittest<T: Individual + Send + Sync + Clone>(simulation: &mu
     // Sort by fittness
     simulation.population.sort();
 
+    // Copy last individual (= unfittest) in order to avoid local minimum
+    simulation.population[orig_population.len() - 1] = simulation.population[simulation.population.len() - 1].clone();
+
     // Reduce population to original length
     simulation.population.truncate(orig_population.len());
 
@@ -76,7 +79,11 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     pub fn run(&mut self) {
         let start_time = precise_time_ns();
 
-        self.original_fittness = self.population[0].individual.calculate_fittness();
+        for wrapper in self.population.iter_mut() {
+            wrapper.fittness = wrapper.individual.calculate_fittness();
+        }
+
+        self.original_fittness = self.population[0].fittness;
 
         // Initialize
         self.iteration_counter = 0;
