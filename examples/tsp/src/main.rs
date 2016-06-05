@@ -7,12 +7,12 @@
 
 extern crate rand;
 
-// internal crates
+// Internal crates
 extern crate darwin_rs;
 
 use rand::Rng;
 
-// internal modules
+// Internal modules
 use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
 fn city_distance(city: &Vec<(f64, f64)>, index1: usize, index2: usize) -> f64 {
@@ -30,7 +30,7 @@ struct CityItem {
     path: Vec<usize>
 }
 
-// implement trait functions mutate and calculate_fittness:
+// Implement trait functions mutate and calculate_fittness:
 impl Individual for CityItem {
     fn new() -> CityItem {
         let city_positions = vec![
@@ -71,6 +71,7 @@ impl Individual for CityItem {
         let index1: usize = rng.gen_range(1, self.city_positions.len());
         let mut index2: usize = rng.gen_range(1, self.city_positions.len());
 
+        // Small optimisation
         while index1 == index2 {
             index2 = rng.gen_range(1, self.city_positions.len());
         }
@@ -78,7 +79,7 @@ impl Individual for CityItem {
         self.path.swap(index1, index2);
     }
 
-    // fittness means here: the length of the route
+    // Fittness means here: the length of the route, the shorter the better
     fn calculate_fittness(&self) -> f64 {
         let mut prev_index = &(self.city_positions.len() - 1);
         let mut length : f64 = 0.0;
@@ -98,6 +99,8 @@ fn main() {
 
     let tsp_builder = SimulationBuilder::<CityItem>::new()
         .factor(0.34)
+        // .factor(0.3175) // use this line for optimal solution...
+        // .fittness(419.0) // ...or this line
         .threads(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
