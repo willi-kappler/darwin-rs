@@ -2,8 +2,12 @@
 name = "darwin-rs"
 version = "0.1.0"
 authors = ["Willi Kappler, grandor@gmx.de"]
+license = "MIT"
+description = "Evolutionary algorithms library written in Rust."
+readme = "README.md"
+repository = "https://github.com/willi-kappler/darwin-rs"
+
 
 [dependencies]
 time = "0.1"
-rand = "0.3"
 jobsteal = "0.4"

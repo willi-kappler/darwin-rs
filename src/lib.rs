@@ -1,11 +1,9 @@
 extern crate time;
 extern crate jobsteal;
-extern crate rand;
 
 // external modules
 use time::precise_time_ns;
 use jobsteal::{make_pool, Pool, IntoSplitIterator, SplitIterator};
-use rand::Rng;
 use std::cmp::Ordering;
 
 #[derive(Debug,Clone)]
@@ -86,10 +84,10 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
 
         match self.type_of_simulation {
             SimulationType::EndIteration(end_iteration) => {
-                for _ in 0..end_iteration {
+                for i in 0..end_iteration {
                     run_body_sorting_fittest(self);
+                    self.iteration_counter = i
                 }
-                self.iteration_counter = end_iteration;
             },
             SimulationType::EndFactor(end_factor) => {
                 loop {
@@ -163,7 +161,6 @@ pub struct SimulationBuilder<T: Individual + Send + Sync> {
 pub enum BuilderResult<T: Individual + Send + Sync> {
         TooLowEndIterration,
         TooLowIndividuals,
-        InvalidFittestCount,
         Ok(Simulation<T>)
 }
 

@@ -77,14 +77,12 @@ fn main() {
         .factor(0.34)
         .threads(2)
         .individuals(100)
-        .sorting_fittest()
         .increasing_exp_mutation_rate(1.03)
         .finalize();
 
         match tsp_builder {
             BuilderResult::TooLowEndIterration => { println!("more than 10 iteratons needed") },
             BuilderResult::TooLowIndividuals => { println!("more than 2 individuals needed") },
-            BuilderResult::InvalidFittestCount => { println!("number of random fittest count > number of individuals") },
             BuilderResult::Ok(mut tsp_simulation) => {
                 /*
                 tsp_simulation.run();

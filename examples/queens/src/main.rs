@@ -144,7 +144,6 @@ fn main() {
     match queens_builder {
         BuilderResult::TooLowEndIterration => { println!("more than 10 iteratons needed") },
         BuilderResult::TooLowIndividuals => { println!("more than 2 individuals needed") },
-        BuilderResult::InvalidFittestCount => { println!("number of random fittest count > number of individuals") },
         BuilderResult::Ok(mut queens_simulation) => {
             queens_simulation.run();
 
