@@ -68,10 +68,10 @@ fn main() {
     face.set_char_size(40 * 64, 0, 50, 0).unwrap();
 
     draw_text_line(&mut original_img, &face, 10, 30, "This is a test text!");
-    draw_text_line(&mut original_img, &face, 10, 60, "Just to see how good ocr works...");
+    draw_text_line(&mut original_img, &face, 10, 60, "Just to see how good OCR works...");
 
-    let fout = Path::new("rendered_text.png");
-    let _ = original_img.save(&fout);
+    let img_file = Path::new("rendered_text.png");
+    let _ = original_img.save(&img_file);
 
     let tsp_builder = SimulationBuilder::<OCRItem>::new()
         .factor(0.34)

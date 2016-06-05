@@ -93,7 +93,6 @@ fn main() {
         .factor(0.34)
         .threads(2)
         .individuals(100)
-        .sorting_fittest()
         .increasing_exp_mutation_rate(1.03)
         .finalize();
 

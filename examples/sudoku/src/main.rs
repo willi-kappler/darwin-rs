@@ -159,7 +159,6 @@ fn main() {
         .fittness(0.0)
         .threads(2)
         .individuals(100)
-        .sorting_fittest()
         .increasing_exp_mutation_rate(1.01)
         .finalize();
 

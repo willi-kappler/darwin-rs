@@ -6,20 +6,13 @@ extern crate rand;
 use time::precise_time_ns;
 use jobsteal::{make_pool, Pool, IntoSplitIterator, SplitIterator};
 use rand::Rng;
+use std::cmp::Ordering;
 
 #[derive(Debug,Clone)]
 pub enum SimulationType {
     EndIteration(u32),
     EndFittness(f64),
     EndFactor(f64)
-}
-
-#[derive(Debug,Clone,PartialEq)]
-pub enum FittestType {
-    GlobalFittest,
-    LocalFittest,
-    RandomFittest,
-    SortingFittest,
 }
 
 pub struct Simulation<T: Individual + Send + Sync> {
@@ -34,22 +27,10 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub iteration_counter: u32,
     pub output_new_fittest: bool,
     pub random_fittest: u32,
-    pub type_of_fittest: FittestType,
     pub pool: Pool,
 }
 
-fn find_fittest<T: Individual + Clone + Send + Sync>(simulation: &mut Simulation<T>) {
-    for wrapper in simulation.population.iter() {
-        if wrapper.fittness < simulation.fittest.fittness {
-            simulation.fittest = wrapper.clone();
-            if simulation.output_new_fittest {
-                println!("new fittest: {}", simulation.fittest.fittness);
-            }
-        }
-    }
-}
-
-fn mutate_population<T: Individual + Clone + Send + Sync>(simulation: &mut Simulation<T>) {
+fn mutate_population<T: Individual + Send + Sync>(simulation: &mut Simulation<T>) {
     (&mut simulation.population).into_split_iter().for_each(
         &simulation.pool.spawner(), |wrapper|
         {
@@ -61,60 +42,7 @@ fn mutate_population<T: Individual + Clone + Send + Sync>(simulation: &mut Simul
     );
 }
 
-fn run_body_global_fittest<T: Individual + Clone + Send + Sync>(simulation: &mut Simulation<T>) {
-    mutate_population(simulation);
-
-    // Find fittest individual for whole simulation...
-    find_fittest(simulation);
-
-    simulation.improvement_factor = simulation.fittest.fittness / simulation.original_fittness;
-
-    // ...  and copy it to the others (except the last one, to avoid local minimum or maximum)
-    for i in 0..(simulation.population.len() - 1) {
-        simulation.population[i].individual = simulation.fittest.individual.clone();
-    }
-
-    // Set fittness of first individual, since population vector will be sorted (by fittness) after the loop
-    simulation.population[0].fittness = simulation.fittest.fittness;
-}
-
-fn run_body_local_fittest<T: Individual + Clone + Send + Sync>(simulation: &mut Simulation<T>) {
-    mutate_population(simulation);
-
-    simulation.fittest = simulation.population[0].clone();
-
-    // Find fittest individual only for this function call...
-    find_fittest(simulation);
-
-    simulation.improvement_factor = simulation.fittest.fittness / simulation.original_fittness;
-
-    // ...  and copy it to the others (except the last one, to avoid local minimum or maximum)
-    for i in 0..(simulation.population.len() - 1) {
-        simulation.population[i].individual = simulation.fittest.individual.clone();
-    }
-
-    // Set fittness of first individual, since population vector will be sorted (by fittness) after the loop
-    simulation.population[0].fittness = simulation.fittest.fittness;
-}
-
-fn run_body_random_fittest<T: Individual + Clone + Send + Sync>(simulation: &mut Simulation<T>) {
-    mutate_population(simulation);
-
-    // Find fittest individual for whole simulation...
-    find_fittest(simulation);
-
-    simulation.improvement_factor = simulation.fittest.fittness / simulation.original_fittness;
-
-    // ... and choose some random individual to set it back to the fittest
-    let mut rng = rand::thread_rng();
-
-    for _ in 0..simulation.random_fittest {
-        let index: usize = rng.gen_range(0, simulation.population.len());
-        simulation.population[index].individual = simulation.fittest.individual.clone();
-    }
-}
-
-fn run_body_sorting_fittest<T: Individual + Clone + Send + Sync>(simulation: &mut Simulation<T>) {
+fn run_body_sorting_fittest<T: Individual + Send + Sync + Clone>(simulation: &mut Simulation<T>) {
     // Keep original population
     let orig_population = simulation.population.clone();
 
@@ -124,131 +52,69 @@ fn run_body_sorting_fittest<T: Individual + Clone + Send + Sync>(simulation: &mu
     // Append original (unmutated) population to new (mutated) population
     simulation.population.extend(orig_population.iter().cloned());
 
-    // Sort by fitness
-    simulation.population.sort_by(|a, b| a.fittness.partial_cmp(&b.fittness).unwrap());
+    // Sort by fittness
+    simulation.population.sort();
 
-    // Remove the upper half of the population and keep only the fittest lower half
+    // Reduce population to original length
     simulation.population.truncate(orig_population.len());
 
-    find_fittest(simulation);
+    // Restore original number of mutation rate, since these get overwritten by .clone()
+    for i in 0..simulation.population.len() {
+        simulation.population[i].num_of_mutations = orig_population[i].num_of_mutations;
+    }
+
+    // Check if we have new fittest individual and store it globally
+    if simulation.population[0].fittness < simulation.fittest.fittness {
+        simulation.fittest = simulation.population[0].clone();
+        if simulation.output_new_fittest {
+            println!("{}: new fittest: {}", simulation.iteration_counter, simulation.fittest.fittness);
+        }
+    }
+
     simulation.improvement_factor = simulation.fittest.fittness / simulation.original_fittness;
 }
 
-impl<T: Individual + Clone + Send + Sync> Simulation<T> {
+impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     pub fn run(&mut self) {
         let start_time = precise_time_ns();
 
         self.original_fittness = self.population[0].individual.calculate_fittness();
 
         // Initialize
-        let mut iteration_counter = 0;
+        self.iteration_counter = 0;
         self.pool = make_pool(self.num_of_threads).unwrap();
 
         match self.type_of_simulation {
             SimulationType::EndIteration(end_iteration) => {
-                match self.type_of_fittest {
-                    FittestType::GlobalFittest => {
-                        for _ in 0..end_iteration {
-                            run_body_global_fittest(self);
-                        }
-                    },
-                    FittestType::LocalFittest => {
-                        for _ in 0..end_iteration {
-                            run_body_local_fittest(self);
-                        }
-                    },
-                    FittestType::RandomFittest => {
-                        for _ in 0..end_iteration {
-                            run_body_random_fittest(self);
-                        }
-                    },
-                    FittestType::SortingFittest => {
-                        for _ in 0..end_iteration {
-                            run_body_sorting_fittest(self);
-                        }
-                    }
+                for _ in 0..end_iteration {
+                    run_body_sorting_fittest(self);
                 }
-
-                iteration_counter = end_iteration;
+                self.iteration_counter = end_iteration;
             },
             SimulationType::EndFactor(end_factor) => {
-                match self.type_of_fittest {
-                    FittestType::GlobalFittest => {
-                        loop {
-                            if self.improvement_factor <= end_factor { break }
-                            run_body_global_fittest (self);
-                            iteration_counter = iteration_counter + 1;
-                        }
-                    },
-                    FittestType::LocalFittest => {
-                        loop {
-                            if self.improvement_factor <= end_factor { break }
-                            run_body_local_fittest(self);
-                            iteration_counter = iteration_counter + 1;
-                        }
-                    },
-                    FittestType::RandomFittest => {
-                        loop {
-                            if self.improvement_factor <= end_factor { break }
-                            run_body_random_fittest (self);
-                            iteration_counter = iteration_counter + 1;
-                        }
-                    },
-                    FittestType::SortingFittest => {
-                        loop {
-                            if self.improvement_factor <= end_factor { break }
-                            run_body_sorting_fittest (self);
-                            iteration_counter = iteration_counter + 1;
-                        }
-                    }
+                loop {
+                    if self.improvement_factor <= end_factor { break }
+                    run_body_sorting_fittest (self);
+                    self.iteration_counter = self.iteration_counter + 1;
                 }
             },
             SimulationType::EndFittness(end_fittness) => {
-                match self.type_of_fittest {
-                    FittestType::GlobalFittest => {
-                        loop {
-                            if self.fittest.fittness <= end_fittness { break }
-                            run_body_global_fittest(self);
-                            iteration_counter = iteration_counter + 1;
-                        }
-                    },
-                    FittestType::LocalFittest => {
-                        loop {
-                            if self.fittest.fittness <= end_fittness { break }
-                            run_body_local_fittest(self);
-                            iteration_counter = iteration_counter + 1;
-                        }
-                    },
-                    FittestType::RandomFittest => {
-                        loop {
-                            if self.fittest.fittness <= end_fittness { break }
-                            run_body_random_fittest(self);
-                            iteration_counter = iteration_counter + 1;
-                        }
-                    },
-                    FittestType::SortingFittest => {
-                        loop {
-                            if self.fittest.fittness <= end_fittness { break }
-                            run_body_sorting_fittest(self);
-                            iteration_counter = iteration_counter + 1;
-                        }
-                    }
+                loop {
+                    if self.fittest.fittness <= end_fittness { break }
+                    run_body_sorting_fittest(self);
+                    self.iteration_counter = self.iteration_counter + 1;
                 }
             }
         }
 
-        // sort all individuals by fittness
-        self.population.sort_by(|a, b| a.fittness.partial_cmp(&b.fittness).unwrap());
-
         let end_time = precise_time_ns();
 
         self.total_time_in_ms = ((end_time - start_time) as f64) / (1000.0 * 1000.0);
-        self.iteration_counter = iteration_counter;
     }
 
     pub fn print_fittness(&self) {
         for wrapper in self.population.iter() {
-            println!("fittness: {}", wrapper.fittness);
+            println!("fittness: {}, num_of_mutations: {}", wrapper.fittness, wrapper.num_of_mutations);
         }
     }
 }
@@ -258,6 +124,30 @@ pub struct IndividualWrapper<T: Individual> {
     pub individual: T,
     fittness: f64,
     num_of_mutations: u32
+}
+
+impl<T: Individual> PartialEq for IndividualWrapper<T> {
+    fn eq(&self, other: &IndividualWrapper<T>) -> bool {
+        self.fittness == other.fittness
+    }
+}
+
+impl<T: Individual> Eq for IndividualWrapper<T>{}
+
+impl<T: Individual> Ord for IndividualWrapper<T> {
+    fn cmp(&self, other: &IndividualWrapper<T>) -> Ordering {
+        if self.fittness < other.fittness { Ordering::Less }
+        else if self.fittness > other.fittness { Ordering::Greater }
+        else { Ordering::Equal }
+    }
+}
+
+impl<T: Individual> PartialOrd for IndividualWrapper<T> {
+    fn partial_cmp(&self, other: &IndividualWrapper<T>) -> Option<Ordering> {
+        if self.fittness < other.fittness { Some(Ordering::Less) }
+        else if self.fittness > other.fittness { Some(Ordering::Greater) }
+        else { Some(Ordering::Equal) }
+    }
 }
 
 pub trait Individual {
@@ -277,12 +167,12 @@ pub enum BuilderResult<T: Individual + Send + Sync> {
         Ok(Simulation<T>)
 }
 
-impl<T: Individual + Clone + Send + Sync> SimulationBuilder<T> {
+impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     pub fn new() -> SimulationBuilder<T> {
         SimulationBuilder {
             simulation: Simulation {
                 type_of_simulation: SimulationType::EndIteration(10),
-                num_of_individuals: 10,
+                num_of_individuals: 0,
                 num_of_threads: 2,
                 improvement_factor: std::f64::MAX,
                 original_fittness: std::f64::MAX,
@@ -297,7 +187,6 @@ impl<T: Individual + Clone + Send + Sync> SimulationBuilder<T> {
                 output_new_fittest: true,
                 random_fittest: 1,
                 pool: make_pool(4).unwrap(),
-                type_of_fittest: FittestType::GlobalFittest,
             }
         }
     }
@@ -340,27 +229,6 @@ impl<T: Individual + Clone + Send + Sync> SimulationBuilder<T> {
 
     pub fn output_new_fittest(mut self, output_new_fittest: bool) -> SimulationBuilder<T> {
         self.simulation.output_new_fittest = output_new_fittest;
-        self
-    }
-
-    pub fn global_fittest(mut self) -> SimulationBuilder<T> {
-        self.simulation.type_of_fittest = FittestType::GlobalFittest;
-        self
-    }
-
-    pub fn local_fittest(mut self) -> SimulationBuilder<T> {
-        self.simulation.type_of_fittest = FittestType::LocalFittest;
-        self
-    }
-
-    pub fn sorting_fittest(mut self) -> SimulationBuilder<T> {
-        self.simulation.type_of_fittest = FittestType::SortingFittest;
-        self
-    }
-
-    pub fn random_fittest(mut self, count: u32) -> SimulationBuilder<T> {
-        self.simulation.type_of_fittest = FittestType::RandomFittest;
-        self.simulation.random_fittest = count;
         self
     }
 
@@ -411,18 +279,12 @@ impl<T: Individual + Clone + Send + Sync> SimulationBuilder<T> {
             output_new_fittest: self.simulation.output_new_fittest,
             random_fittest: self.simulation.random_fittest,
             pool: self.simulation.pool,
-            type_of_fittest: self.simulation.type_of_fittest,
         };
 
         if self.simulation.num_of_individuals < 3 { return BuilderResult::TooLowIndividuals }
 
         if let SimulationType::EndIteration(end_iteration) = self.simulation.type_of_simulation {
             if end_iteration < 10 { return BuilderResult::TooLowEndIterration }
-        }
-
-        if result.type_of_fittest == FittestType::RandomFittest {
-            if result.random_fittest >= result.num_of_individuals ||
-               result.random_fittest == 0 { return BuilderResult::InvalidFittestCount }
         }
 
         BuilderResult::Ok(result)
