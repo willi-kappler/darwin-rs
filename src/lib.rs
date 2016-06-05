@@ -1,3 +1,11 @@
+// darwin-rs: evolitionary algorithms with rust
+//
+// Written by Willi Kappler, Version 0.1
+//
+// https://github.com/willi-kappler/darwin-rs
+//
+// License: MIT
+
 extern crate time;
 extern crate jobsteal;
 

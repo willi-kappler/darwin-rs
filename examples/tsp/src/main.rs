@@ -1,3 +1,10 @@
+// This example implements the tsp (travelling salesman problem) problem:
+// https://en.wikipedia.org/wiki/Travelling_salesman_problem
+// using an evolutionary algorithm.
+//
+// Note that evolutionary algorithms do no guarantee to always find the optimal solution.
+// But they can get very close
+
 extern crate rand;
 
 // internal crates

@@ -1,12 +1,6 @@
 // This example implements the queens problem:
 // https://en.wikipedia.org/wiki/Eight_queens_puzzle
 // using an evolutionary algorithm.
-//
-// It's just to show you how ot use the libraray, if you really want to solve the problem
-// you'd be better off using the back tracking algorithm.
-//
-// Note that evolutionary algorithms do no guarantee to always find the optimal solution.
-// But they can get very close
 
 extern crate rand;
 

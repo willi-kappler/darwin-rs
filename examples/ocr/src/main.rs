@@ -1,3 +1,11 @@
+// This example implements an OCR (optical character recognition):
+// https://en.wikipedia.org/wiki/Optical_character_recognition
+// using an evolutionary algorithm.
+//
+// Note that evolutionary algorithms do no guarantee to always find the optimal solution.
+// But they can get very close
+
+
 extern crate rand;
 extern crate image;
 extern crate imageproc;

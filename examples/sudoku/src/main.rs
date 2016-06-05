@@ -1,3 +1,7 @@
+// This example implements a sudoku solver:
+// https://en.wikipedia.org/wiki/Sudoku
+// using an evolutionary algorithm.
+
 extern crate rand;
 
 // internal crates
