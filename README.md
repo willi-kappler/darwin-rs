@@ -109,8 +109,8 @@ See also the example folders for full working demonstrations.
 
 
 # Used crates:
-- [Time](): time usage statistics
-- [Jobsteal](): parallelization
+- [Time](https://doc.rust-lang.org/time/time/index.html): time usage statistics
+- [Jobsteal](https://github.com/rphmeier/jobsteal): parallelization
 
 TODO:
 - [ ] Add documentation comments for library
