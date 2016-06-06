@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/willi-kappler/darwin-rs.svg?branch=master)](https://travis-ci.org/willi-kappler/darwin-rs)
+
 # darwin-rs
 This library allows you to write evolutionary algorithms (EA) using the [Rust](https://www.rust-lang.org/) programming language.
 
