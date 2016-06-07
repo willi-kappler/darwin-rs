@@ -54,6 +54,8 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub total_time_in_ms: f64,
     /// The number of current iteration. This changes with every iteration and is used by the `EndIteration` enum.
     pub iteration_counter: u32,
+    /// The amount of iteration to wait until individuals will be resetted.
+    pub iteration_reset_limit: u32,
     /// A flag that specifies if the sumulation should write a message every time a new most fittest individual is found.
     pub output_new_fittest: bool,
     /// The thread pool used by the `jobsteal` crate
@@ -149,7 +151,8 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             SimulationType::EndIteration(end_iteration) => {
                 for i in 0..end_iteration {
                     run_body_sorting_fittest(self);
-                    self.iteration_counter = i
+                    self.iteration_counter = i;
+                    self.check_iteration_limit();
                 }
             },
             SimulationType::EndFactor(end_factor) => {
@@ -157,6 +160,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                     if self.improvement_factor <= end_factor { break }
                     run_body_sorting_fittest (self);
                     self.iteration_counter = self.iteration_counter + 1;
+                    self.check_iteration_limit();
                 }
             },
             SimulationType::EndFittness(end_fittness) => {
@@ -164,6 +168,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                     if self.fittest.fittness <= end_fittness { break }
                     run_body_sorting_fittest(self);
                     self.iteration_counter = self.iteration_counter + 1;
+                    self.check_iteration_limit();
                 }
             }
         }
@@ -178,6 +183,22 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     pub fn print_fittness(&self) {
         for wrapper in self.population.iter() {
             println!("fittness: {}, num_of_mutations: {}", wrapper.fittness, wrapper.num_of_mutations);
+        }
+    }
+
+    /// This function checks if the current iteration counter is above a certain threshold value.
+    /// If yes, all the individuals (except the first one) will be replaced by initial ones.
+    /// Thus local minima are avoided. The limit threshold is doubled every time after that.
+    fn check_iteration_limit(&mut self) {
+        if self.iteration_counter > self.iteration_reset_limit {
+            self.iteration_reset_limit = self.iteration_reset_limit * 2;
+            println!("new iteration_reset_limit: {}", self.iteration_reset_limit);
+            // Keep fittest individual (= the first in the list at index 0),
+            // so we start the for loop with 1:
+            for i in 1..self.population.len() {
+                self.population[i].individual = Individual::new();
+                self.population[i].fittness = self.population[i].individual.calculate_fittness();
+            }
         }
     }
 }
@@ -274,6 +295,7 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
                 population: Vec::new(),
                 total_time_in_ms: 0.0,
                 iteration_counter: 0,
+                iteration_reset_limit: 8000,
                 output_new_fittest: true,
                 pool: make_pool(4).unwrap(),
             }
@@ -386,6 +408,7 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
             population: self.simulation.population,
             total_time_in_ms: self.simulation.total_time_in_ms,
             iteration_counter: self.simulation.iteration_counter,
+            iteration_reset_limit: self.simulation.iteration_reset_limit,
             output_new_fittest: self.simulation.output_new_fittest,
             pool: self.simulation.pool,
         };
