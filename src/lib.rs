@@ -187,15 +187,15 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     }
 
     /// This function checks if the current iteration counter is above a certain threshold value.
-    /// If yes, all the individuals (except the first one) will be replaced by initial ones.
+    /// If yes, all the individuals will be replaced by new initial ones.
     /// Thus local minima are avoided. The limit threshold is doubled every time after that.
     fn check_iteration_limit(&mut self) {
         if self.iteration_counter > self.iteration_reset_limit {
             self.iteration_reset_limit = self.iteration_reset_limit * 2;
             println!("new iteration_reset_limit: {}", self.iteration_reset_limit);
-            // Keep fittest individual (= the first in the list at index 0),
-            // so we start the for loop with 1:
-            for i in 1..self.population.len() {
+
+            // Kill all individuals since we are stuck in a local minimum:
+            for i in 0..self.population.len() {
                 self.population[i].individual = Individual::new();
                 self.population[i].fittness = self.population[i].individual.calculate_fittness();
             }
