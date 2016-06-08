@@ -98,7 +98,9 @@ fn main() {
     println!("Darwin test: traveling salesman problem");
 
     let tsp_builder = SimulationBuilder::<CityItem>::new()
-        .factor(0.34)
+        // .factor(0.34)
+        .fittness(460.0)
+
         // .factor(0.3175) // use this line for optimal solution...
         // .fittness(419.0) // ...or this line
         .threads(2)
