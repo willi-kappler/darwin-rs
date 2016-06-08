@@ -56,6 +56,8 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub iteration_counter: u32,
     /// The amount of iteration to wait until individuals will be resetted.
     pub reset_limit: u32,
+    /// The reset counter, if reset_counter >= reset_limit, all the individuals are discarded and the
+    /// simulation restarts anew with an increased reset_limit
     pub reset_counter: u32,
     /// A flag that specifies if the sumulation should write a message every time a new most fittest individual is found.
     pub output_new_fittest: bool,
@@ -196,7 +198,8 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             self.reset_counter = 0;
             println!("new reset_limit: {}", self.reset_limit);
 
-            // Kill all individuals since we are stuck in a local minimum:
+            // Kill all individuals since we are stuck in a local minimum.
+            // Why is it so ? Because the simulation is still running!
             for i in 0..self.population.len() {
                 self.population[i].individual = Individual::new();
                 self.population[i].fittness = self.population[i].individual.calculate_fittness();

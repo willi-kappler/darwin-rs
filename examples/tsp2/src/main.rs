@@ -69,14 +69,37 @@ impl Individual for CityItem {
         let mut rng = rand::thread_rng();
         // Keep stating position always the same:
         let index1: usize = rng.gen_range(1, self.city_positions.len());
-        let mut index2: usize = rng.gen_range(1, self.city_positions.len());
 
-        // Small optimisation
-        while index1 == index2 {
-            index2 = rng.gen_range(1, self.city_positions.len());
+        // choose mutate operation
+        let operation: u8 = rng.gen_range(1, 3);
+
+        match operation {
+            0 => { // just swap two positions
+                let mut index2: usize = rng.gen_range(1, self.city_positions.len());
+
+                // Small optimisation
+                while index1 == index2 {
+                    index2 = rng.gen_range(1, self.city_positions.len());
+                }
+
+                self.path.swap(index1, index2);
+            },
+            1 => { // shift (roate) left n items
+                let n: usize = rng.gen_range(1, 20);
+                if index1 + n < self.city_positions.len() {
+                    let tmp = self.city_positions.remove(index1);
+                    self.city_positions.insert(index1 + n, tmp);
+                }
+            },
+            2 => { // shift (roate) right n items
+                let n: usize = rng.gen_range(1, 20);
+                if index1 + n < self.city_positions.len() {
+                    let tmp = self.city_positions.remove(index1 + n);
+                    self.city_positions.insert(index1, tmp);
+                }
+            },
+            _ => println!("unknown operation: {}", operation)
         }
-
-        self.path.swap(index1, index2);
     }
 
     // Fittness means here: the length of the route, the shorter the better
@@ -98,11 +121,7 @@ fn main() {
     println!("Darwin test: traveling salesman problem");
 
     let tsp_builder = SimulationBuilder::<CityItem>::new()
-        // .factor(0.34)
-        .fittness(470.0)
-
-        // .factor(0.3175) // use this line for optimal solution...
-        // .fittness(419.0) // ...or this line
+        .fittness(387.0)
         .threads(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
