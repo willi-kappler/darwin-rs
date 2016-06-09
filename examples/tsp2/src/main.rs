@@ -85,14 +85,14 @@ impl Individual for CityItem {
                 self.path.swap(index1, index2);
             },
             1 => { // shift (roate) left n items
-                let n: usize = rng.gen_range(1, 20);
+                let n: usize = rng.gen_range(1, self.city_positions.len());
                 if index1 + n < self.city_positions.len() {
                     let tmp = self.city_positions.remove(index1);
                     self.city_positions.insert(index1 + n, tmp);
                 }
             },
             2 => { // shift (roate) right n items
-                let n: usize = rng.gen_range(1, 20);
+                let n: usize = rng.gen_range(1, self.city_positions.len());
                 if index1 + n < self.city_positions.len() {
                     let tmp = self.city_positions.remove(index1 + n);
                     self.city_positions.insert(index1, tmp);
