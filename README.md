@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/willi-kappler/darwin-rs.svg?branch=master)](https://travis-ci.org/willi-kappler/darwin-rs)
-
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 # darwin-rs
@@ -16,7 +15,7 @@ The example folder contains three examples:
 
 - TSP (traveling salesman problem): the classic type of problem for EA
 - Sudoku: a sudoku solver using EA
-- Queens: solving the queens problem with EA. Not as fast as [this one](https://github.com/reem/rust-n-queens) ;-)
+- Queens: solving the queens problem with EA. Although not as fast as [this one](https://github.com/reem/rust-n-queens) ;-)
 
 # Usage:
 Add the following to the Cargo.toml in your project:
@@ -93,7 +92,7 @@ let my_builder = SimulationBuilder::<MyStruct>::new()
     }
 ```
 
-**factor()**: Sets the termination condition: if the inprovement factor is better or equal to this value, the simulation stops.
+**factor()**: Sets the termination condition: if the improvement factor is better or equal to this value, the simulation stops.
 
 **threads()**: Number of threads to use for the simulation.
 
@@ -106,21 +105,32 @@ let my_builder = SimulationBuilder::<MyStruct>::new()
 Then just do a match on the result of ```finalize()``` and call ```simulation.run()``` to start the simulation. After the finishing it, you can access some statistics (```total_time_in_ms```, ```improvement_factor```, ```iteration_counter```) and the population of course:
 
 ```rust
-    for individual in my_simulation.population {...}
+    for wrapper in my_simulation.population {...}
 ```
-
-See also the example folders for full working demonstrations.
+Each individual is wrapped inside a ```Wrapper``` struct that contains additional information needed for the simulation: **fittness** and the **number of mutations**.
+See also the example folders for full working programs.
 
 
 # Used crates:
-- [Time](https://doc.rust-lang.org/time/time/index.html): time usage statistics
-- [Jobsteal](https://github.com/rphmeier/jobsteal): parallelization
+- [time](https://doc.rust-lang.org/time/time/index.html): time usage statistics
+- [jobsteal](https://github.com/rphmeier/jobsteal): parallelization
+
+# Similar crates:
+- [genetic-files](https://github.com/vadixidav/genetic-files)
+- [RsGenetic](https://github.com/m-decoster/RsGenetic)
+- [evo-rs](https://github.com/mneumann/evo-rs)
+- [calco-rs](https://github.com/Kerosene2000/calco-rs)
+- [GenGen](https://crates.io/crates/GenGen)
+- [parasailors](https://github.com/dikaiosune/parasailors)
+- [random-wheel-rs](https://github.com/Kerosene2000/random-wheel-rs)
+- [roulette-wheel-rs](https://github.com/Kerosene2000/roulette-wheel-rs)
 
 TODO:
-- [ ] Add documentation comments for library
-- [ ] Add more test cases (ocr, ...)
+- [ ] Add more documentation comments for library
+- [ ] Add test cases
+- [ ] Add more examples (ocr, ...)
 - [ ] Maybe use phantom type for builder pattern to detect configuration error at compile type ? (https://www.reddit.com/r/rust/comments/2pgrz7/required_parameters_utilizing_the_builder_pattern/)
-- [ ] Add super optimization (only allow changes that have an improvement)
-- [ ] Add possibility to load and save population / individuals in order to cancel / resume simulation (serde ?)
+- [ ] Add super optimization (only allow changes that have an improvement) ?
+- [ ] Add possibility to load and save population / individuals in order to cancel / resume simulation (serde)
 
 Any feedback is welcome!

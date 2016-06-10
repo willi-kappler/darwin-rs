@@ -255,6 +255,15 @@ pub trait Individual {
     fn new() -> Self;
     /// This method mutates the individual. Usually this is a cheap and easy to implement function.
     /// In order to improve the simulation, the user can make this function a bit smarter.
+    /// This is nicely shown in the tsp and tsp2 example. The tsp2 example contains three types of mutation,
+    /// tsp just one:
+    /// tsp: 1. swap position
+    /// tsp2: 1. swap position, 2. rotate (shift) positions to the left and 3. rotate positions to the right.
+    /// By just adding these two additional mutation types the simulation converges much faster to the optimum.
+    /// Of course rotation can be "simulated" by a number of swaps, but re-doing all these steps takes time and
+    /// the chances that these steps are taken in the correct order by just randomly swaping positions are very slim.
+    /// So just start with one simple mutation function (one operation) and add more and more "smarter" mutation
+    /// types to the mutate function.
     fn mutate(&mut self);
     /// This method calculates the fittness for the individual. Usually this is an expensive operation Append
     /// a bite mor difficult to implement, compared to the mutation method above.
