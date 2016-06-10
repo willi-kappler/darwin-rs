@@ -76,6 +76,9 @@ impl Individual for CityItem {
             index2 = rng.gen_range(1, self.city_positions.len());
         }
 
+        // Here we just swap the two indices. Compare this to example/tsp2 where we have
+        // a second mutation operation and the results are much better.
+
         self.path.swap(index1, index2);
     }
 

@@ -69,34 +69,33 @@ impl Individual for CityItem {
         let mut rng = rand::thread_rng();
         // Keep stating position always the same:
         let index1: usize = rng.gen_range(1, self.city_positions.len());
+        let mut index2: usize = rng.gen_range(1, self.city_positions.len());
 
-        // choose mutate operation
-        let operation: u8 = rng.gen_range(1, 3);
+        // Small optimisation
+        while index1 == index2 {
+            index2 = rng.gen_range(1, self.city_positions.len());
+        }
+
+        // Compared to examples/tsp/ here we add a second operation:
+        // Additionaly to swaping indices we also roate (shift) items around.
+        // And just by adding this second mutation operation, the resulst converge
+        // much faster to the optimum.
+        // You can add a third operation her if you want (for ex. mirrorig), or
+        // try to leave the swap opersion out, just to see if it runs better.
+
+        // Choose mutate operation
+        let operation: u8 = rng.gen_range(1, 2);
 
         match operation {
-            0 => { // just swap two positions
-                let mut index2: usize = rng.gen_range(1, self.city_positions.len());
-
-                // Small optimisation
-                while index1 == index2 {
-                    index2 = rng.gen_range(1, self.city_positions.len());
-                }
-
+            0 => { // Just swap two positions
                 self.path.swap(index1, index2);
             },
-            1 => { // shift (roate) left n items
-                let n: usize = rng.gen_range(1, self.city_positions.len());
-                if index1 + n < self.city_positions.len() {
-                    let tmp = self.city_positions.remove(index1);
-                    self.city_positions.insert(index1 + n, tmp);
-                }
+            1 => { // Rotate (shift) items
+                let tmp = self.city_positions.remove(index1);
+                self.city_positions.insert(index2, tmp);
             },
-            2 => { // shift (roate) right n items
-                let n: usize = rng.gen_range(1, self.city_positions.len());
-                if index1 + n < self.city_positions.len() {
-                    let tmp = self.city_positions.remove(index1 + n);
-                    self.city_positions.insert(index1, tmp);
-                }
+            2 => { // Add your new operation here, for ex. mirror between index1 and index2:
+
             },
             _ => println!("unknown operation: {}", operation)
         }

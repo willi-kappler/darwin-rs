@@ -108,7 +108,7 @@ Then just do a match on the result of ```finalize()``` and call ```simulation.ru
     for wrapper in my_simulation.population {...}
 ```
 Each individual is wrapped inside a ```Wrapper``` struct that contains additional information needed for the simulation: **fittness** and the **number of mutations**.
-See also the example folders for full working programs.
+See also the example folder for full working programs.
 
 
 # Used crates:

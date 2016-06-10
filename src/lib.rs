@@ -254,21 +254,21 @@ pub trait Individual {
     /// This method creates a new individual.
     fn new() -> Self;
     /// This method mutates the individual. Usually this is a cheap and easy to implement function.
-    /// In order to improve the simulation, the user can make this function a bit smarter.
-    /// This is nicely shown in the tsp and tsp2 example. The tsp2 example contains three types of mutation,
+    /// In order to improve the simulation, the user can make this function a bit "smarter".
+    /// This is nicely shown in the tsp and tsp2 example. The tsp2 example contains two types of mutation,
     /// tsp just one:
-    /// tsp: 1. swap position
-    /// tsp2: 1. swap position, 2. rotate (shift) positions to the left and 3. rotate positions to the right.
-    /// By just adding these two additional mutation types the simulation converges much faster to the optimum.
+    /// examples/tsp: 1. swap position
+    /// examples/tsp2: 1. swap position, 2. rotate (shift) positions
+    /// By just adding this one additional mutation type the simulation converges much faster to the optimum.
     /// Of course rotation can be "simulated" by a number of swaps, but re-doing all these steps takes time and
     /// the chances that these steps are taken in the correct order by just randomly swaping positions are very slim.
     /// So just start with one simple mutation function (one operation) and add more and more "smarter" mutation
     /// types to the mutate function.
     fn mutate(&mut self);
-    /// This method calculates the fittness for the individual. Usually this is an expensive operation Append
-    /// a bite mor difficult to implement, compared to the mutation method above.
+    /// This method calculates the fittness for the individual. Usually this is an expensive operation and
+    /// a bit more difficult to implement, compared to the mutation method above.
     /// The lower the fittness value, the better (healthier) the individual is and the closer the individual is to the
-    /// perfect solution. This can also correspont to the number of errors for example in the sudoku or queens problem case.
+    /// perfect solution. This can also correspont to the number of errors like for example in the sudoku or queens problem case.
     fn calculate_fittness(&self) -> f64;
 }
 
