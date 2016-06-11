@@ -6,7 +6,7 @@ license = "MIT"
 description = "Evolutionary algorithms library written in Rust."
 readme = "README.md"
 repository = "https://github.com/willi-kappler/darwin-rs"
-exclude = ["*.png", "example"]
+exclude = ["*.png", "example", "target"]
 keywords = ["evolutionary", "algorithm", "EA", "darwin"]
 documentation = "https://willi-kappler.github.io/darwin-rs"
 
