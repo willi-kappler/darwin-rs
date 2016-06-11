@@ -7,7 +7,8 @@ description = "Evolutionary algorithms library written in Rust."
 readme = "README.md"
 repository = "https://github.com/willi-kappler/darwin-rs"
 exclude = ["*.png", "example"]
-keywords = ["evolutionary", "algorithm", "EA"]
+keywords = ["evolutionary", "algorithm", "EA", "darwin"]
+documentation = "https://willi-kappler.github.io/darwin-rs"
 
 [dependencies]
 time = "0.1"

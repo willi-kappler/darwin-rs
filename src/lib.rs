@@ -1,6 +1,6 @@
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.1 (2016.06.05)
+//! Written by Willi Kappler, Version 0.1 (2016.06.11)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -257,8 +257,11 @@ pub trait Individual {
     /// In order to improve the simulation, the user can make this function a bit "smarter".
     /// This is nicely shown in the tsp and tsp2 example. The tsp2 example contains two types of mutation,
     /// tsp just one:
+    ///
     /// examples/tsp: 1. swap position
+    ///
     /// examples/tsp2: 1. swap position, 2. rotate (shift) positions
+    ///
     /// By just adding this one additional mutation type the simulation converges much faster to the optimum.
     /// Of course rotation can be "simulated" by a number of swaps, but re-doing all these steps takes time and
     /// the chances that these steps are taken in the correct order by just randomly swaping positions are very slim.
