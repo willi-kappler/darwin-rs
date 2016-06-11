@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Pool` struct in crate `jobsteal`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Pool">
+
+    <title>jobsteal::Pool - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>jobsteal</a></p><script>window.sidebarCurrent = {name: 'Pool', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>jobsteal</a>::<wbr><a class='struct' href=''>Pool</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-1340' class='srclink' href='../src/jobsteal/lib.rs.html#340-344' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Pool {
+    // some fields omitted
+}</pre><div class='docblock'><p>The work pool manages worker threads in a work-stealing fork-join thread pool.</p>
+
+<p>You can submit jobs to the pool directly using <code>Pool::submit</code>. This has similar
+semantics to the standard library <code>thread::spawn</code>, in that the work provided must
+fully own its data.</p>
+
+<p><code>Pool</code> also provides a facility for spawning scoped jobs via the &quot;scope&quot; function.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl <a class='struct' href='../jobsteal/struct.Pool.html' title='jobsteal::Pool'>Pool</a></code></h3><div class='impl-items'><h4 id='method.synchronize' class='method'><code>fn <a href='#method.synchronize' class='fnname'>synchronize</a>(&amp;mut self)</code></h4>
+<div class='docblock'><p>Finish all current jobs which are queued, and synchronize the workers until
+it&#39;s time to start again.</p>
+
+<p>If any of the threads have panicked, that panic
+will be propagated to this thread. Until the next job is submitted,
+workers will block, allowing other threads to have higher priority.</p>
+</div><h4 id='method.scope' class='method'><code>fn <a href='#method.scope' class='fnname'>scope</a>&lt;'pool, 'new, F, R&gt;(&amp;'pool mut self, f: F) -&gt; R <span class='where'>where F: 'new + <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnOnce.html' title='core::ops::FnOnce'>FnOnce</a>(&amp;<a class='struct' href='../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>&lt;'pool, 'new&gt;) -&gt; R, R: 'new</span></code></h4>
+<div class='docblock'><p>Create a new spawning scope for submitting jobs.</p>
+
+<p>This is shorthand for <code>my_pool.spawner().scope(|scope| ...)</code>.</p>
+
+<p>Any jobs submitted in this scope will be completed by the end of this function call.
+See Spawner::scope for a more detailed description.</p>
+</div><h4 id='method.recurse' class='method'><code>fn <a href='#method.recurse' class='fnname'>recurse</a>&lt;'a, F&gt;(&amp;'a mut self, f: F) <span class='where'>where F: 'static + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnOnce.html' title='core::ops::FnOnce'>FnOnce</a>(&amp;<a class='struct' href='../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>&lt;'a, 'static&gt;)</span></code></h4>
+<div class='docblock'><p>Execute a job which strictly owns its contents and is to be given access to the thread pool.</p>
+
+<p>The execution of this function may be deferred beyond this function call,
+to as far as either the next call to <code>synchronize</code> or the pool&#39;s destructor.</p>
+
+<p>This is shorthand for <code>my_pool.spawner().recurse(my_job);</code></p>
+
+<h1 id='safety' class='section-header'><a href='#safety'>Safety</a></h1>
+<p>In the general case, it is safe to submit jobs which only strictly outlive the pool.
+However, there is always the chance that the pool could be leaked, violating the
+invariant that the job is completed while its data is still alive.</p>
+</div><h4 id='method.submit' class='method'><code>fn <a href='#method.submit' class='fnname'>submit</a>&lt;'a, F&gt;(&amp;'a mut self, f: F) <span class='where'>where F: 'static + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnOnce.html' title='core::ops::FnOnce'>FnOnce</a>()</span></code></h4>
+<div class='docblock'><p>Execute a job which strictly owns its contents.</p>
+
+<p>The execution of this function may be deferred beyond this function call,
+to as far as either the next call to <code>synchronize</code> or the pool&#39;s destructor.</p>
+
+<p>This is shorthand for <code>my_pool.spawner().submit(my_job);</code></p>
+
+<h1 id='safety-1' class='section-header'><a href='#safety-1'>Safety</a></h1>
+<p>In the general case, it is safe to submit jobs which only strictly outlive the pool.
+However, there is always the chance that the pool could be leaked, violating the
+invariant that the job is completed while its data is still alive.</p>
+</div><h4 id='method.spin_up' class='method'><code>fn <a href='#method.spin_up' class='fnname'>spin_up</a>(&amp;mut self)</code></h4>
+<div class='docblock'><p>Spin up all the workers, in case they were in a paused
+state.</p>
+</div><h4 id='method.spawner' class='method'><code>fn <a href='#method.spawner' class='fnname'>spawner</a>&lt;'a&gt;(&amp;'a mut self) -&gt; <a class='struct' href='../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>&lt;'a, 'static&gt;</code></h4>
+<div class='docblock'><p>Get the pool&#39;s spawner.</p>
+
+<p>This will initally only accept jobs which outive &#39;static,
+but the scope can be focused further.
+See the <code>Spawner</code> documentation for more information.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html' title='core::ops::Drop'>Drop</a> for <a class='struct' href='../jobsteal/struct.Pool.html' title='jobsteal::Pool'>Pool</a></code></h3><div class='impl-items'><h4 id='method.drop' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html#tymethod.drop' class='fnname'>drop</a>(&amp;mut self)</code></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "jobsteal";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["fold",""]],"trait":[["Folder","Something which can \"fold\" two items together."]]});

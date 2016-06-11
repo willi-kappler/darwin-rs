@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["collect","Collect the elements of this iterator into a collection."]],"trait":[["Combine","Items that can be combined with another of the same type."]]});

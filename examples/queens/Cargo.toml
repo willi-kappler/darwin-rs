@@ -1,9 +1,0 @@
-[package]
-name = "queens"
-version = "0.1.0"
-authors = ["Willi Kappler, grandor@gmx.de"]
-
-[dependencies]
-time = "0.1"
-rand = "0.3"
-darwin-rs = {path = "../../../darwin-rs"}

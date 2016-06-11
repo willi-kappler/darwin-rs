@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Simulation` struct in crate `darwin_rs`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Simulation">
+
+    <title>darwin_rs::Simulation - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>darwin_rs</a></p><script>window.sidebarCurrent = {name: 'Simulation', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>darwin_rs</a>::<wbr><a class='struct' href=''>Simulation</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-32' class='srclink' href='../src/darwin_rs/src/lib.rs.html#38-66' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Simulation&lt;T: <a class='trait' href='../darwin_rs/trait.Individual.html' title='darwin_rs::Individual'>Individual</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt; {
+    pub type_of_simulation: <a class='enum' href='../darwin_rs/enum.SimulationType.html' title='darwin_rs::SimulationType'>SimulationType</a>,
+    pub num_of_individuals: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub num_of_threads: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>,
+    pub improvement_factor: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>,
+    pub original_fittness: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>,
+    pub fittest: <a class='struct' href='../darwin_rs/struct.IndividualWrapper.html' title='darwin_rs::IndividualWrapper'>IndividualWrapper</a>&lt;T&gt;,
+    pub population: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../darwin_rs/struct.IndividualWrapper.html' title='darwin_rs::IndividualWrapper'>IndividualWrapper</a>&lt;T&gt;&gt;,
+    pub total_time_in_ms: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>,
+    pub iteration_counter: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub reset_limit: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub reset_counter: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub output_new_fittest: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub pool: <a class='struct' href='../jobsteal/struct.Pool.html' title='jobsteal::Pool'>Pool</a>,
+}</pre><div class='docblock'><p>The <code>Simulation</code> type. Contains all the information / configuration for the simulation to run.</p>
+</div><h2 class='fields'>Fields</h2>
+<table><tr class='stab '>
+                             <td id='structfield.type_of_simulation'><code>type_of_simulation</code></td><td><div class='docblock'><p>How should the simulation stop ?</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.num_of_individuals'><code>num_of_individuals</code></td><td><div class='docblock'><p>The number of individuals for the whole simulation.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.num_of_threads'><code>num_of_threads</code></td><td><div class='docblock'><p>The number of threads to use to speed up calculation.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.improvement_factor'><code>improvement_factor</code></td><td><div class='docblock'><p>The current improvement factor, that means the ration between the first and the current fittness.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.original_fittness'><code>original_fittness</code></td><td><div class='docblock'><p>The very first calculated fittness, when the simulation just started.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.fittest'><code>fittest</code></td><td><div class='docblock'><p>The current fittest individual. This will change during the simulation as soon as a new more fittest individual is found</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.population'><code>population</code></td><td><div class='docblock'><p>The population for the simulation. Contains all individuals for the simulation.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.total_time_in_ms'><code>total_time_in_ms</code></td><td><div class='docblock'><p>The total run time for the simulation. This will be calculated once the stimulation has finished.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.iteration_counter'><code>iteration_counter</code></td><td><div class='docblock'><p>The number of current iteration. This changes with every iteration and is used by the <code>EndIteration</code> enum.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.reset_limit'><code>reset_limit</code></td><td><div class='docblock'><p>The amount of iteration to wait until individuals will be resetted.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.reset_counter'><code>reset_counter</code></td><td><div class='docblock'><p>The reset counter, if reset_counter &gt;= reset_limit, all the individuals are discarded and the
+simulation restarts anew with an increased reset_limit</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.output_new_fittest'><code>output_new_fittest</code></td><td><div class='docblock'><p>A flag that specifies if the sumulation should write a message every time a new most fittest individual is found.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.pool'><code>pool</code></td><td><div class='docblock'><p>The thread pool used by the <code>jobsteal</code> crate</p>
+</div></td></tr></table><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl&lt;T: <a class='trait' href='../darwin_rs/trait.Individual.html' title='darwin_rs::Individual'>Individual</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a>&gt; <a class='struct' href='../darwin_rs/struct.Simulation.html' title='darwin_rs::Simulation'>Simulation</a>&lt;T&gt;</code></h3><div class='docblock'><p>This implements the two functions <code>run</code> and <code>print_fittness</code> for the struct <code>Simulation</code>.</p>
+</div><div class='impl-items'><h4 id='method.run' class='method'><code>fn <a href='#method.run' class='fnname'>run</a>(&amp;mut self)</code></h4>
+<div class='docblock'><p>This actually runs the simulation.
+Depending on the type of simulation (EndIteration, EndFactor or EndFittness) the iteration loop will check for The
+stop condition accordingly.</p>
+</div><h4 id='method.print_fittness' class='method'><code>fn <a href='#method.print_fittness' class='fnname'>print_fittness</a>(&amp;self)</code></h4>
+<div class='docblock'><p>This is a helper function that the user can call after the simulation stops in order to see
+all the fittness values for all the individuals.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "darwin_rs";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

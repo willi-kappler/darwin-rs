@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["all","Consumes the iterator, returning true if all elements fulfill the predicate and false otherwise."],["any","Consumes the iterator, returning true if any element fulfills the predicate and false otherwise."]]});
