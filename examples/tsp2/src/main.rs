@@ -71,7 +71,7 @@ impl Individual for CityItem {
         let index1: usize = rng.gen_range(1, self.city_positions.len());
         let mut index2: usize = rng.gen_range(1, self.city_positions.len());
 
-        // Small optimisation
+        // Small optimisation to avoid a NOP
         while index1 == index2 {
             index2 = rng.gen_range(1, self.city_positions.len());
         }

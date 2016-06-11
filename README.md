@@ -13,7 +13,7 @@ Written by Willi Kappler, License: MIT - Version 0.1 (2016.06.05)
 
 The example folder contains three examples:
 
-- TSP (traveling salesman problem): the classic type of problem for EA
+- TSP (traveling salesman problem): the classic type of problem for EA (see two pictures above)
 - Sudoku: a sudoku solver using EA
 - Queens: solving the queens problem with EA. Although not as fast as [this one](https://github.com/reem/rust-n-queens) ;-)
 
