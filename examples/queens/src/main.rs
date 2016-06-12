@@ -10,9 +10,9 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
+use darwin_rs::{Individual, SimulationBuilder, Error};
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 struct Queens {
     board: Vec<u8>,
 }
@@ -140,9 +140,9 @@ fn main() {
         .finalize();
 
     match queens_builder {
-        BuilderResult::TooLowEndIterration => println!("more than 10 iteratons needed"),
-        BuilderResult::TooLowIndividuals => println!("more than 2 individuals needed"),
-        BuilderResult::Ok(mut queens_simulation) => {
+        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
+        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+        Ok(mut queens_simulation) => {
             queens_simulation.run();
 
             println!("total run time: {} ms", queens_simulation.total_time_in_ms);

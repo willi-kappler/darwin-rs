@@ -10,7 +10,7 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
+use darwin_rs::{Individual, SimulationBuilder, Error};
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
 fn fitness_of_one_cell(sudoku: &Vec<u8>, row: usize, col: usize) -> f64 {
@@ -162,9 +162,9 @@ fn main() {
         .finalize();
 
     match sudoku_builder {
-        BuilderResult::TooLowEndIterration => println!("more than 10 iteratons needed"),
-        BuilderResult::TooLowIndividuals => println!("more than 2 individuals needed"),
-        BuilderResult::Ok(mut sudoku_simulation) => {
+        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
+        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+        Ok(mut sudoku_simulation) => {
             sudoku_simulation.run();
 
             println!("total run time: {} ms", sudoku_simulation.total_time_in_ms);

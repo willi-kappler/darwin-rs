@@ -39,7 +39,7 @@ impl Individual for OCRItem {
 }
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
+use darwin_rs::{Individual, SimulationBuilder, Error};
 
 fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
                   face: &freetype::Face,
@@ -100,9 +100,9 @@ fn main() {
         .finalize();
 
     match tsp_builder {
-        BuilderResult::TooLowEndIterration => println!("more than 10 iteratons needed"),
-        BuilderResult::TooLowIndividuals => println!("more than 2 individuals needed"),
-        BuilderResult::Ok(mut tsp_simulation) => {
+        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
+        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+        Ok(mut tsp_simulation) => {
             // tsp_simulation.run();
             //
             // println!("total run time: {} ms", tsp_simulation.total_time_in_ms);

@@ -7,17 +7,22 @@
 //! License: MIT
 //!
 //! This library allows you to write evolutionary algorithms (EA) in Rust.
-//! Examples provieded: TSP, Sudoku, Queens Problem
+//! Examples provided: TSP, Sudoku, Queens Problem
 //!
 //!
 
+<<<<<<< HEAD
 // For clippy
 // #![feature(plugin)]
 //
 // #![plugin(clippy)]
 
+=======
+>>>>>>> e60261f225e1e33532be3fe20b1bd78b5c67a7b1
 extern crate time;
 extern crate jobsteal;
+#[macro_use]
+extern crate quick_error;
 
 // external modules
 use time::precise_time_ns;
@@ -33,7 +38,7 @@ pub enum SimulationType {
     /// That means if at least one of the individuals has this fitness.
     /// The fitness is calculated using the implemented `calculate_fitness` functions
     /// of the `Individual` trait
-    Endfitness(f64),
+    EndFitness(f64),
     /// Finish the simulation when a specific improvement factor is reached.
     /// That means the relation between the very first fitness and the current fitness of the
     /// fittest individual
@@ -123,8 +128,10 @@ fn run_body_sorting_fittest<T: Individual + Send + Sync + Clone>(simulation: &mu
     simulation.population.truncate(orig_population_len);
 
     // Restore original number of mutation rate, since these will be lost because of sorting
-    for i in 0..orig_population_len {
-        simulation.population[i].num_of_mutations = orig_population[i].num_of_mutations;
+    for (individual, orig_individual) in simulation.population
+        .iter_mut()
+        .zip(orig_population.iter()) {
+        individual.num_of_mutations = orig_individual.num_of_mutations;
     }
 
     // Check if we have new fittest individual and store it globally
@@ -182,7 +189,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                     self.check_iteration_limit();
                 }
             }
-            SimulationType::Endfitness(end_fitness) => {
+            SimulationType::EndFitness(end_fitness) => {
                 loop {
                     if self.fittest.fitness <= end_fitness {
                         break;
@@ -222,9 +229,9 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
 
             // Kill all individuals since we are stuck in a local minimum.
             // Why is it so ? Because the simulation is still running!
-            for i in 0..self.population.len() {
-                self.population[i].individual = Individual::new();
-                self.population[i].fitness = self.population[i].individual.calculate_fitness();
+            for population in &mut self.population {
+                population.individual = Individual::new();
+                population.fitness = population.individual.calculate_fitness();
             }
         }
     }
@@ -256,26 +263,14 @@ impl<T: Individual> Eq for IndividualWrapper<T> {}
 /// Implement this for sorting
 impl<T: Individual> Ord for IndividualWrapper<T> {
     fn cmp(&self, other: &IndividualWrapper<T>) -> Ordering {
-        if self.fitness < other.fitness {
-            Ordering::Less
-        } else if self.fitness > other.fitness {
-            Ordering::Greater
-        } else {
-            Ordering::Equal
-        }
+        self.partial_cmp(other).expect("Fitness of Individual is NaN")
     }
 }
 
 /// Implement this for sorting
 impl<T: Individual> PartialOrd for IndividualWrapper<T> {
     fn partial_cmp(&self, other: &IndividualWrapper<T>) -> Option<Ordering> {
-        if self.fitness < other.fitness {
-            Some(Ordering::Less)
-        } else if self.fitness > other.fitness {
-            Some(Ordering::Greater)
-        } else {
-            Some(Ordering::Equal)
-        }
+        self.fitness.partial_cmp(&other.fitness)
     }
 }
 
@@ -314,15 +309,17 @@ pub struct SimulationBuilder<T: Individual + Send + Sync> {
     simulation: Simulation<T>,
 }
 
-/// This enum describes the possible return error that the simulation builder can return.
-pub enum BuilderResult<T: Individual + Send + Sync> {
-    /// The number of iteration is too low, should be >= 10
-    TooLowEndIterration,
-    /// The number of individuals is too loe, should be >= 3
-    TooLowIndividuals,
-    /// Everything is fine, the simulation is properly configured and ready to run.
-    Ok(Simulation<T>),
+quick_error! {
+    #[derive(Debug)]
+    pub enum Error {
+        /// The number of iteration is too low, should be >= 10
+        TooLowEndIteration {}
+        /// The number of individuals is too low, should be >= 3
+        TooLowIndividuals {}
+    }
 }
+
+pub type Result<T> = std::result::Result<Simulation<T>, Error>;
 
 /// This implementation contains all the helper method to build (configure) a valid simulation
 impl<T: Individual + Send + Sync> SimulationBuilder<T> {
@@ -369,7 +366,7 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     /// Set the minimum fitness stop criteria for the simulation and thus sets the simulation
     /// type to `Endfitness`. (Only usefull in combination with `EndFactor`).
     pub fn fitness(mut self, fitness: f64) -> SimulationBuilder<T> {
-        self.simulation.type_of_simulation = SimulationType::Endfitness(fitness);
+        self.simulation.type_of_simulation = SimulationType::EndFitness(fitness);
         self
     }
 
@@ -432,14 +429,17 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     }
 
     /// Configures the mutation rates (number of mutation runs) for all the individuals in the
-    /// sumulation: This allows to specify an arbitrary mutation scheme for each individual.
+    /// simulation: This allows to specify an arbitrary mutation scheme for each individual.
     /// The number of rates must be equal to the number of individuals.
     pub fn mutation_rate(mut self, mutation_rate: Vec<u32>) -> SimulationBuilder<T> {
         // TODO: better error handling
         assert!(self.simulation.population.len() == mutation_rate.len());
 
-        for i in 0..self.simulation.population.len() {
-            self.simulation.population[i].num_of_mutations = mutation_rate[i];
+        for (individual, mutation_rate) in self.simulation
+            .population
+            .iter_mut()
+            .zip(mutation_rate.into_iter()) {
+            individual.num_of_mutations = mutation_rate;
         }
 
         self
@@ -447,33 +447,13 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
 
     /// This checks the configuration of the simulation and returns an error or Ok if no errors
     /// where found.
-    pub fn finalize(self) -> BuilderResult<T> {
-        let result = Simulation {
-            type_of_simulation: self.simulation.type_of_simulation.clone(),
-            num_of_individuals: self.simulation.num_of_individuals,
-            num_of_threads: self.simulation.num_of_threads,
-            improvement_factor: self.simulation.improvement_factor,
-            original_fitness: self.simulation.original_fitness,
-            fittest: self.simulation.fittest,
-            population: self.simulation.population,
-            total_time_in_ms: self.simulation.total_time_in_ms,
-            iteration_counter: self.simulation.iteration_counter,
-            reset_limit: self.simulation.reset_limit,
-            reset_counter: self.simulation.reset_counter,
-            output_new_fittest: self.simulation.output_new_fittest,
-            pool: self.simulation.pool,
-        };
-
-        if self.simulation.num_of_individuals < 3 {
-            return BuilderResult::TooLowIndividuals;
-        }
-
-        if let SimulationType::EndIteration(end_iteration) = self.simulation.type_of_simulation {
-            if end_iteration < 10 {
-                return BuilderResult::TooLowEndIterration;
+    pub fn finalize(self) -> Result<T> {
+        match self.simulation {
+            Simulation { num_of_individuals: 0...2, .. } => Err(Error::TooLowIndividuals),
+            Simulation { type_of_simulation: SimulationType::EndIteration(0...9), .. } => {
+                Err(Error::TooLowEndIteration)
             }
+            simulation => Ok(simulation),
         }
-
-        BuilderResult::Ok(result)
     }
 }
