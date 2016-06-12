@@ -13,3 +13,4 @@ documentation = "https://willi-kappler.github.io/darwin-rs"
 [dependencies]
 time = "0.1"
 jobsteal = "0.4"
+# clippy = "*"

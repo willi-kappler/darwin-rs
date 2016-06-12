@@ -11,6 +11,10 @@
 //!
 //!
 
+// For clippy
+// #![feature(plugin)]
+//
+// #![plugin(clippy)]
 
 extern crate time;
 extern crate jobsteal;
@@ -147,7 +151,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         let start_time = precise_time_ns();
 
         // Calculate the fitness for all individuals at the beginning.
-        for wrapper in self.population.iter_mut() {
+        for wrapper in &mut self.population {
             wrapper.fitness = wrapper.individual.calculate_fitness();
         }
 
@@ -174,7 +178,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                         break;
                     }
                     run_body_sorting_fittest(self);
-                    self.iteration_counter = self.iteration_counter + 1;
+                    self.iteration_counter += 1;
                     self.check_iteration_limit();
                 }
             }
@@ -184,7 +188,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                         break;
                     }
                     run_body_sorting_fittest(self);
-                    self.iteration_counter = self.iteration_counter + 1;
+                    self.iteration_counter += 1;
                     self.check_iteration_limit();
                 }
             }
@@ -198,7 +202,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// This is a helper function that the user can call after the simulation stops in order to
     /// see all the fitness values for all the individuals.
     pub fn print_fitness(&self) {
-        for wrapper in self.population.iter() {
+        for wrapper in &self.population {
             println!("fitness: {}, num_of_mutations: {}",
                      wrapper.fitness,
                      wrapper.num_of_mutations);
@@ -209,10 +213,10 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// If yes, all the individuals will be replaced by new initial ones.
     /// Thus local minima are avoided. The limit threshold is increased every time after that.
     fn check_iteration_limit(&mut self) {
-        self.reset_counter = self.reset_counter + 1;
+        self.reset_counter += 1;
 
         if self.reset_counter > self.reset_limit {
-            self.reset_limit = self.reset_limit + 1000;
+            self.reset_limit += 1000;
             self.reset_counter = 0;
             println!("new reset_limit: {}", self.reset_limit);
 
@@ -403,9 +407,9 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     pub fn increasing_mutation_rate(mut self) -> SimulationBuilder<T> {
         let mut mutation_rate = 1;
 
-        for wrapper in self.simulation.population.iter_mut() {
+        for wrapper in &mut self.simulation.population {
             wrapper.num_of_mutations = mutation_rate;
-            mutation_rate = mutation_rate + 1;
+            mutation_rate += 1;
         }
 
         self
@@ -419,9 +423,9 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     pub fn increasing_exp_mutation_rate(mut self, base: f64) -> SimulationBuilder<T> {
         let mut mutation_rate = 1;
 
-        for wrapper in self.simulation.population.iter_mut() {
+        for wrapper in &mut self.simulation.population {
             wrapper.num_of_mutations = base.powi(mutation_rate).floor() as u32;
-            mutation_rate = mutation_rate + 1;
+            mutation_rate += 1;
         }
 
         self
