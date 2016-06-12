@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-33' class='srclink' href='../src/darwin_rs/src/lib.rs.html#46-79' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-33' class='srclink' href='../src/darwin_rs/src/lib.rs.html#46-80' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct Simulation&lt;T: <a class='trait' href='../darwin_rs/trait.Individual.html' title='darwin_rs::Individual'>Individual</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt; {
     pub type_of_simulation: <a class='enum' href='../darwin_rs/enum.SimulationType.html' title='darwin_rs::SimulationType'>SimulationType</a>,
     pub num_of_individuals: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
@@ -87,10 +87,11 @@ finished.</p>
                              <td id='structfield.iteration_counter'><code>iteration_counter</code></td><td><div class='docblock'><p>The number of current iteration. This changes with every iteration and is used by the
 <code>EndIteration</code> enum.</p>
 </div></td></tr><tr class='stab '>
-                             <td id='structfield.reset_limit'><code>reset_limit</code></td><td><div class='docblock'><p>The amount of iteration to wait until individuals will be resetted.</p>
+                             <td id='structfield.reset_limit'><code>reset_limit</code></td><td><div class='docblock'><p>The amount of iteration to wait until all individuals will be resetted.</p>
 </div></td></tr><tr class='stab '>
                              <td id='structfield.reset_counter'><code>reset_counter</code></td><td><div class='docblock'><p>The reset counter, if reset_counter &gt;= reset_limit, all the individuals are discarded and
-the simulation restarts anew with an increased reset_limit</p>
+the simulation restarts anew with an increased reset_limit. This prevents local minima,
+but also discards the current fittest individual.</p>
 </div></td></tr><tr class='stab '>
                              <td id='structfield.output_new_fittest'><code>output_new_fittest</code></td><td><div class='docblock'><p>A flag that specifies if the sumulation should write a message every time a new most
 fittest individual is found.</p>

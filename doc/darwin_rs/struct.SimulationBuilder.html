@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-143' class='srclink' href='../src/darwin_rs/src/lib.rs.html#304-307' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-143' class='srclink' href='../src/darwin_rs/src/lib.rs.html#307-310' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct SimulationBuilder&lt;T: <a class='trait' href='../darwin_rs/trait.Individual.html' title='darwin_rs::Individual'>Individual</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt; {
     // some fields omitted
 }</pre><div class='docblock'><p>This is a helper struct in order to build (configure) a valid simulation.
@@ -86,6 +86,11 @@ mutate base<sup>2</sup> times, and nth will mutate base<sup>n</sup> times per it
 <div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals in the
 simulation: This allows to specify an arbitrary mutation scheme for each individual.
 The number of rates must be equal to the number of individuals.</p>
+</div><h4 id='method.reset_limit' class='method'><code>fn <a href='#method.reset_limit' class='fnname'>reset_limit</a>(self, reset_limit: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Configures the reset limit for the simulation. If the limit is greater than zero then a
+reset counter is increased each iteration. If that counter is greater than the limit,
+all individuals will be resetted, the limit will be increased by 1000 and the counter is
+set back to zero. Default value is 1000.</p>
 </div><h4 id='method.finalize' class='method'><code>fn <a href='#method.finalize' class='fnname'>finalize</a>(self) -&gt; <a class='type' href='../darwin_rs/type.Result.html' title='darwin_rs::Result'>Result</a>&lt;T&gt;</code></h4>
 <div class='docblock'><p>This checks the configuration of the simulation and returns an error or Ok if no errors
 where found.</p>
