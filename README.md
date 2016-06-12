@@ -31,7 +31,7 @@ And this in the rust source code of your application:
 ```rust
 extern crate darwin_rs;
 
-use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
+use darwin_rs::{Individual, SimulationBuilder, Error};
 ```
 
 Basically you have to implement the trait ```Individual``` for your data structure:
@@ -79,9 +79,9 @@ let my_builder = SimulationBuilder::<MyStruct>::new()
     .finalize();
 
     match my_builder {
-        BuilderResult::TooLowEndIterration => { println!("more than 10 iteratons needed") },
-        BuilderResult::TooLowIndividuals => { println!("more than 2 individuals needed") },
-        BuilderResult::Ok(mut my_simulation) => {
+        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
+        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+        Ok(mut my_simulation) => {
             my_simulation.run();
 
             println!("total run time: {} ms", my_simulation.total_time_in_ms);
@@ -115,6 +115,7 @@ See also the example folder for full working programs.
 # Used crates:
 - [time](https://doc.rust-lang.org/time/time/index.html): time usage statistics
 - [jobsteal](https://github.com/rphmeier/jobsteal): parallelization
+- [quick-error](https://github.com/tailhook/quick-error): easy error type creation
 
 # Similar crates:
 - [genetic-files](https://github.com/vadixidav/genetic-files)

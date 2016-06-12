@@ -13,7 +13,7 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // Internal modules
-use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
+use darwin_rs::{Individual, SimulationBuilder, Error};
 
 fn city_distance(city: &Vec<(f64, f64)>, index1: usize, index2: usize) -> f64 {
     let (x1, y1) = city[index1];
@@ -110,9 +110,9 @@ fn main() {
         .finalize();
 
     match tsp_builder {
-        BuilderResult::TooLowEndIterration => println!("more than 10 iteratons needed"),
-        BuilderResult::TooLowIndividuals => println!("more than 2 individuals needed"),
-        BuilderResult::Ok(mut tsp_simulation) => {
+        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
+        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+        Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 
             println!("total run time: {} ms", tsp_simulation.total_time_in_ms);
