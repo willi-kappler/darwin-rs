@@ -47,13 +47,13 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-32' class='srclink' href='../src/darwin_rs/src/lib.rs.html#38-66' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-32' class='srclink' href='../src/darwin_rs/src/lib.rs.html#44-77' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct Simulation&lt;T: <a class='trait' href='../darwin_rs/trait.Individual.html' title='darwin_rs::Individual'>Individual</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt; {
     pub type_of_simulation: <a class='enum' href='../darwin_rs/enum.SimulationType.html' title='darwin_rs::SimulationType'>SimulationType</a>,
     pub num_of_individuals: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
     pub num_of_threads: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>,
     pub improvement_factor: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>,
-    pub original_fittness: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>,
+    pub original_fitness: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>,
     pub fittest: <a class='struct' href='../darwin_rs/struct.IndividualWrapper.html' title='darwin_rs::IndividualWrapper'>IndividualWrapper</a>&lt;T&gt;,
     pub population: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../darwin_rs/struct.IndividualWrapper.html' title='darwin_rs::IndividualWrapper'>IndividualWrapper</a>&lt;T&gt;&gt;,
     pub total_time_in_ms: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>,
@@ -71,34 +71,40 @@
 </div></td></tr><tr class='stab '>
                              <td id='structfield.num_of_threads'><code>num_of_threads</code></td><td><div class='docblock'><p>The number of threads to use to speed up calculation.</p>
 </div></td></tr><tr class='stab '>
-                             <td id='structfield.improvement_factor'><code>improvement_factor</code></td><td><div class='docblock'><p>The current improvement factor, that means the ration between the first and the current fittness.</p>
+                             <td id='structfield.improvement_factor'><code>improvement_factor</code></td><td><div class='docblock'><p>The current improvement factor, that means the ration between the first and the current
+fitness.</p>
 </div></td></tr><tr class='stab '>
-                             <td id='structfield.original_fittness'><code>original_fittness</code></td><td><div class='docblock'><p>The very first calculated fittness, when the simulation just started.</p>
+                             <td id='structfield.original_fitness'><code>original_fitness</code></td><td><div class='docblock'><p>The very first calculated fitness, when the simulation just started.</p>
 </div></td></tr><tr class='stab '>
-                             <td id='structfield.fittest'><code>fittest</code></td><td><div class='docblock'><p>The current fittest individual. This will change during the simulation as soon as a new more fittest individual is found</p>
+                             <td id='structfield.fittest'><code>fittest</code></td><td><div class='docblock'><p>The current fittest individual. This will change during the simulation as soon as a new
+more fittest individual is found</p>
 </div></td></tr><tr class='stab '>
                              <td id='structfield.population'><code>population</code></td><td><div class='docblock'><p>The population for the simulation. Contains all individuals for the simulation.</p>
 </div></td></tr><tr class='stab '>
-                             <td id='structfield.total_time_in_ms'><code>total_time_in_ms</code></td><td><div class='docblock'><p>The total run time for the simulation. This will be calculated once the stimulation has finished.</p>
+                             <td id='structfield.total_time_in_ms'><code>total_time_in_ms</code></td><td><div class='docblock'><p>The total run time for the simulation. This will be calculated once the stimulation has
+finished.</p>
 </div></td></tr><tr class='stab '>
-                             <td id='structfield.iteration_counter'><code>iteration_counter</code></td><td><div class='docblock'><p>The number of current iteration. This changes with every iteration and is used by the <code>EndIteration</code> enum.</p>
+                             <td id='structfield.iteration_counter'><code>iteration_counter</code></td><td><div class='docblock'><p>The number of current iteration. This changes with every iteration and is used by the
+<code>EndIteration</code> enum.</p>
 </div></td></tr><tr class='stab '>
                              <td id='structfield.reset_limit'><code>reset_limit</code></td><td><div class='docblock'><p>The amount of iteration to wait until individuals will be resetted.</p>
 </div></td></tr><tr class='stab '>
-                             <td id='structfield.reset_counter'><code>reset_counter</code></td><td><div class='docblock'><p>The reset counter, if reset_counter &gt;= reset_limit, all the individuals are discarded and the
-simulation restarts anew with an increased reset_limit</p>
+                             <td id='structfield.reset_counter'><code>reset_counter</code></td><td><div class='docblock'><p>The reset counter, if reset_counter &gt;= reset_limit, all the individuals are discarded and
+the simulation restarts anew with an increased reset_limit</p>
 </div></td></tr><tr class='stab '>
-                             <td id='structfield.output_new_fittest'><code>output_new_fittest</code></td><td><div class='docblock'><p>A flag that specifies if the sumulation should write a message every time a new most fittest individual is found.</p>
+                             <td id='structfield.output_new_fittest'><code>output_new_fittest</code></td><td><div class='docblock'><p>A flag that specifies if the sumulation should write a message every time a new most
+fittest individual is found.</p>
 </div></td></tr><tr class='stab '>
                              <td id='structfield.pool'><code>pool</code></td><td><div class='docblock'><p>The thread pool used by the <code>jobsteal</code> crate</p>
-</div></td></tr></table><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl&lt;T: <a class='trait' href='../darwin_rs/trait.Individual.html' title='darwin_rs::Individual'>Individual</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a>&gt; <a class='struct' href='../darwin_rs/struct.Simulation.html' title='darwin_rs::Simulation'>Simulation</a>&lt;T&gt;</code></h3><div class='docblock'><p>This implements the two functions <code>run</code> and <code>print_fittness</code> for the struct <code>Simulation</code>.</p>
+</div></td></tr></table><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl&lt;T: <a class='trait' href='../darwin_rs/trait.Individual.html' title='darwin_rs::Individual'>Individual</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a>&gt; <a class='struct' href='../darwin_rs/struct.Simulation.html' title='darwin_rs::Simulation'>Simulation</a>&lt;T&gt;</code></h3><div class='docblock'><p>This implements the two functions <code>run</code> and <code>print_fitness</code> for the struct <code>Simulation</code>.</p>
 </div><div class='impl-items'><h4 id='method.run' class='method'><code>fn <a href='#method.run' class='fnname'>run</a>(&amp;mut self)</code></h4>
 <div class='docblock'><p>This actually runs the simulation.
-Depending on the type of simulation (EndIteration, EndFactor or EndFittness) the iteration loop will check for The
+Depending on the type of simulation (EndIteration, EndFactor or Endfitness) the iteration
+loop will check for The
 stop condition accordingly.</p>
-</div><h4 id='method.print_fittness' class='method'><code>fn <a href='#method.print_fittness' class='fnname'>print_fittness</a>(&amp;self)</code></h4>
-<div class='docblock'><p>This is a helper function that the user can call after the simulation stops in order to see
-all the fittness values for all the individuals.</p>
+</div><h4 id='method.print_fitness' class='method'><code>fn <a href='#method.print_fitness' class='fnname'>print_fitness</a>(&amp;self)</code></h4>
+<div class='docblock'><p>This is a helper function that the user can call after the simulation stops in order to
+see all the fitness values for all the individuals.</p>
 </div></div></section>
     <section id='search' class="content hidden"></section>
 

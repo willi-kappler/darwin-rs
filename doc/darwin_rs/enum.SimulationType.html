@@ -47,20 +47,21 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-9' class='srclink' href='../src/darwin_rs/src/lib.rs.html#24-35' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-9' class='srclink' href='../src/darwin_rs/src/lib.rs.html#29-41' title='goto source code'>[src]</a></span></h1>
 <pre class='rust enum'>pub enum SimulationType {
     EndIteration(<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>),
-    EndFittness(<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>),
+    Endfitness(<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>),
     EndFactor(<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>),
 }</pre><div class='docblock'><p>The <code>SimulationType</code> type. Speficies the criteria on how a simulation should stop.</p>
 </div><h2 class='variants'>Variants</h2>
 <table class='variants_table'><tr><td id='variant.EndIteration'><code>EndIteration</code></td><td><div class='docblock'><p>Finish the simulation when a number of iteration has been reached.</p>
-</div></td><td></td></tr><tr><td id='variant.EndFittness'><code>EndFittness</code></td><td><div class='docblock'><p>Finish the simulation when a specific fittness is rached.
-That means if at least one of the individuals has this fittness.
-The fittness is calculated using the implemented <code>calculate_fittness</code> functions
+</div></td><td></td></tr><tr><td id='variant.Endfitness'><code>Endfitness</code></td><td><div class='docblock'><p>Finish the simulation when a specific fitness is rached.
+That means if at least one of the individuals has this fitness.
+The fitness is calculated using the implemented <code>calculate_fitness</code> functions
 of the <code>Individual</code> trait</p>
 </div></td><td></td></tr><tr><td id='variant.EndFactor'><code>EndFactor</code></td><td><div class='docblock'><p>Finish the simulation when a specific improvement factor is reached.
-That means the relation between the very first fittness and the current fittness of the fittest individual</p>
+That means the relation between the very first fitness and the current fitness of the
+fittest individual</p>
 </div></td><td></td></tr></table><h2 id='implementations'>Trait Implementations</h2><h3 id='derived_implementations'>Derived Implementations </h3><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='enum' href='../darwin_rs/enum.SimulationType.html' title='darwin_rs::SimulationType'>SimulationType</a></code></h3><div class='impl-items'><h4 id='method.clone' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='enum' href='../darwin_rs/enum.SimulationType.html' title='darwin_rs::SimulationType'>SimulationType</a></code></h4>
 <h4 id='method.clone_from' class='method'><span class="since">1.0.0</span><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code></h4>
 </div><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='enum' href='../darwin_rs/enum.SimulationType.html' title='darwin_rs::SimulationType'>SimulationType</a></code></h3><div class='impl-items'><h4 id='method.fmt' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></h4>

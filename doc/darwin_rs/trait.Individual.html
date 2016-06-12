@@ -47,34 +47,36 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-135' class='srclink' href='../src/darwin_rs/src/lib.rs.html#253-276' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-135' class='srclink' href='../src/darwin_rs/src/lib.rs.html#283-308' title='goto source code'>[src]</a></span></h1>
 <pre class='rust trait'>pub trait Individual {
     fn <a href='#tymethod.new' class='fnname'>new</a>() -&gt; Self;
     fn <a href='#tymethod.mutate' class='fnname'>mutate</a>(&amp;mut self);
-    fn <a href='#tymethod.calculate_fittness' class='fnname'>calculate_fittness</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>;
+    fn <a href='#tymethod.calculate_fitness' class='fnname'>calculate_fitness</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>;
 }</pre><div class='docblock'><p>This trait has to be implemented for the user defined struct.</p>
 </div>
             <h2 id='required-methods'>Required Methods</h2>
             <div class='methods'>
         <h3 id='tymethod.new' class='method stab '><code>fn <a href='#tymethod.new' class='fnname'>new</a>() -&gt; Self</code></h3><div class='docblock'><p>This method creates a new individual.</p>
-</div><h3 id='tymethod.mutate' class='method stab '><code>fn <a href='#tymethod.mutate' class='fnname'>mutate</a>(&amp;mut self)</code></h3><div class='docblock'><p>This method mutates the individual. Usually this is a cheap and easy to implement function.
-In order to improve the simulation, the user can make this function a bit &quot;smarter&quot;.
-This is nicely shown in the tsp and tsp2 example. The tsp2 example contains two types of mutation,
-tsp just one:</p>
+</div><h3 id='tymethod.mutate' class='method stab '><code>fn <a href='#tymethod.mutate' class='fnname'>mutate</a>(&amp;mut self)</code></h3><div class='docblock'><p>This method mutates the individual. Usually this is a cheap and easy to implement
+function. In order to improve the simulation, the user can make this function a bit
+&quot;smarter&quot;. This is nicely shown in the tsp and tsp2 example. The tsp2 example contains
+two types of mutation, tsp just one:</p>
 
 <p>examples/tsp: 1. swap position</p>
 
 <p>examples/tsp2: 1. swap position, 2. rotate (shift) positions</p>
 
-<p>By just adding this one additional mutation type the simulation converges much faster to the optimum.
-Of course rotation can be &quot;simulated&quot; by a number of swaps, but re-doing all these steps takes time and
-the chances that these steps are taken in the correct order by just randomly swaping positions are very slim.
-So just start with one simple mutation function (one operation) and add more and more &quot;smarter&quot; mutation
-types to the mutate function.</p>
-</div><h3 id='tymethod.calculate_fittness' class='method stab '><code>fn <a href='#tymethod.calculate_fittness' class='fnname'>calculate_fittness</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a></code></h3><div class='docblock'><p>This method calculates the fittness for the individual. Usually this is an expensive operation and
-a bit more difficult to implement, compared to the mutation method above.
-The lower the fittness value, the better (healthier) the individual is and the closer the individual is to the
-perfect solution. This can also correspont to the number of errors like for example in the sudoku or queens problem case.</p>
+<p>By just adding this one additional mutation type the simulation converges much faster
+to the optimum. Of course rotation can be &quot;simulated&quot; by a number of swaps, but re-doing
+all these steps takes time and the chances that these steps are taken in the correct
+order by just randomly swaping positions are very slim. So just start with one simple
+mutation function (one operation) and add more and more &quot;smarter&quot; mutation types to the
+mutate function.</p>
+</div><h3 id='tymethod.calculate_fitness' class='method stab '><code>fn <a href='#tymethod.calculate_fitness' class='fnname'>calculate_fitness</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a></code></h3><div class='docblock'><p>This method calculates the fitness for the individual. Usually this is an expensive
+operation and a bit more difficult to implement, compared to the mutation method above.
+The lower the fitness value, the better (healthier) the individual is and the closer
+the individual is to the perfect solution. This can also correspont to the number of
+errors like for example in the sudoku or queens problem case.</p>
 </div></div>
         <h2 id='implementors'>Implementors</h2>
         <ul class='item-list' id='implementors-list'>

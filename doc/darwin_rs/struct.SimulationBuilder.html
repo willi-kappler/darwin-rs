@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-141' class='srclink' href='../src/darwin_rs/src/lib.rs.html#280-283' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-141' class='srclink' href='../src/darwin_rs/src/lib.rs.html#312-315' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct SimulationBuilder&lt;T: <a class='trait' href='../darwin_rs/trait.Individual.html' title='darwin_rs::Individual'>Individual</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt; {
     // some fields omitted
 }</pre><div class='docblock'><p>This is a helper struct in order to build (configure) a valid simulation.
@@ -57,36 +57,38 @@ See builder pattern: <a href="https://en.wikipedia.org/wiki/Builder_pattern">htt
 <div class='docblock'><p>Start with this method, it must always be called as the first one.
 It creates a default simulation with some dummy (but invalid) values.</p>
 </div><h4 id='method.iterations' class='method'><code>fn <a href='#method.iterations' class='fnname'>iterations</a>(self, iterations: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>Set the total number of iterations for the simulation and thus sets the simulation type to <code>EndIteration</code>.
-(Only usefull in combination with <code>EndIteration</code>).</p>
+<div class='docblock'><p>Set the total number of iterations for the simulation and thus sets the simulation
+type to <code>EndIteration</code>. (Only usefull in combination with <code>EndIteration</code>).</p>
 </div><h4 id='method.factor' class='method'><code>fn <a href='#method.factor' class='fnname'>factor</a>(self, factor: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>Set the improvement factor stop criteria for the simulation and thus sets the simulation type to <code>EndFactor</code>.
-(Only usefull in combination with <code>EndFactor</code>).</p>
-</div><h4 id='method.fittness' class='method'><code>fn <a href='#method.fittness' class='fnname'>fittness</a>(self, fittness: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>Set the minimum fittness stop criteria for the simulation and thus sets the simulation type to <code>EndFittness</code>.
-(Only usefull in combination with <code>EndFactor</code>).</p>
+<div class='docblock'><p>Set the improvement factor stop criteria for the simulation and thus sets the simulation
+type to <code>EndFactor</code>. (Only usefull in combination with <code>EndFactor</code>).</p>
+</div><h4 id='method.fitness' class='method'><code>fn <a href='#method.fitness' class='fnname'>fitness</a>(self, fitness: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Set the minimum fitness stop criteria for the simulation and thus sets the simulation
+type to <code>Endfitness</code>. (Only usefull in combination with <code>EndFactor</code>).</p>
 </div><h4 id='method.individuals' class='method'><code>fn <a href='#method.individuals' class='fnname'>individuals</a>(self, individuals: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
 <div class='docblock'><p>Sets the number of individuals and creates the population, must be &gt;= 3</p>
 </div><h4 id='method.threads' class='method'><code>fn <a href='#method.threads' class='fnname'>threads</a>(self, threads: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
 <div class='docblock'><p>Sets the number of threads in order to speed up the simulation.</p>
 </div><h4 id='method.output_new_fittest' class='method'><code>fn <a href='#method.output_new_fittest' class='fnname'>output_new_fittest</a>(self, output_new_fittest: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>Sets a flag if the simulation should write a message whenever a new fittest individual is found.</p>
+<div class='docblock'><p>Sets a flag if the simulation should write a message whenever a new fittest
+individual is found.</p>
 </div><h4 id='method.increasing_mutation_rate' class='method'><code>fn <a href='#method.increasing_mutation_rate' class='fnname'>increasing_mutation_rate</a>(self) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals in the sumulation:
-The first individual will mutate once, the second will mutate twice, the nth individual will Mutate
-n-times per iteration.</p>
+<div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals
+in the sumulation: The first individual will mutate once, the second will mutate twice,
+the nth individual will Mutate n-times per iteration.</p>
 </div><h4 id='method.increasing_exp_mutation_rate' class='method'><code>fn <a href='#method.increasing_exp_mutation_rate' class='fnname'>increasing_exp_mutation_rate</a>(self, base: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals in the sumulation:
-Instead of a linear growing mutation rate like in the <code>increasing_mutation_rate</code> function above
-this sets an exponention mutation rate for all the individuals.
-The first individual will mutate base<sup>1</sup> times, the second will mutate base<sup>2</sup> times, and nth
-will mutate base<sup>n</sup> times per iteration.</p>
+<div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals in the
+sumulation: Instead of a linear growing mutation rate like in the
+<code>increasing_mutation_rate</code> function above this sets an exponention mutation rate for
+all the individuals. The first individual will mutate base<sup>1</sup> times, the second will
+mutate base<sup>2</sup> times, and nth will mutate base<sup>n</sup> times per iteration.</p>
 </div><h4 id='method.mutation_rate' class='method'><code>fn <a href='#method.mutation_rate' class='fnname'>mutation_rate</a>(self, mutation_rate: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt;) -&gt; <a class='struct' href='../darwin_rs/struct.SimulationBuilder.html' title='darwin_rs::SimulationBuilder'>SimulationBuilder</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals in the sumulation:
-This allows to specify an arbitrary mutation scheme for each individual.
+<div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals in the
+sumulation: This allows to specify an arbitrary mutation scheme for each individual.
 The number of rates must be equal to the number of individuals.</p>
 </div><h4 id='method.finalize' class='method'><code>fn <a href='#method.finalize' class='fnname'>finalize</a>(self) -&gt; <a class='enum' href='../darwin_rs/enum.BuilderResult.html' title='darwin_rs::BuilderResult'>BuilderResult</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>This checks the configuration of the simulation and returns an error or Ok if no errors where found.</p>
+<div class='docblock'><p>This checks the configuration of the simulation and returns an error or Ok if no errors
+where found.</p>
 </div></div></section>
     <section id='search' class="content hidden"></section>
 
