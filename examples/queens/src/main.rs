@@ -69,7 +69,7 @@ fn find_collisions(board: &Vec<u8>, row: usize, col: usize) -> u8 {
     num_of_collisions
 }
 
-// implement trait functions mutate and calculate_fittness:
+// implement trait functions mutate and calculate_fitness:
 impl Individual for Queens {
     fn new() -> Queens {
         Queens {
@@ -108,8 +108,8 @@ impl Individual for Queens {
         self.board.swap(index1, index2);
     }
 
-    // fittness means here: how many queens are colliding
-    fn calculate_fittness(&self) -> f64 {
+    // fitness means here: how many queens are colliding
+    fn calculate_fitness(&self) -> f64 {
         let mut num_of_collisions = 0;
 
         for row in 0..8 {
@@ -129,7 +129,7 @@ fn main() {
     println!("Darwin test: queens problem");
 
     let queens_builder = SimulationBuilder::<Queens>::new()
-        .fittness(0.0)
+        .fitness(0.0)
         .threads(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.05)
@@ -145,9 +145,9 @@ fn main() {
             println!("improvement factor: {}", queens_simulation.improvement_factor);
             println!("number of iterations: {}", queens_simulation.iteration_counter);
 
-            // A fittness of zero means a solution was found. Otherwise there are stll some collsisions
+            // A fitness of zero means a solution was found. Otherwise there are stll some collsisions
             // Just re-run the programm a few times or increase the number of iterations
-            queens_simulation.print_fittness();
+            queens_simulation.print_fitness();
 
             // print solution
             for row in 0..8 {

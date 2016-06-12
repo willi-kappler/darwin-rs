@@ -30,7 +30,7 @@ struct CityItem {
     path: Vec<usize>
 }
 
-// Implement trait functions mutate and calculate_fittness:
+// Implement trait functions mutate and calculate_fitness:
 impl Individual for CityItem {
     fn new() -> CityItem {
         let city_positions = vec![
@@ -101,8 +101,8 @@ impl Individual for CityItem {
         }
     }
 
-    // Fittness means here: the length of the route, the shorter the better
-    fn calculate_fittness(&self) -> f64 {
+    // fitness means here: the length of the route, the shorter the better
+    fn calculate_fitness(&self) -> f64 {
         let mut prev_index = &(self.city_positions.len() - 1);
         let mut length : f64 = 0.0;
 
@@ -120,7 +120,7 @@ fn main() {
     println!("Darwin test: traveling salesman problem");
 
     let tsp_builder = SimulationBuilder::<CityItem>::new()
-        .fittness(387.0) // optimal solution
+        .fitness(387.0) // optimal solution
         .threads(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
@@ -136,7 +136,7 @@ fn main() {
             println!("improvement factor: {}", tsp_simulation.improvement_factor);
             println!("number of iterations: {}", tsp_simulation.iteration_counter);
 
-            tsp_simulation.print_fittness();
+            tsp_simulation.print_fitness();
 
             println!("Path and coordinates: ");
 

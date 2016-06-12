@@ -34,7 +34,7 @@ impl Individual for OCRItem {
     fn mutate(&mut self) {
     }
 
-    fn calculate_fittness(&self) -> f64 {
+    fn calculate_fitness(&self) -> f64 {
         0.0
     }
 }
@@ -99,7 +99,7 @@ fn main() {
                 println!("improvement factor: {}", tsp_simulation.improvement_factor);
                 println!("number of iterations: {}", tsp_simulation.iteration_counter);
 
-                tsp_simulation.print_fittness();
+                tsp_simulation.print_fitness();
                 */
             }
         }

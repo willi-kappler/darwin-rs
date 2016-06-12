@@ -13,7 +13,7 @@ use rand::Rng;
 use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
-fn fittness_of_one_cell(sudoku: &Vec<u8>, row: usize, col: usize) -> f64 {
+fn fitness_of_one_cell(sudoku: &Vec<u8>, row: usize, col: usize) -> f64 {
     let mut number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
     let mut error = 0.0;
 
@@ -38,7 +38,7 @@ fn fittness_of_one_cell(sudoku: &Vec<u8>, row: usize, col: usize) -> f64 {
     error
 }
 
-fn fittness_of_one_row(sudoku: &Vec<u8>, row: usize) -> f64 {
+fn fitness_of_one_row(sudoku: &Vec<u8>, row: usize) -> f64 {
     let mut number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
     let mut error = 0.0;
 
@@ -59,7 +59,7 @@ fn fittness_of_one_row(sudoku: &Vec<u8>, row: usize) -> f64 {
     error
 }
 
-fn fittness_of_one_col(sudoku: &Vec<u8>, col: usize) -> f64 {
+fn fitness_of_one_col(sudoku: &Vec<u8>, col: usize) -> f64 {
     let mut number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
     let mut error = 0.0;
 
@@ -86,7 +86,7 @@ struct Sudoku {
     solved: Vec<u8>
 }
 
-// implement trait functions mutate and calculate_fittness:
+// implement trait functions mutate and calculate_fitness:
 impl Individual for Sudoku {
     fn new() -> Sudoku {
         let mut sudoku = Sudoku {
@@ -126,13 +126,13 @@ impl Individual for Sudoku {
         self.solved[index] = rng.gen_range(1, 10);
     }
 
-    // fittness means here: how many errors
-    fn calculate_fittness(&self) -> f64 {
+    // fitness means here: how many errors
+    fn calculate_fitness(&self) -> f64 {
         let mut result = 0.0;
 
         for i in 0..9 {
-            result = result + fittness_of_one_row(&self.solved, i);
-            result = result + fittness_of_one_col(&self.solved, i);
+            result = result + fitness_of_one_row(&self.solved, i);
+            result = result + fitness_of_one_col(&self.solved, i);
         }
 
 
@@ -140,7 +140,7 @@ impl Individual for Sudoku {
         let mut j = 0;
 
         loop {
-            result = result + fittness_of_one_cell(&self.solved, i, j);
+            result = result + fitness_of_one_cell(&self.solved, i, j);
 
             i = i + 3;
             if i >= 9 {
@@ -160,7 +160,7 @@ fn main() {
     println!("Darwin test: sudoku solver");
 
     let sudoku_builder = SimulationBuilder::<Sudoku>::new()
-        .fittness(0.0)
+        .fitness(0.0)
         .threads(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.01)
@@ -176,7 +176,7 @@ fn main() {
             println!("improvement factor: {}", sudoku_simulation.improvement_factor);
             println!("number of iterations: {}", sudoku_simulation.iteration_counter);
 
-            sudoku_simulation.print_fittness();
+            sudoku_simulation.print_fitness();
 
             // print solution
             for row in 0..9 {

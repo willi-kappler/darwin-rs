@@ -24,13 +24,13 @@ use std::cmp::Ordering;
 pub enum SimulationType {
     /// Finish the simulation when a number of iteration has been reached.
     EndIteration(u32),
-    /// Finish the simulation when a specific fittness is rached.
-    /// That means if at least one of the individuals has this fittness.
-    /// The fittness is calculated using the implemented `calculate_fittness` functions
+    /// Finish the simulation when a specific fitness is rached.
+    /// That means if at least one of the individuals has this fitness.
+    /// The fitness is calculated using the implemented `calculate_fitness` functions
     /// of the `Individual` trait
-    EndFittness(f64),
+    Endfitness(f64),
     /// Finish the simulation when a specific improvement factor is reached.
-    /// That means the relation between the very first fittness and the current fittness of the fittest individual
+    /// That means the relation between the very first fitness and the current fitness of the fittest individual
     EndFactor(f64)
 }
 
@@ -42,10 +42,10 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub num_of_individuals: u32,
     /// The number of threads to use to speed up calculation.
     pub num_of_threads: usize,
-    /// The current improvement factor, that means the ration between the first and the current fittness.
+    /// The current improvement factor, that means the ration between the first and the current fitness.
     pub improvement_factor: f64,
-    /// The very first calculated fittness, when the simulation just started.
-    pub original_fittness: f64,
+    /// The very first calculated fitness, when the simulation just started.
+    pub original_fitness: f64,
     /// The current fittest individual. This will change during the simulation as soon as a new more fittest individual is found
     pub fittest: IndividualWrapper<T>,
     /// The population for the simulation. Contains all individuals for the simulation.
@@ -65,7 +65,7 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub pool: Pool,
 }
 
-/// Mutates the population and calculates the new fittness for each individual.
+/// Mutates the population and calculates the new fitness for each individual.
 /// Every individual has its own mutation counter `num_of_mutations`.
 /// This counter specifies how often an individual should be mutated during one iteration.
 /// The function iterates through all the individual in the population of the simulation and
@@ -77,7 +77,7 @@ fn mutate_population<T: Individual + Send + Sync>(simulation: &mut Simulation<T>
             for _ in 0..wrapper.num_of_mutations {
                 wrapper.individual.mutate();
             }
-            wrapper.fittness = wrapper.individual.calculate_fittness();
+            wrapper.fitness = wrapper.individual.calculate_fitness();
         }
     );
 }
@@ -87,7 +87,7 @@ fn mutate_population<T: Individual + Send + Sync>(simulation: &mut Simulation<T>
 /// 1. Clone the current population.
 /// 2. Mutate the current population using the `mutate_population` function.
 /// 3. Merge the newly mutated population and the original cloned population into one big population twice the size.
-/// 4. Sort this new big population by fittness. So the fittest individual is at position 0.
+/// 4. Sort this new big population by fitness. So the fittest individual is at position 0.
 /// 5. Truncated the big population to its original size and thus gets rid of all the less fittest individuals (they "die").
 /// 6. Check if the fittest individual (at index 0) in the current sorted population is better (= fitter) than the global
 ///    fittest individual of the whole simulation. If yes, the global fittest individual is replaced.
@@ -103,7 +103,7 @@ fn run_body_sorting_fittest<T: Individual + Send + Sync + Clone>(simulation: &mu
     // Append original (unmutated) population to new (mutated) population
     simulation.population.extend(orig_population.iter().cloned());
 
-    // Sort by fittness
+    // Sort by fitness
     simulation.population.sort();
 
     // Reduce population to original length
@@ -115,34 +115,34 @@ fn run_body_sorting_fittest<T: Individual + Send + Sync + Clone>(simulation: &mu
     }
 
     // Check if we have new fittest individual and store it globally
-    if simulation.population[0].fittness < simulation.fittest.fittness {
+    if simulation.population[0].fitness < simulation.fittest.fitness {
         simulation.fittest = simulation.population[0].clone();
         if simulation.output_new_fittest {
-            println!("{}: new fittest: {}", simulation.iteration_counter, simulation.fittest.fittness);
+            println!("{}: new fittest: {}", simulation.iteration_counter, simulation.fittest.fitness);
         }
     }
 
-    simulation.improvement_factor = simulation.fittest.fittness / simulation.original_fittness;
+    simulation.improvement_factor = simulation.fittest.fitness / simulation.original_fitness;
 }
 
-/// This implements the two functions `run` and `print_fittness` for the struct `Simulation`.
+/// This implements the two functions `run` and `print_fitness` for the struct `Simulation`.
 impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// This actually runs the simulation.
-    /// Depending on the type of simulation (EndIteration, EndFactor or EndFittness) the iteration loop will check for The
+    /// Depending on the type of simulation (EndIteration, EndFactor or Endfitness) the iteration loop will check for The
     /// stop condition accordingly.
     pub fn run(&mut self) {
         // Initialize timer
         let start_time = precise_time_ns();
 
-        // Calculate the fittness for all individuals at the beginning.
+        // Calculate the fitness for all individuals at the beginning.
         for wrapper in self.population.iter_mut() {
-            wrapper.fittness = wrapper.individual.calculate_fittness();
+            wrapper.fitness = wrapper.individual.calculate_fitness();
         }
 
         // Select one global fittest individual.
-        self.original_fittness = self.population[0].fittness;
+        self.original_fitness = self.population[0].fitness;
 
-        println!("original_fittness: {}", self.original_fittness);
+        println!("original_fitness: {}", self.original_fitness);
 
         self.iteration_counter = 0;
         self.pool = make_pool(self.num_of_threads).unwrap();
@@ -164,9 +164,9 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                     self.check_iteration_limit();
                 }
             },
-            SimulationType::EndFittness(end_fittness) => {
+            SimulationType::Endfitness(end_fitness) => {
                 loop {
-                    if self.fittest.fittness <= end_fittness { break }
+                    if self.fittest.fitness <= end_fitness { break }
                     run_body_sorting_fittest(self);
                     self.iteration_counter = self.iteration_counter + 1;
                     self.check_iteration_limit();
@@ -180,10 +180,10 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     }
 
     /// This is a helper function that the user can call after the simulation stops in order to see
-    /// all the fittness values for all the individuals.
-    pub fn print_fittness(&self) {
+    /// all the fitness values for all the individuals.
+    pub fn print_fitness(&self) {
         for wrapper in self.population.iter() {
-            println!("fittness: {}, num_of_mutations: {}", wrapper.fittness, wrapper.num_of_mutations);
+            println!("fitness: {}, num_of_mutations: {}", wrapper.fitness, wrapper.num_of_mutations);
         }
     }
 
@@ -202,21 +202,21 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             // Why is it so ? Because the simulation is still running!
             for i in 0..self.population.len() {
                 self.population[i].individual = Individual::new();
-                self.population[i].fittness = self.population[i].individual.calculate_fittness();
+                self.population[i].fitness = self.population[i].individual.calculate_fitness();
             }
         }
     }
 }
 
 /// A wrapper helper struct for the individuals.
-/// It does the book keeping of the fittness and the number of mutations this individual
+/// It does the book keeping of the fitness and the number of mutations this individual
 /// has to run in one iteration.
 #[derive(Debug,Clone)]
 pub struct IndividualWrapper<T: Individual> {
     /// The actual individual, user defined struct.
     pub individual: T,
-    /// the current calculated fittness for this individual.
-    fittness: f64,
+    /// the current calculated fitness for this individual.
+    fitness: f64,
     /// The number of mutation this individual is doing in one iteration.
     num_of_mutations: u32
 }
@@ -224,7 +224,7 @@ pub struct IndividualWrapper<T: Individual> {
 /// Implement this for sorting
 impl<T: Individual> PartialEq for IndividualWrapper<T> {
     fn eq(&self, other: &IndividualWrapper<T>) -> bool {
-        self.fittness == other.fittness
+        self.fitness == other.fitness
     }
 }
 
@@ -234,8 +234,8 @@ impl<T: Individual> Eq for IndividualWrapper<T>{}
 /// Implement this for sorting
 impl<T: Individual> Ord for IndividualWrapper<T> {
     fn cmp(&self, other: &IndividualWrapper<T>) -> Ordering {
-        if self.fittness < other.fittness { Ordering::Less }
-        else if self.fittness > other.fittness { Ordering::Greater }
+        if self.fitness < other.fitness { Ordering::Less }
+        else if self.fitness > other.fitness { Ordering::Greater }
         else { Ordering::Equal }
     }
 }
@@ -243,8 +243,8 @@ impl<T: Individual> Ord for IndividualWrapper<T> {
 /// Implement this for sorting
 impl<T: Individual> PartialOrd for IndividualWrapper<T> {
     fn partial_cmp(&self, other: &IndividualWrapper<T>) -> Option<Ordering> {
-        if self.fittness < other.fittness { Some(Ordering::Less) }
-        else if self.fittness > other.fittness { Some(Ordering::Greater) }
+        if self.fitness < other.fitness { Some(Ordering::Less) }
+        else if self.fitness > other.fitness { Some(Ordering::Greater) }
         else { Some(Ordering::Equal) }
     }
 }
@@ -268,11 +268,11 @@ pub trait Individual {
     /// So just start with one simple mutation function (one operation) and add more and more "smarter" mutation
     /// types to the mutate function.
     fn mutate(&mut self);
-    /// This method calculates the fittness for the individual. Usually this is an expensive operation and
+    /// This method calculates the fitness for the individual. Usually this is an expensive operation and
     /// a bit more difficult to implement, compared to the mutation method above.
-    /// The lower the fittness value, the better (healthier) the individual is and the closer the individual is to the
+    /// The lower the fitness value, the better (healthier) the individual is and the closer the individual is to the
     /// perfect solution. This can also correspont to the number of errors like for example in the sudoku or queens problem case.
-    fn calculate_fittness(&self) -> f64;
+    fn calculate_fitness(&self) -> f64;
 }
 
 /// This is a helper struct in order to build (configure) a valid simulation.
@@ -303,10 +303,10 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
                 num_of_individuals: 0,
                 num_of_threads: 2,
                 improvement_factor: std::f64::MAX,
-                original_fittness: std::f64::MAX,
+                original_fitness: std::f64::MAX,
                 fittest: IndividualWrapper {
                     individual: Individual::new(),
-                    fittness: std::f64::MAX,
+                    fitness: std::f64::MAX,
                     num_of_mutations: 1
                 },
                 population: Vec::new(),
@@ -334,10 +334,10 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
         self
     }
 
-    /// Set the minimum fittness stop criteria for the simulation and thus sets the simulation type to `EndFittness`.
+    /// Set the minimum fitness stop criteria for the simulation and thus sets the simulation type to `Endfitness`.
     /// (Only usefull in combination with `EndFactor`).
-    pub fn fittness(mut self, fittness: f64) -> SimulationBuilder<T> {
-        self.simulation.type_of_simulation = SimulationType::EndFittness(fittness);
+    pub fn fitness(mut self, fitness: f64) -> SimulationBuilder<T> {
+        self.simulation.type_of_simulation = SimulationType::Endfitness(fitness);
         self
     }
 
@@ -349,7 +349,7 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
             self.simulation.population.push(
                 IndividualWrapper {
                     individual: Individual::new(),
-                    fittness: std::f64::MAX,
+                    fitness: std::f64::MAX,
                     num_of_mutations: 1
                 }
             );
@@ -421,7 +421,7 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
             num_of_individuals: self.simulation.num_of_individuals,
             num_of_threads: self.simulation.num_of_threads,
             improvement_factor: self.simulation.improvement_factor,
-            original_fittness: self.simulation.original_fittness,
+            original_fitness: self.simulation.original_fitness,
             fittest: self.simulation.fittest,
             population: self.simulation.population,
             total_time_in_ms: self.simulation.total_time_in_ms,

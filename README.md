@@ -51,7 +51,7 @@ impl Individual for MyStruct {
         // Mutate the struct here.
     }
 
-    fn calculate_fittness(&self) -> f64 {
+    fn calculate_fitness(&self) -> f64 {
         // Calculate how good the data values are compared to the perfect solution
         0.0
     }
@@ -64,7 +64,7 @@ These three methods are needed:
 
 **mutate(&mut self)**: mutates the content of the struct.
 
-**calculate_fittness(&self) -> f64**: this calculates the fittness value, that is how close is this individual struct instance to the perfect solution ? Lower values means better fit (or less error).
+**calculate_fitness(&self) -> f64**: this calculates the fitness value, that is how close is this individual struct instance to the perfect solution ? Lower values means better fit (or less error).
 
 
 After that you have to create a new instance of the simulation and provide the settings:
@@ -88,7 +88,7 @@ let my_builder = SimulationBuilder::<MyStruct>::new()
             println!("improvement factor: {}", my_simulation.improvement_factor);
             println!("number of iterations: {}", my_simulation.iteration_counter);
 
-            my_simulation.print_fittness();
+            my_simulation.print_fitness();
         }
     }
 ```
@@ -108,7 +108,7 @@ Then just do a match on the result of ```finalize()``` and call ```simulation.ru
 ```rust
     for wrapper in my_simulation.population {...}
 ```
-Each individual is wrapped inside a ```Wrapper``` struct that contains additional information needed for the simulation: **fittness** and the **number of mutations**.
+Each individual is wrapped inside a ```Wrapper``` struct that contains additional information needed for the simulation: **fitness** and the **number of mutations**.
 See also the example folder for full working programs.
 
 
