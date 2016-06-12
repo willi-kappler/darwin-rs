@@ -14,7 +14,7 @@ use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
 #[derive(Debug,Clone)]
 struct Queens {
-    board: Vec<u8>
+    board: Vec<u8>,
 }
 
 // Chech one straight line in one specific direction
@@ -25,10 +25,14 @@ fn one_trace(board: &Vec<u8>, row: usize, col: usize, dy: i8, dx: i8) -> u8 {
 
     loop {
         x = x + dx as i16;
-        if (x < 0) || (x > 7) { break; }
+        if (x < 0) || (x > 7) {
+            break;
+        }
 
         y = y + dy as i16;
-        if (y < 0) || (y > 7) { break; }
+        if (y < 0) || (y > 7) {
+            break;
+        }
 
         if board[((y * 8) + x) as usize] == 1 {
             num_of_collisions = num_of_collisions + 1;
@@ -83,7 +87,7 @@ impl Individual for Queens {
                 0,0,0,0,0,0,0,0,
                 0,0,0,0,0,0,0,0,
                 0,0,0,0,0,0,0,0,
-            ]
+            ],
         }
     }
 
@@ -136,23 +140,27 @@ fn main() {
         .finalize();
 
     match queens_builder {
-        BuilderResult::TooLowEndIterration => { println!("more than 10 iteratons needed") },
-        BuilderResult::TooLowIndividuals => { println!("more than 2 individuals needed") },
+        BuilderResult::TooLowEndIterration => println!("more than 10 iteratons needed"),
+        BuilderResult::TooLowIndividuals => println!("more than 2 individuals needed"),
         BuilderResult::Ok(mut queens_simulation) => {
             queens_simulation.run();
 
             println!("total run time: {} ms", queens_simulation.total_time_in_ms);
-            println!("improvement factor: {}", queens_simulation.improvement_factor);
-            println!("number of iterations: {}", queens_simulation.iteration_counter);
+            println!("improvement factor: {}",
+                     queens_simulation.improvement_factor);
+            println!("number of iterations: {}",
+                     queens_simulation.iteration_counter);
 
-            // A fitness of zero means a solution was found. Otherwise there are stll some collsisions
-            // Just re-run the programm a few times or increase the number of iterations
+            // A fitness of zero means a solution was found. Otherwise there are stll
+            // some collsisions Just re-run the programm a few times or increase the number
+            // of iterations
             queens_simulation.print_fitness();
 
             // print solution
             for row in 0..8 {
                 for col in 0..8 {
-                    print!("{} | ", queens_simulation.population[0].individual.board[(row * 8) + col]);
+                    print!("{} | ",
+                           queens_simulation.population[0].individual.board[(row * 8) + col]);
                 }
                 println!("\n");
             }

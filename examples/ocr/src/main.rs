@@ -23,16 +23,15 @@ use imageproc::stats::root_mean_squared_error;
 
 #[derive(Debug, Clone)]
 struct OCRItem {
-    text: String
+    text: String,
 }
 
 impl Individual for OCRItem {
     fn new() -> OCRItem {
-        OCRItem{ text: "abc test".to_string() }
+        OCRItem { text: "abc test".to_string() }
     }
 
-    fn mutate(&mut self) {
-    }
+    fn mutate(&mut self) {}
 
     fn calculate_fitness(&self) -> f64 {
         0.0
@@ -42,7 +41,11 @@ impl Individual for OCRItem {
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, BuilderResult};
 
-fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>, face: &freetype::Face, x: u32, y: u32, text: &str) {
+fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
+                  face: &freetype::Face,
+                  x: u32,
+                  y: u32,
+                  text: &str) {
     let mut pos_x = x;
     let pos_y = y;
 
@@ -55,8 +58,12 @@ fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>, face: &freetype::
         if !char.is_whitespace() {
             let bm_slice = bm.buffer().to_vec();
 
-            let rendered_char: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::from_vec(bm.pitch() as u32, bm.rows() as u32, bm_slice).unwrap();
-            replace(canvas, &rendered_char, pos_x + (glyph.bitmap_left() as u32), pos_y - (glyph.bitmap_top() as u32));
+            let rendered_char: ImageBuffer<Luma<u8>, Vec<u8>> =
+                ImageBuffer::from_vec(bm.pitch() as u32, bm.rows() as u32, bm_slice).unwrap();
+            replace(canvas,
+                    &rendered_char,
+                    pos_x + (glyph.bitmap_left() as u32),
+                    pos_y - (glyph.bitmap_top() as u32));
         }
 
         let step_x = ((glyph.get_glyph().unwrap().advance_x()) >> 16) as u32;
@@ -76,7 +83,11 @@ fn main() {
     face.set_char_size(40 * 64, 0, 50, 0).unwrap();
 
     draw_text_line(&mut original_img, &face, 10, 30, "This is a test text!");
-    draw_text_line(&mut original_img, &face, 10, 60, "Just to see how good OCR works...");
+    draw_text_line(&mut original_img,
+                   &face,
+                   10,
+                   60,
+                   "Just to see how good OCR works...");
 
     let img_file = Path::new("rendered_text.png");
     let _ = original_img.save(&img_file);
@@ -88,19 +99,18 @@ fn main() {
         .increasing_exp_mutation_rate(1.03)
         .finalize();
 
-        match tsp_builder {
-            BuilderResult::TooLowEndIterration => { println!("more than 10 iteratons needed") },
-            BuilderResult::TooLowIndividuals => { println!("more than 2 individuals needed") },
-            BuilderResult::Ok(mut tsp_simulation) => {
-                /*
-                tsp_simulation.run();
-
-                println!("total run time: {} ms", tsp_simulation.total_time_in_ms);
-                println!("improvement factor: {}", tsp_simulation.improvement_factor);
-                println!("number of iterations: {}", tsp_simulation.iteration_counter);
-
-                tsp_simulation.print_fitness();
-                */
-            }
+    match tsp_builder {
+        BuilderResult::TooLowEndIterration => println!("more than 10 iteratons needed"),
+        BuilderResult::TooLowIndividuals => println!("more than 2 individuals needed"),
+        BuilderResult::Ok(mut tsp_simulation) => {
+            // tsp_simulation.run();
+            //
+            // println!("total run time: {} ms", tsp_simulation.total_time_in_ms);
+            // println!("improvement factor: {}", tsp_simulation.improvement_factor);
+            // println!("number of iterations: {}", tsp_simulation.iteration_counter);
+            //
+            // tsp_simulation.print_fitness();
+            //
         }
+    }
 }
