@@ -11,14 +11,11 @@
 //!
 //!
 
-<<<<<<< HEAD
 // For clippy
 // #![feature(plugin)]
 //
 // #![plugin(clippy)]
 
-=======
->>>>>>> e60261f225e1e33532be3fe20b1bd78b5c67a7b1
 extern crate time;
 extern crate jobsteal;
 #[macro_use]
