@@ -498,29 +498,6 @@
 <span id="454">454</span>
 <span id="455">455</span>
 <span id="456">456</span>
-<span id="457">457</span>
-<span id="458">458</span>
-<span id="459">459</span>
-<span id="460">460</span>
-<span id="461">461</span>
-<span id="462">462</span>
-<span id="463">463</span>
-<span id="464">464</span>
-<span id="465">465</span>
-<span id="466">466</span>
-<span id="467">467</span>
-<span id="468">468</span>
-<span id="469">469</span>
-<span id="470">470</span>
-<span id="471">471</span>
-<span id="472">472</span>
-<span id="473">473</span>
-<span id="474">474</span>
-<span id="475">475</span>
-<span id="476">476</span>
-<span id="477">477</span>
-<span id="478">478</span>
-<span id="479">479</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! darwin-rs: evolutionary algorithms with Rust</span>
 <span class='doccomment'>//!</span>
@@ -531,7 +508,7 @@
 <span class='doccomment'>//! License: MIT</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! This library allows you to write evolutionary algorithms (EA) in Rust.</span>
-<span class='doccomment'>//! Examples provieded: TSP, Sudoku, Queens Problem</span>
+<span class='doccomment'>//! Examples provided: TSP, Sudoku, Queens Problem</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//!</span>
 
@@ -542,6 +519,8 @@
 
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>time</span>;
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>jobsteal</span>;
+<span class='attribute'>#[<span class='ident'>macro_use</span>]</span>
+<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>quick_error</span>;
 
 <span class='comment'>// external modules</span>
 <span class='kw'>use</span> <span class='ident'>time</span>::<span class='ident'>precise_time_ns</span>;
@@ -557,7 +536,7 @@
     <span class='doccomment'>/// That means if at least one of the individuals has this fitness.</span>
     <span class='doccomment'>/// The fitness is calculated using the implemented `calculate_fitness` functions</span>
     <span class='doccomment'>/// of the `Individual` trait</span>
-    <span class='ident'>Endfitness</span>(<span class='ident'>f64</span>),
+    <span class='ident'>EndFitness</span>(<span class='ident'>f64</span>),
     <span class='doccomment'>/// Finish the simulation when a specific improvement factor is reached.</span>
     <span class='doccomment'>/// That means the relation between the very first fitness and the current fitness of the</span>
     <span class='doccomment'>/// fittest individual</span>
@@ -647,8 +626,10 @@
     <span class='ident'>simulation</span>.<span class='ident'>population</span>.<span class='ident'>truncate</span>(<span class='ident'>orig_population_len</span>);
 
     <span class='comment'>// Restore original number of mutation rate, since these will be lost because of sorting</span>
-    <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='ident'>orig_population_len</span> {
-        <span class='ident'>simulation</span>.<span class='ident'>population</span>[<span class='ident'>i</span>].<span class='ident'>num_of_mutations</span> <span class='op'>=</span> <span class='ident'>orig_population</span>[<span class='ident'>i</span>].<span class='ident'>num_of_mutations</span>;
+    <span class='kw'>for</span> (<span class='ident'>individual</span>, <span class='ident'>orig_individual</span>) <span class='kw'>in</span> <span class='ident'>simulation</span>.<span class='ident'>population</span>
+        .<span class='ident'>iter_mut</span>()
+        .<span class='ident'>zip</span>(<span class='ident'>orig_population</span>.<span class='ident'>iter</span>()) {
+        <span class='ident'>individual</span>.<span class='ident'>num_of_mutations</span> <span class='op'>=</span> <span class='ident'>orig_individual</span>.<span class='ident'>num_of_mutations</span>;
     }
 
     <span class='comment'>// Check if we have new fittest individual and store it globally</span>
@@ -706,7 +687,7 @@
                     <span class='self'>self</span>.<span class='ident'>check_iteration_limit</span>();
                 }
             }
-            <span class='ident'>SimulationType</span>::<span class='ident'>Endfitness</span>(<span class='ident'>end_fitness</span>) <span class='op'>=&gt;</span> {
+            <span class='ident'>SimulationType</span>::<span class='ident'>EndFitness</span>(<span class='ident'>end_fitness</span>) <span class='op'>=&gt;</span> {
                 <span class='kw'>loop</span> {
                     <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>fittest</span>.<span class='ident'>fitness</span> <span class='op'>&lt;=</span> <span class='ident'>end_fitness</span> {
                         <span class='kw'>break</span>;
@@ -746,9 +727,9 @@
 
             <span class='comment'>// Kill all individuals since we are stuck in a local minimum.</span>
             <span class='comment'>// Why is it so ? Because the simulation is still running!</span>
-            <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='self'>self</span>.<span class='ident'>population</span>.<span class='ident'>len</span>() {
-                <span class='self'>self</span>.<span class='ident'>population</span>[<span class='ident'>i</span>].<span class='ident'>individual</span> <span class='op'>=</span> <span class='ident'>Individual</span>::<span class='ident'>new</span>();
-                <span class='self'>self</span>.<span class='ident'>population</span>[<span class='ident'>i</span>].<span class='ident'>fitness</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>population</span>[<span class='ident'>i</span>].<span class='ident'>individual</span>.<span class='ident'>calculate_fitness</span>();
+            <span class='kw'>for</span> <span class='ident'>population</span> <span class='kw'>in</span> <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>population</span> {
+                <span class='ident'>population</span>.<span class='ident'>individual</span> <span class='op'>=</span> <span class='ident'>Individual</span>::<span class='ident'>new</span>();
+                <span class='ident'>population</span>.<span class='ident'>fitness</span> <span class='op'>=</span> <span class='ident'>population</span>.<span class='ident'>individual</span>.<span class='ident'>calculate_fitness</span>();
             }
         }
     }
@@ -780,26 +761,14 @@
 <span class='doccomment'>/// Implement this for sorting</span>
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Individual</span><span class='op'>&gt;</span> <span class='ident'>Ord</span> <span class='kw'>for</span> <span class='ident'>IndividualWrapper</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
     <span class='kw'>fn</span> <span class='ident'>cmp</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>other</span>: <span class='kw-2'>&amp;</span><span class='ident'>IndividualWrapper</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='ident'>Ordering</span> {
-        <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>fitness</span> <span class='op'>&lt;</span> <span class='ident'>other</span>.<span class='ident'>fitness</span> {
-            <span class='ident'>Ordering</span>::<span class='ident'>Less</span>
-        } <span class='kw'>else</span> <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>fitness</span> <span class='op'>&gt;</span> <span class='ident'>other</span>.<span class='ident'>fitness</span> {
-            <span class='ident'>Ordering</span>::<span class='ident'>Greater</span>
-        } <span class='kw'>else</span> {
-            <span class='ident'>Ordering</span>::<span class='ident'>Equal</span>
-        }
+        <span class='self'>self</span>.<span class='ident'>partial_cmp</span>(<span class='ident'>other</span>).<span class='ident'>expect</span>(<span class='string'>&quot;Fitness of Individual is NaN&quot;</span>)
     }
 }
 
 <span class='doccomment'>/// Implement this for sorting</span>
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Individual</span><span class='op'>&gt;</span> <span class='ident'>PartialOrd</span> <span class='kw'>for</span> <span class='ident'>IndividualWrapper</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
     <span class='kw'>fn</span> <span class='ident'>partial_cmp</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>other</span>: <span class='kw-2'>&amp;</span><span class='ident'>IndividualWrapper</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>Ordering</span><span class='op'>&gt;</span> {
-        <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>fitness</span> <span class='op'>&lt;</span> <span class='ident'>other</span>.<span class='ident'>fitness</span> {
-            <span class='prelude-val'>Some</span>(<span class='ident'>Ordering</span>::<span class='ident'>Less</span>)
-        } <span class='kw'>else</span> <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>fitness</span> <span class='op'>&gt;</span> <span class='ident'>other</span>.<span class='ident'>fitness</span> {
-            <span class='prelude-val'>Some</span>(<span class='ident'>Ordering</span>::<span class='ident'>Greater</span>)
-        } <span class='kw'>else</span> {
-            <span class='prelude-val'>Some</span>(<span class='ident'>Ordering</span>::<span class='ident'>Equal</span>)
-        }
+        <span class='self'>self</span>.<span class='ident'>fitness</span>.<span class='ident'>partial_cmp</span>(<span class='kw-2'>&amp;</span><span class='ident'>other</span>.<span class='ident'>fitness</span>)
     }
 }
 
@@ -838,15 +807,17 @@
     <span class='ident'>simulation</span>: <span class='ident'>Simulation</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>,
 }
 
-<span class='doccomment'>/// This enum describes the possible return error that the simulation builder can return.</span>
-<span class='kw'>pub</span> <span class='kw'>enum</span> <span class='ident'>BuilderResult</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Individual</span> <span class='op'>+</span> <span class='ident'>Send</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> {
-    <span class='doccomment'>/// The number of iteration is too low, should be &gt;= 10</span>
-    <span class='ident'>TooLowEndIterration</span>,
-    <span class='doccomment'>/// The number of individuals is too loe, should be &gt;= 3</span>
-    <span class='ident'>TooLowIndividuals</span>,
-    <span class='doccomment'>/// Everything is fine, the simulation is properly configured and ready to run.</span>
-    <span class='prelude-val'>Ok</span>(<span class='ident'>Simulation</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>),
+<span class='macro'>quick_error</span><span class='macro'>!</span> {
+    <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>)]</span>
+    <span class='kw'>pub</span> <span class='kw'>enum</span> <span class='ident'>Error</span> {
+        <span class='doccomment'>/// The number of iteration is too low, should be &gt;= 10</span>
+        <span class='ident'>TooLowEndIteration</span> {}
+        <span class='doccomment'>/// The number of individuals is too low, should be &gt;= 3</span>
+        <span class='ident'>TooLowIndividuals</span> {}
+    }
 }
+
+<span class='kw'>pub</span> <span class='kw'>type</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>result</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Simulation</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span>;
 
 <span class='doccomment'>/// This implementation contains all the helper method to build (configure) a valid simulation</span>
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Individual</span> <span class='op'>+</span> <span class='ident'>Send</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> <span class='ident'>SimulationBuilder</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
@@ -893,7 +864,7 @@
     <span class='doccomment'>/// Set the minimum fitness stop criteria for the simulation and thus sets the simulation</span>
     <span class='doccomment'>/// type to `Endfitness`. (Only usefull in combination with `EndFactor`).</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>fitness</span>(<span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>fitness</span>: <span class='ident'>f64</span>) <span class='op'>-&gt;</span> <span class='ident'>SimulationBuilder</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
-        <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>type_of_simulation</span> <span class='op'>=</span> <span class='ident'>SimulationType</span>::<span class='ident'>Endfitness</span>(<span class='ident'>fitness</span>);
+        <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>type_of_simulation</span> <span class='op'>=</span> <span class='ident'>SimulationType</span>::<span class='ident'>EndFitness</span>(<span class='ident'>fitness</span>);
         <span class='self'>self</span>
     }
 
@@ -956,14 +927,17 @@
     }
 
     <span class='doccomment'>/// Configures the mutation rates (number of mutation runs) for all the individuals in the</span>
-    <span class='doccomment'>/// sumulation: This allows to specify an arbitrary mutation scheme for each individual.</span>
+    <span class='doccomment'>/// simulation: This allows to specify an arbitrary mutation scheme for each individual.</span>
     <span class='doccomment'>/// The number of rates must be equal to the number of individuals.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>mutation_rate</span>(<span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>mutation_rate</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u32</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='ident'>SimulationBuilder</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
         <span class='comment'>// TODO: better error handling</span>
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>population</span>.<span class='ident'>len</span>() <span class='op'>==</span> <span class='ident'>mutation_rate</span>.<span class='ident'>len</span>());
 
-        <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> <span class='number'>0</span>..<span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>population</span>.<span class='ident'>len</span>() {
-            <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>population</span>[<span class='ident'>i</span>].<span class='ident'>num_of_mutations</span> <span class='op'>=</span> <span class='ident'>mutation_rate</span>[<span class='ident'>i</span>];
+        <span class='kw'>for</span> (<span class='ident'>individual</span>, <span class='ident'>mutation_rate</span>) <span class='kw'>in</span> <span class='self'>self</span>.<span class='ident'>simulation</span>
+            .<span class='ident'>population</span>
+            .<span class='ident'>iter_mut</span>()
+            .<span class='ident'>zip</span>(<span class='ident'>mutation_rate</span>.<span class='ident'>into_iter</span>()) {
+            <span class='ident'>individual</span>.<span class='ident'>num_of_mutations</span> <span class='op'>=</span> <span class='ident'>mutation_rate</span>;
         }
 
         <span class='self'>self</span>
@@ -971,34 +945,14 @@
 
     <span class='doccomment'>/// This checks the configuration of the simulation and returns an error or Ok if no errors</span>
     <span class='doccomment'>/// where found.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>finalize</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>BuilderResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
-        <span class='kw'>let</span> <span class='ident'>result</span> <span class='op'>=</span> <span class='ident'>Simulation</span> {
-            <span class='ident'>type_of_simulation</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>type_of_simulation</span>.<span class='ident'>clone</span>(),
-            <span class='ident'>num_of_individuals</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>num_of_individuals</span>,
-            <span class='ident'>num_of_threads</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>num_of_threads</span>,
-            <span class='ident'>improvement_factor</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>improvement_factor</span>,
-            <span class='ident'>original_fitness</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>original_fitness</span>,
-            <span class='ident'>fittest</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>fittest</span>,
-            <span class='ident'>population</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>population</span>,
-            <span class='ident'>total_time_in_ms</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>total_time_in_ms</span>,
-            <span class='ident'>iteration_counter</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>iteration_counter</span>,
-            <span class='ident'>reset_limit</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>reset_limit</span>,
-            <span class='ident'>reset_counter</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>reset_counter</span>,
-            <span class='ident'>output_new_fittest</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>output_new_fittest</span>,
-            <span class='ident'>pool</span>: <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>pool</span>,
-        };
-
-        <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>num_of_individuals</span> <span class='op'>&lt;</span> <span class='number'>3</span> {
-            <span class='kw'>return</span> <span class='ident'>BuilderResult</span>::<span class='ident'>TooLowIndividuals</span>;
-        }
-
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='ident'>SimulationType</span>::<span class='ident'>EndIteration</span>(<span class='ident'>end_iteration</span>) <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>simulation</span>.<span class='ident'>type_of_simulation</span> {
-            <span class='kw'>if</span> <span class='ident'>end_iteration</span> <span class='op'>&lt;</span> <span class='number'>10</span> {
-                <span class='kw'>return</span> <span class='ident'>BuilderResult</span>::<span class='ident'>TooLowEndIterration</span>;
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>finalize</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+        <span class='kw'>match</span> <span class='self'>self</span>.<span class='ident'>simulation</span> {
+            <span class='ident'>Simulation</span> { <span class='ident'>num_of_individuals</span>: <span class='number'>0</span>...<span class='number'>2</span>, .. } <span class='op'>=&gt;</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>TooLowIndividuals</span>),
+            <span class='ident'>Simulation</span> { <span class='ident'>type_of_simulation</span>: <span class='ident'>SimulationType</span>::<span class='ident'>EndIteration</span>(<span class='number'>0</span>...<span class='number'>9</span>), .. } <span class='op'>=&gt;</span> {
+                <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>TooLowEndIteration</span>)
             }
+            <span class='ident'>simulation</span> <span class='op'>=&gt;</span> <span class='prelude-val'>Ok</span>(<span class='ident'>simulation</span>),
         }
-
-        <span class='ident'>BuilderResult</span>::<span class='prelude-val'>Ok</span>(<span class='ident'>result</span>)
     }
 }
 </pre>
