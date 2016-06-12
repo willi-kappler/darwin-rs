@@ -6,7 +6,7 @@ This library allows you to write evolutionary algorithms (EA) using the [Rust](h
 
 Written by Willi Kappler, License: MIT - Version 0.1.1 (2016.06.12)
 
-Documentation: [darwin-rs](https://willi-kappler.github.io/darwin-rs)
+**Documentation:** [darwin-rs](https://willi-kappler.github.io/darwin-rs)
 
 ![tsp start](tsp_start.png)
 
@@ -111,6 +111,9 @@ Then just do a match on the result of ```finalize()``` and call ```simulation.ru
 Each individual is wrapped inside a ```Wrapper``` struct that contains additional information needed for the simulation: **fitness** and the **number of mutations**.
 See also the example folder for full working programs.
 
+# Discussion:
+- [Reddit](https://www.reddit.com/r/rust/comments/4nnajh/darwinrs_evolutionary_algorithms_with_rust/)
+- [Rust User Forum](https://users.rust-lang.org/t/darwin-rs-evolutionary-algorithms-with-rust/6188)
 
 # Used crates:
 - [time](https://doc.rust-lang.org/time/time/index.html): time usage statistics
