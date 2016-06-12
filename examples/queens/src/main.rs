@@ -137,6 +137,7 @@ fn main() {
         .threads(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.05)
+        .reset_limit(0) // disable the resetting of all individuals
         .finalize();
 
     match queens_builder {

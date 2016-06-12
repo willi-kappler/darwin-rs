@@ -66,10 +66,11 @@ pub struct Simulation<T: Individual + Send + Sync> {
     /// The number of current iteration. This changes with every iteration and is used by the
     /// `EndIteration` enum.
     pub iteration_counter: u32,
-    /// The amount of iteration to wait until individuals will be resetted.
+    /// The amount of iteration to wait until all individuals will be resetted.
     pub reset_limit: u32,
     /// The reset counter, if reset_counter >= reset_limit, all the individuals are discarded and
-    /// the simulation restarts anew with an increased reset_limit
+    /// the simulation restarts anew with an increased reset_limit. This prevents local minima,
+    /// but also discards the current fittest individual.
     pub reset_counter: u32,
     /// A flag that specifies if the sumulation should write a message every time a new most
     /// fittest individual is found.
@@ -217,18 +218,20 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// If yes, all the individuals will be replaced by new initial ones.
     /// Thus local minima are avoided. The limit threshold is increased every time after that.
     fn check_iteration_limit(&mut self) {
-        self.reset_counter += 1;
+        if self.reset_limit > 0 {
+            self.reset_counter += 1;
 
-        if self.reset_counter > self.reset_limit {
-            self.reset_limit += 1000;
-            self.reset_counter = 0;
-            println!("new reset_limit: {}", self.reset_limit);
+            if self.reset_counter > self.reset_limit {
+                self.reset_limit += 1000;
+                self.reset_counter = 0;
+                println!("new reset_limit: {}", self.reset_limit);
 
-            // Kill all individuals since we are stuck in a local minimum.
-            // Why is it so ? Because the simulation is still running!
-            for population in &mut self.population {
-                population.individual = Individual::new();
-                population.fitness = population.individual.calculate_fitness();
+                // Kill all individuals since we are stuck in a local minimum.
+                // Why is it so ? Because the simulation is still running!
+                for population in &mut self.population {
+                    population.individual = Individual::new();
+                    population.fitness = population.individual.calculate_fitness();
+                }
             }
         }
     }
@@ -438,6 +441,16 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
             .zip(mutation_rate.into_iter()) {
             individual.num_of_mutations = mutation_rate;
         }
+
+        self
+    }
+
+    /// Configures the reset limit for the simulation. If the limit is greater than zero then a
+    /// reset counter is increased each iteration. If that counter is greater than the limit,
+    /// all individuals will be resetted, the limit will be increased by 1000 and the counter is
+    /// set back to zero. Default value is 1000.
+    pub fn reset_limit(mut self, reset_limit: u32) -> SimulationBuilder<T> {
+        self.simulation.reset_limit = reset_limit;
 
         self
     }
