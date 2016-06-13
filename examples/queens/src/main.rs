@@ -18,24 +18,24 @@ struct Queens {
 }
 
 // Chech one straight line in one specific direction
-fn one_trace(board: &Vec<u8>, row: usize, col: usize, dy: i8, dx: i8) -> u8 {
+fn one_trace(board: &[u8], row: usize, col: usize, dy: i8, dx: i8) -> u8 {
     let mut num_of_collisions = 0;
     let mut x: i16 = col as i16;
     let mut y: i16 = row as i16;
 
     loop {
-        x = x + dx as i16;
+        x += dx as i16;
         if (x < 0) || (x > 7) {
             break;
         }
 
-        y = y + dy as i16;
+        y += dy as i16;
         if (y < 0) || (y > 7) {
             break;
         }
 
         if board[((y * 8) + x) as usize] == 1 {
-            num_of_collisions = num_of_collisions + 1;
+            num_of_collisions += 1;
         }
     }
 
@@ -43,32 +43,32 @@ fn one_trace(board: &Vec<u8>, row: usize, col: usize, dy: i8, dx: i8) -> u8 {
 }
 
 // Check all eight directions:
-fn find_collisions(board: &Vec<u8>, row: usize, col: usize) -> u8 {
+fn find_collisions(board: &[u8], row: usize, col: usize) -> u8 {
     let mut num_of_collisions = 0;
 
     // up
-    num_of_collisions = num_of_collisions + one_trace(board, row, col, -1, 0);
+    num_of_collisions += one_trace(board, row, col, -1, 0);
 
     // up right
-    num_of_collisions = num_of_collisions + one_trace(board, row, col, -1, 1);
+    num_of_collisions += one_trace(board, row, col, -1, 1);
 
     // right
-    num_of_collisions = num_of_collisions + one_trace(board, row, col, 0, 1);
+    num_of_collisions += one_trace(board, row, col, 0, 1);
 
     // right down
-    num_of_collisions = num_of_collisions + one_trace(board, row, col, 1, 1);
+    num_of_collisions += one_trace(board, row, col, 1, 1);
 
     // down
-    num_of_collisions = num_of_collisions + one_trace(board, row, col, 1, 0);
+    num_of_collisions += one_trace(board, row, col, 1, 0);
 
     // down left
-    num_of_collisions = num_of_collisions + one_trace(board, row, col, 1, -1);
+    num_of_collisions += one_trace(board, row, col, 1, -1);
 
     // left
-    num_of_collisions = num_of_collisions + one_trace(board, row, col, 0, -1);
+    num_of_collisions += one_trace(board, row, col, 0, -1);
 
     // left top
-    num_of_collisions = num_of_collisions + one_trace(board, row, col, -1, -1);
+    num_of_collisions += one_trace(board, row, col, -1, -1);
 
     num_of_collisions
 }
@@ -120,7 +120,7 @@ impl Individual for Queens {
             for col in 0..8 {
                 // Found a queen, so check for collisions
                 if self.board[(row * 8) + col] == 1 {
-                    num_of_collisions = num_of_collisions + find_collisions(&self.board, row, col);
+                    num_of_collisions += find_collisions(&self.board, row, col);
                 }
             }
         }
