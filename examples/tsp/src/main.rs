@@ -15,7 +15,7 @@ use rand::Rng;
 // Internal modules
 use darwin_rs::{Individual, SimulationBuilder, Error};
 
-fn city_distance(city: &Vec<(f64, f64)>, index1: usize, index2: usize) -> f64 {
+fn city_distance(city: &[(f64, f64)], index1: usize, index2: usize) -> f64 {
     let (x1, y1) = city[index1];
     let (x2, y2) = city[index2];
     let x = x2 - x1;
@@ -86,7 +86,7 @@ impl Individual for CityItem {
         let mut length: f64 = 0.0;
 
         for index in &self.path {
-            length = length + city_distance(&self.city_positions, *prev_index, *index);
+            length += city_distance(&self.city_positions, *prev_index, *index);
 
             prev_index = index;
         }
@@ -124,7 +124,7 @@ fn main() {
             println!("Path and coordinates: ");
 
             let cities = &tsp_simulation.population[0].individual.city_positions;
-            for index in tsp_simulation.population[0].individual.path.iter() {
+            for index in &tsp_simulation.population[0].individual.path {
                 let (x, y) = cities[*index];
                 println!("{} {}", x, y);
             }
