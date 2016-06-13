@@ -13,7 +13,7 @@ use rand::Rng;
 use darwin_rs::{Individual, SimulationBuilder, Error};
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
-fn fitness_of_one_cell(sudoku: &Vec<u8>, row: usize, col: usize) -> f64 {
+fn fitness_of_one_cell(sudoku: &[u8], row: usize, col: usize) -> f64 {
     let mut number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
     let mut error = 0.0;
 
@@ -22,62 +22,62 @@ fn fitness_of_one_cell(sudoku: &Vec<u8>, row: usize, col: usize) -> f64 {
             let data = sudoku[(((row + i) * 9) + col + j) as usize];
 
             if data > 0 && data < 10 {
-                number_occurence[(data - 1) as usize] = number_occurence[(data - 1) as usize] + 1;
+                number_occurence[(data - 1) as usize] += 1;
             } else {
-                error = error + 1.0;
+                error += 1.0;
             }
         }
     }
 
     for number in number_occurence {
         if number != 1 {
-            error = error + 1.0;
+            error += 1.0;
         }
     }
 
     error
 }
 
-fn fitness_of_one_row(sudoku: &Vec<u8>, row: usize) -> f64 {
+fn fitness_of_one_row(sudoku: &[u8], row: usize) -> f64 {
     let mut number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
     let mut error = 0.0;
 
     for col in 0..9 {
         let number = sudoku[(row * 9) + col];
         if number > 0 && number < 10 {
-            number_occurence[(number - 1) as usize] = number_occurence[(number - 1) as usize] + 1;
+            number_occurence[(number - 1) as usize] += 1;
         } else {
-            error = error + 1.0;
+            error += 1.0;
         }
     }
 
     // Each number must be unique, otherwise increase error
     for number in number_occurence {
         if number != 1 {
-            error = error + 1.0;
+            error += 1.0;
         }
     }
 
     error
 }
 
-fn fitness_of_one_col(sudoku: &Vec<u8>, col: usize) -> f64 {
+fn fitness_of_one_col(sudoku: &[u8], col: usize) -> f64 {
     let mut number_occurence = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
     let mut error = 0.0;
 
     for row in 0..9 {
         let number = sudoku[(row * 9) + col];
         if number > 0 && number < 10 {
-            number_occurence[(number - 1) as usize] = number_occurence[(number - 1) as usize] + 1;
+            number_occurence[(number - 1) as usize] += 1;
         } else {
-            error = error + 1.0;
+            error += 1.0;
         }
     }
 
     // Each number must be unique, otherwise increase error
     for number in number_occurence {
         if number != 1 {
-            error = error + 1.0;
+            error += 1.0;
         }
     }
 
@@ -126,8 +126,8 @@ impl Individual for Sudoku {
         let mut result = 0.0;
 
         for i in 0..9 {
-            result = result + fitness_of_one_row(&self.solved, i);
-            result = result + fitness_of_one_col(&self.solved, i);
+            result += fitness_of_one_row(&self.solved, i);
+            result += fitness_of_one_col(&self.solved, i);
         }
 
 
@@ -135,12 +135,12 @@ impl Individual for Sudoku {
         let mut j = 0;
 
         loop {
-            result = result + fitness_of_one_cell(&self.solved, i, j);
+            result += fitness_of_one_cell(&self.solved, i, j);
 
-            i = i + 3;
+            i += 3;
             if i >= 9 {
                 i = 0;
-                j = j + 3;
+                j += 3;
                 if j >= 9 {
                     break;
                 }
