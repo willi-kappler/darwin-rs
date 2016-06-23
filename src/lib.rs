@@ -16,15 +16,14 @@
 //
 // #![plugin(clippy)]
 
-extern crate time;
 extern crate jobsteal;
 #[macro_use]
 extern crate quick_error;
 
 // external modules
-use time::precise_time_ns;
 use jobsteal::{make_pool, Pool, IntoSplitIterator, SplitIterator};
 use std::cmp::Ordering;
+use std::time::Instant;
 
 /// The `SimulationType` type. Speficies the criteria on how a simulation should stop.
 #[derive(Debug,Clone)]
@@ -153,7 +152,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// stop condition accordingly.
     pub fn run(&mut self) {
         // Initialize timer
-        let start_time = precise_time_ns();
+        let start_time = Instant::now();
 
         // Calculate the fitness for all individuals at the beginning.
         for wrapper in &mut self.population {
@@ -199,9 +198,9 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             }
         }
 
-        let end_time = precise_time_ns();
+        let elapsed = start_time.elapsed();
 
-        self.total_time_in_ms = ((end_time - start_time) as f64) / (1000.0 * 1000.0);
+        self.total_time_in_ms = elapsed.as_secs() as f64 * 1000.0 + elapsed.subsec_nanos() as f64 / 1000_000.0;
     }
 
     /// This is a helper function that the user can call after the simulation stops in order to
