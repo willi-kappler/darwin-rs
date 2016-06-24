@@ -18,6 +18,8 @@ The example folder contains three examples:
 - Sudoku: a sudoku solver using EA
 - Queens: solving the queens problem with EA. Although not as fast as [this one](https://github.com/reem/rust-n-queens) ;-)
 
+darwin-rs uses [semantic versioning](http://semver.org/)
+
 # Usage:
 Add the following to the Cargo.toml in your project:
 
@@ -116,7 +118,6 @@ See also the example folder for full working programs.
 - [Rust User Forum](https://users.rust-lang.org/t/darwin-rs-evolutionary-algorithms-with-rust/6188)
 
 # Used crates:
-- [time](https://doc.rust-lang.org/time/time/index.html): time usage statistics
 - [jobsteal](https://github.com/rphmeier/jobsteal): parallelization
 - [quick-error](https://github.com/tailhook/quick-error): easy error type creation
 
