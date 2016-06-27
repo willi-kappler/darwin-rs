@@ -67,6 +67,12 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub iteration_counter: u32,
     /// The amount of iteration to wait until all individuals will be resetted.
     pub reset_limit: u32,
+    /// The start value of the reset limit
+    pub reset_limit_start: u32,
+    /// The end value of the reset limit, if reset_limit >= reset_limit_end, then the reset_limit
+    /// will be resettet to the start value reset_limit_start.
+    /// If reset_limit_end == 0, this feature will be disabled.
+    pub reset_limit_end: u32,
     /// The reset counter, if reset_counter >= reset_limit, all the individuals are discarded and
     /// the simulation restarts anew with an increased reset_limit. This prevents local minima,
     /// but also discards the current fittest individual.
@@ -165,6 +171,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         println!("original_fitness: {}", self.original_fitness);
 
         self.iteration_counter = 0;
+        self.reset_limit = self.reset_limit_start;
         self.pool = make_pool(self.num_of_threads).unwrap();
 
         // Check which type of simulation to run.
@@ -217,15 +224,18 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// If yes, all the individuals will be replaced by new initial ones.
     /// Thus local minima are avoided. The limit threshold is increased every time after that.
     fn check_iteration_limit(&mut self) {
-        if self.reset_limit > 0 {
+        if self.reset_limit_end > 0 {
             self.reset_counter += 1;
 
             if self.reset_counter > self.reset_limit {
                 self.reset_limit += 1000;
+                if self.reset_limit >= self.reset_limit_end {
+                    self.reset_limit = self.reset_limit_start;
+                }
                 self.reset_counter = 0;
                 println!("new reset_limit: {}", self.reset_limit);
 
-                // Kill all individuals since we are stuck in a local minimum.
+                // Kill all individuals since we are most likely stuck in a local minimum.
                 // Why is it so ? Because the simulation is still running!
                 for population in &mut self.population {
                     population.individual = Individual::new();
@@ -341,6 +351,8 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
                 total_time_in_ms: 0.0,
                 iteration_counter: 0,
                 reset_limit: 1000,
+                reset_limit_start: 1000,
+                reset_limit_end: 100000,
                 reset_counter: 0,
                 output_new_fittest: true,
                 pool: make_pool(4).unwrap(),
@@ -444,12 +456,22 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
         self
     }
 
-    /// Configures the reset limit for the simulation. If the limit is greater than zero then a
-    /// reset counter is increased each iteration. If that counter is greater than the limit,
-    /// all individuals will be resetted, the limit will be increased by 1000 and the counter is
-    /// set back to zero. Default value is 1000.
-    pub fn reset_limit(mut self, reset_limit: u32) -> SimulationBuilder<T> {
-        self.simulation.reset_limit = reset_limit;
+    /// Configures the reset limit for the simulation. If reset_limit_end is greater than zero
+    /// then a reset counter is increased each iteration. If that counter is greater than the
+    /// limit, all individuals will be resetted, the limit will be increased by 1000 and the
+    /// counter is set back to zero. Default value for reset_limit_start is 1000.
+    pub fn reset_limit_start(mut self, reset_limit_start: u32) -> SimulationBuilder<T> {
+        self.simulation.reset_limit_start = reset_limit_start;
+
+        self
+    }
+
+    /// Configures the end value for the reset_limit. If the reset_limit >= reset_limit_end
+    /// then the reset_limit will be resetted to the start value reset_limit_start.
+    /// Default value for reset_limit_end is 100000.
+    /// If reset_limit_end == 0 then the reset limit feature will be disabled.
+    pub fn reset_limit_end(mut self, reset_limit_end: u32) -> SimulationBuilder<T> {
+        self.simulation.reset_limit_end = reset_limit_end;
 
         self
     }
