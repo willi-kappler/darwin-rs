@@ -4,7 +4,7 @@
 # darwin-rs
 This library allows you to write evolutionary algorithms (EA) using the [Rust](https://www.rust-lang.org/) programming language.
 
-Written by Willi Kappler, License: MIT - Version 0.1.1 (2016.06.12)
+Written by Willi Kappler, License: MIT - Version 0.2 (2016.07.xx)
 
 **Documentation:** [darwin-rs](https://willi-kappler.github.io/darwin-rs)
 
@@ -33,7 +33,8 @@ And this in the rust source code of your application:
 ```rust
 extern crate darwin_rs;
 
-use darwin_rs::{Individual, SimulationBuilder, Error};
+use darwin_rs::simulation_builder::{SimulationBuilder, Error};
+use darwin_rs::individual::{Individual};
 ```
 
 Basically you have to implement the trait ```Individual``` for your data structure:
@@ -135,6 +136,10 @@ TODO:
 - [ ] Add more documentation comments for library
 - [ ] Add test cases
 - [ ] Add more examples (ocr, ...)
+- [x] Split up code
+- [x] Allow user to specify start and end of reset limit
+- [ ] Use log file instead of println!()
+- [ ] Use multiple population
 - [ ] Maybe use phantom type for builder pattern to detect configuration error at compile type ? (https://www.reddit.com/r/rust/comments/2pgrz7/required_parameters_utilizing_the_builder_pattern/)
 - [ ] Add super optimization (only allow changes that have an improvement) ?
 - [ ] Add possibility to load and save population / individuals in order to cancel / resume simulation (serde)

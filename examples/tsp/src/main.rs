@@ -13,7 +13,8 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // Internal modules
-use darwin_rs::{Individual, SimulationBuilder, Error};
+use darwin_rs::simulation_builder::{SimulationBuilder, Error};
+use darwin_rs::individual::{Individual};
 
 fn city_distance(city: &[(f64, f64)], index1: usize, index2: usize) -> f64 {
     let (x1, y1) = city[index1];

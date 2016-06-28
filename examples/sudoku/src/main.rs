@@ -10,7 +10,8 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, Error};
+use darwin_rs::individual::{Individual};
+use darwin_rs::simulation_builder::{SimulationBuilder, Error};
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
 fn fitness_of_one_cell(sudoku: &[u8], row: usize, col: usize) -> f64 {

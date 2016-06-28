@@ -21,6 +21,10 @@ use image::{GenericImage, ImageBuffer, Luma};
 use image::imageops::replace;
 use imageproc::stats::root_mean_squared_error;
 
+// internal modules
+use darwin_rs::individual::Individual;
+use darwin_rs::simulation_builder::{SimulationBuilder, Error};
+
 #[derive(Debug, Clone)]
 struct OCRItem {
     text: String,
@@ -37,9 +41,6 @@ impl Individual for OCRItem {
         0.0
     }
 }
-
-// internal modules
-use darwin_rs::{Individual, SimulationBuilder, Error};
 
 fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
                   face: &freetype::Face,

@@ -10,7 +10,8 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, Error};
+use darwin_rs::individual::Individual;
+use darwin_rs::simulation_builder::{SimulationBuilder, Error};
 
 #[derive(Debug, Clone)]
 struct Queens {
