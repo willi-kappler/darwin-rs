@@ -78,3 +78,43 @@ pub trait Individual {
     /// errors like for example in the sudoku or queens problem case.
     fn calculate_fitness(&self) -> f64;
 }
+
+#[cfg(test)]
+mod test {
+
+    use super::{IndividualWrapper, Individual};
+
+    struct IndividualTest1;
+
+    impl Individual for IndividualTest1 {
+        fn new() -> IndividualTest1 {
+            IndividualTest1
+        }
+
+        fn mutate(&mut self) {
+        }
+
+        fn calculate_fitness(&self) -> f64 {
+            0.0
+        }
+    }
+
+    #[test]
+    fn compare1() {
+        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 1.2, num_of_mutations: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 5.93, num_of_mutations: 1};
+
+        assert!(individual2 > individual1);
+    }
+
+    #[test]
+    fn compare2() {
+        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 21.996, num_of_mutations: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 21.996, num_of_mutations: 1};
+
+        assert!(individual1 == individual2);
+    }
+
+
+
+}
