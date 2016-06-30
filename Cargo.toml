@@ -13,4 +13,5 @@ documentation = "https://willi-kappler.github.io/darwin-rs"
 [dependencies]
 jobsteal = "0.4"
 quick-error = "1.1.0"
+itertools = "0.4.16"
 # clippy = "*"
