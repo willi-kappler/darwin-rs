@@ -11,7 +11,8 @@ use rand::Rng;
 
 // internal modules
 use darwin_rs::individual::Individual;
-use darwin_rs::simulation_builder::{SimulationBuilder, Error};
+use darwin_rs::simulation_builder;
+use darwin_rs::population_builder;
 
 #[derive(Debug, Clone)]
 struct Queens {
@@ -133,36 +134,42 @@ impl Individual for Queens {
 fn main() {
     println!("Darwin test: queens problem");
 
-    let queens_builder = SimulationBuilder::<Queens>::new()
-        .fitness(0.0)
-        .threads(2)
+    let population1 = population_builder::PopulationBuilder::<Queens>::new()
         .individuals(100)
         .increasing_exp_mutation_rate(1.05)
         .reset_limit_end(0) // disable the resetting of all individuals
+        .finalize().unwrap();
+
+    let population2 = population1.clone();
+
+    let queens = simulation_builder::SimulationBuilder::<Queens>::new()
+        .fitness(0.0)
+        .threads(2)
+        .add_population(population1)
+        .add_population(population2)
         .finalize();
 
-    match queens_builder {
-        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
-        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+    match queens {
+        Err(simulation_builder::Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
         Ok(mut queens_simulation) => {
             queens_simulation.run();
 
             println!("total run time: {} ms", queens_simulation.total_time_in_ms);
-            println!("improvement factor: {}",
-                     queens_simulation.improvement_factor);
-            println!("number of iterations: {}",
-                     queens_simulation.iteration_counter);
+            // TODO
+            // println!("improvement factor: {}",
+            //          queens_simulation.improvement_factor);
+            // println!("number of iterations: {}",
+            //          queens_simulation.iteration_counter);
 
-            // A fitness of zero means a solution was found. Otherwise there are stll
-            // some collsisions Just re-run the programm a few times or increase the number
-            // of iterations
+            // A fitness of zero means a solution was found.
             queens_simulation.print_fitness();
 
             // print solution
             for row in 0..8 {
                 for col in 0..8 {
+                    // TODO
                     print!("{} | ",
-                           queens_simulation.population[0].individual.board[(row * 8) + col]);
+                           queens_simulation.habitat[0].population[0].individual.board[(row * 8) + col]);
                 }
                 println!("\n");
             }

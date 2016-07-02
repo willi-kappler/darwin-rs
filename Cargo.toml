@@ -1,6 +1,6 @@
 [package]
 name = "darwin-rs"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Willi Kappler, grandor@gmx.de"]
 license = "MIT"
 description = "Evolutionary algorithms library written in Rust."
@@ -13,5 +13,4 @@ documentation = "https://willi-kappler.github.io/darwin-rs"
 [dependencies]
 jobsteal = "0.4"
 quick-error = "1.1.0"
-itertools = "0.4.16"
 # clippy = "*"

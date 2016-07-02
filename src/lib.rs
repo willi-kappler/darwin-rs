@@ -18,9 +18,9 @@
 
 #[macro_use] extern crate quick_error;
 extern crate jobsteal;
-#[macro_use] extern crate itertools;
 
 pub mod individual;
 pub mod simulation;
 pub mod simulation_builder;
 pub mod population;
+pub mod population_builder;

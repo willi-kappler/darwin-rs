@@ -10,8 +10,9 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // internal modules
-use darwin_rs::individual::{Individual};
-use darwin_rs::simulation_builder::{SimulationBuilder, Error};
+use darwin_rs::individual::Individual;
+use darwin_rs::simulation_builder;
+use darwin_rs::population_builder;
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
 fn fitness_of_one_cell(sudoku: &[u8], row: usize, col: usize) -> f64 {
@@ -155,32 +156,40 @@ impl Individual for Sudoku {
 fn main() {
     println!("Darwin test: sudoku solver");
 
-    let sudoku_builder = SimulationBuilder::<Sudoku>::new()
-        .fitness(0.0)
-        .threads(2)
+    let population1 = population_builder::PopulationBuilder::<Sudoku>::new()
         .individuals(100)
         .increasing_exp_mutation_rate(1.01)
+        .finalize().unwrap();
+
+    let population2 = population1.clone();
+
+    let sudoku = simulation_builder::SimulationBuilder::<Sudoku>::new()
+        .fitness(0.0)
+        .threads(2)
+        .add_population(population1)
+        .add_population(population2)
         .finalize();
 
-    match sudoku_builder {
-        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
-        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+    match sudoku {
+        Err(simulation_builder::Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
         Ok(mut sudoku_simulation) => {
             sudoku_simulation.run();
 
             println!("total run time: {} ms", sudoku_simulation.total_time_in_ms);
-            println!("improvement factor: {}",
-                     sudoku_simulation.improvement_factor);
-            println!("number of iterations: {}",
-                     sudoku_simulation.iteration_counter);
+            // TODO
+            // println!("improvement factor: {}",
+            //          sudoku_simulation.improvement_factor);
+            // println!("number of iterations: {}",
+            //          sudoku_simulation.iteration_counter);
 
             sudoku_simulation.print_fitness();
 
             // print solution
             for row in 0..9 {
                 for col in 0..9 {
+                    // TODO
                     print!("{} | ",
-                           sudoku_simulation.population[0].individual.solved[(row * 9) + col]);
+                           sudoku_simulation.habitat[0].population[0].individual.solved[(row * 9) + col]);
                 }
                 println!("\n");
             }

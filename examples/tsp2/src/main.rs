@@ -13,8 +13,9 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // Internal modules
-use darwin_rs::simulation_builder::{SimulationBuilder, Error};
-use darwin_rs::individual::{Individual};
+use darwin_rs::individual::Individual;
+use darwin_rs::simulation_builder;
+use darwin_rs::population_builder;
 
 fn city_distance(city: &[(f64, f64)], index1: usize, index2: usize) -> f64 {
     let (x1, y1) = city[index1];
@@ -121,29 +122,37 @@ impl Individual for CityItem {
 fn main() {
     println!("Darwin test: traveling salesman problem");
 
-    let tsp_builder = SimulationBuilder::<CityItem>::new()
-        .fitness(387.0) // optimal solution
-        .threads(2)
+    let population1 = population_builder::PopulationBuilder::<CityItem>::new()
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
+        .finalize().unwrap();
+
+    let population2 = population1.clone();
+
+    let tsp = simulation_builder::SimulationBuilder::<CityItem>::new()
+        .fitness(387.0) // optimal solution
+        .threads(2)
+        .add_population(population1)
+        .add_population(population2)
         .finalize();
 
-    match tsp_builder {
-        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
-        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+    match tsp {
+        Err(simulation_builder::Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
         Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 
             println!("total run time: {} ms", tsp_simulation.total_time_in_ms);
-            println!("improvement factor: {}", tsp_simulation.improvement_factor);
-            println!("number of iterations: {}", tsp_simulation.iteration_counter);
+            // TODO
+            // println!("improvement factor: {}", tsp_simulation.improvement_factor);
+            // println!("number of iterations: {}", tsp_simulation.iteration_counter);
 
             tsp_simulation.print_fitness();
 
             println!("Path and coordinates: ");
 
-            let cities = &tsp_simulation.population[0].individual.city_positions;
-            for index in &tsp_simulation.population[0].individual.path {
+            // TODO
+            let cities = &tsp_simulation.habitat[0].population[0].individual.city_positions;
+            for index in &tsp_simulation.habitat[0].population[0].individual.path {
                 let (x, y) = cities[*index];
                 println!("{} {}", x, y);
             }
