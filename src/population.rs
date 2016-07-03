@@ -68,7 +68,7 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
     /// fittest individual of the whole simulation. If yes, the global fittest individual is
     /// replaced.
     /// 8. Calculate the new improvement factor and prepare for the next iteration.
-    pub fn run_body(&mut self, simulation_result: &Arc<Mutex<&mut SimulationResult<T>>>,
+    pub fn run_body(&mut self, simulation_result: &Arc<Mutex<Box<SimulationResult<T>>>>,
             iteration_counter: u32) {
         // First check if reset limit is reached
         if self.reset_limit_end > 0 {

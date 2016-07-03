@@ -85,7 +85,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         // - The fittest individual.
         // - The fitness at the beginning of the simulation. This is uesed to calculate the
         //   overall improvement later on.
-        let mut simulation_result = SimulationResult {
+        let simulation_result = SimulationResult {
             improvement_factor: 0.0,
             original_fitness: self.habitat[0].population[0].fitness,
             fittest: vec![self.habitat[0].population[0].clone()]
@@ -93,14 +93,11 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
 
         println!("original_fitness: {}", simulation_result.original_fitness);
 
-        let simulation_result = Arc::new(Mutex::new(&mut simulation_result));
+        let simulation_result = Arc::new(Mutex::new(Box::new(simulation_result)));
 
         // Check which type of simulation to run.
         match self.type_of_simulation {
             SimulationType::EndIteration(end_iteration) => {
-                // let simulation = Arc::new(Mutex::new(self));
-                // let simulation = simulation.clone();
-
                 for iteration_counter in 0..end_iteration {
                     (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| {
@@ -109,9 +106,6 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 };
             }
             SimulationType::EndFactor(end_factor) => {
-                // let simulation = Arc::new(Mutex::new(self));
-                // let simulation = simulation.clone();
-
                 loop {
                     match simulation_result.lock() {
                         Ok(simulation_result) => {
@@ -130,9 +124,6 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 }
             }
             SimulationType::EndFitness(end_fitness) => {
-                // let simulation = Arc::new(Mutex::new(self));
-                // let simulation = simulation.clone();
-
                 loop {
                     match simulation_result.lock() {
                         Ok(simulation_result) => {
@@ -159,7 +150,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         // TODO
         // match simulation_result.lock() {
         //     Ok(simulation_result) => {
-        //         self.simulation_result = (*simulation_result).clone();
+        //         self.simulation_result = (*(*simulation_result)).clone();
         //     },
         //     Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
         // }
