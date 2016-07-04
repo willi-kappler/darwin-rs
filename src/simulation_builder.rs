@@ -28,7 +28,7 @@ quick_error! {
     #[derive(Debug)]
     pub enum Error {
         /// The number of iteration is too low, should be >= 10
-        TooLowEndIteration {}
+        EndIterationTooLow {}
     }
 }
 
@@ -69,7 +69,7 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     }
 
     /// Set the minimum fitness stop criteria for the simulation and thus sets the simulation
-    /// type to `Endfitness`. (Only usefull in combination with `EndFactor`).
+    /// type to `EndFitness`. (Only usefull in combination with `EndFactor`).
     pub fn fitness(mut self, fitness: f64) -> SimulationBuilder<T> {
         self.simulation.type_of_simulation = SimulationType::EndFitness(fitness);
         self
@@ -92,7 +92,7 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     pub fn finalize(self) -> Result<T> {
         match self.simulation {
             Simulation { type_of_simulation: SimulationType::EndIteration(0...9), .. } => {
-                Err(Error::TooLowEndIteration)
+                Err(Error::EndIterationTooLow)
             }
             _ => Ok(self.simulation),
         }

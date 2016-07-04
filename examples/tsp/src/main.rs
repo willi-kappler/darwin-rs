@@ -132,19 +132,28 @@ fn main() {
         .reset_limit_end(4000)
         .finalize().unwrap();
 
+    let population5 = population_builder::PopulationBuilder::<CityItem>::new()
+        .individuals(100)
+        .increasing_exp_mutation_rate(1.07)
+        .reset_limit_increment(500)
+        .reset_limit_start(100)
+        .reset_limit_end(5000)
+        .finalize().unwrap();
+
     let tsp = simulation_builder::SimulationBuilder::<CityItem>::new()
         // .factor(0.34)
         .fitness(460.0)
         // .fitness(387.0) // use this line for optimal solution
-        .threads(2)
+        .threads(5)
         .add_population(population1)
         .add_population(population2)
         .add_population(population3)
         .add_population(population4)
+        .add_population(population5)
         .finalize();
 
     match tsp {
-        Err(simulation_builder::Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 

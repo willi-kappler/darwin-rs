@@ -137,7 +137,7 @@ fn main() {
         .finalize();
 
     match tsp {
-        Err(simulation_builder::Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 

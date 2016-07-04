@@ -11,7 +11,7 @@
 //!
 //!
 
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use simulation::SimulationResult;
 use individual::{Individual, IndividualWrapper};
@@ -46,7 +46,7 @@ pub struct Population<T: Individual + Send + Sync> {
 impl<T: Individual + Send + Sync + Clone> Population<T> {
     /// Just calculates the fitness for each individual.
     pub fn calculate_fitness(&mut self) {
-        for wrapper in self.population.iter_mut() {
+        for wrapper in &mut self.population {
             wrapper.fitness = wrapper.individual.calculate_fitness();
         }
     }
@@ -68,7 +68,7 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
     /// fittest individual of the whole simulation. If yes, the global fittest individual is
     /// replaced.
     /// 8. Calculate the new improvement factor and prepare for the next iteration.
-    pub fn run_body(&mut self, simulation_result: &Arc<Mutex<Box<SimulationResult<T>>>>,
+    pub fn run_body(&mut self, simulation_result: &Mutex<SimulationResult<T>>,
             iteration_counter: u32) {
         // First check if reset limit is reached
         if self.reset_limit_end > 0 {
@@ -97,7 +97,7 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
         let orig_population = self.population.clone();
 
         // Mutate population
-        for wrapper in self.population.iter_mut() {
+        for wrapper in &mut self.population {
             for _ in 0..wrapper.num_of_mutations {
                 wrapper.individual.mutate();
             }

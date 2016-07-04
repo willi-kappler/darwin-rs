@@ -150,7 +150,7 @@ fn main() {
         .finalize();
 
     match queens {
-        Err(simulation_builder::Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut queens_simulation) => {
             queens_simulation.run();
 

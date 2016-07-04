@@ -27,9 +27,9 @@ quick_error! {
     #[derive(Debug)]
     pub enum Error {
         /// The number of individuals is too low, should be >= 3
-        TooLowIndividuals {}
+        IndividualsTooLow {}
         /// reset_limit_start must be greater than reset_limit_end
-        TooLowLimitEnd {}
+        LimitEndTooLow {}
     }
 }
 
@@ -144,11 +144,11 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
     pub fn finalize(self) -> Result<T> {
         match self.population {
             Population { num_of_individuals: 0...2, ..} => {
-                Err(Error::TooLowIndividuals)
+                Err(Error::IndividualsTooLow)
             }
             Population { reset_limit_start: start,
                          reset_limit_end: end, ..} if (end > 0) && (start >= end) => {
-                Err(Error::TooLowLimitEnd)
+                Err(Error::LimitEndTooLow)
             }
             _ => Ok(self.population)
         }
