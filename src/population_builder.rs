@@ -48,7 +48,8 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
                 reset_limit_start: 1000,
                 reset_limit_end: 10000,
                 reset_limit_increment: 1000,
-                reset_counter: 0
+                reset_counter: 0,
+                id: 1
             }
         }
     }
@@ -62,6 +63,7 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
                 individual: Individual::new(),
                 fitness: std::f64::MAX,
                 num_of_mutations: 1,
+                id: self.population.id,
             });
         }
 
@@ -136,6 +138,16 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
     /// TODO
     pub fn reset_limit_increment(mut self, reset_limit_increment: u32) -> PopulationBuilder<T> {
         self.population.reset_limit_increment = reset_limit_increment;
+        self
+    }
+
+    /// TODO
+    pub fn set_id(mut self, id: u32) -> PopulationBuilder<T> {
+        for individual in &mut self.population.population {
+            individual.id = id;
+        }
+
+        self.population.id = id;
         self
     }
 

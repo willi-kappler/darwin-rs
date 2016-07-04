@@ -48,7 +48,8 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
                 simulation_result: SimulationResult {
                     improvement_factor: std::f64::MAX,
                     original_fitness: std::f64::MAX,
-                    fittest: Vec::new()
+                    fittest: Vec::new(),
+                    iteration_counter: 0
                 }
             },
         }

@@ -61,7 +61,9 @@ pub struct SimulationResult<T: Individual + Send + Sync> {
     pub original_fitness: f64,
     /// Vector of fittest individuals. This will change during the simulation as soon as a new
     /// more fittest individual is found and pushed into the first position (index 0).
-    pub fittest: Vec<IndividualWrapper<T>>
+    pub fittest: Vec<IndividualWrapper<T>>,
+    /// Hoe many iteration did the simulation run
+    pub iteration_counter: u32
 }
 
 /// This implements the two functions `run` and `print_fitness` for the struct `Simulation`.
@@ -88,12 +90,12 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         let simulation_result = SimulationResult {
             improvement_factor: 0.0,
             original_fitness: self.habitat[0].population[0].fitness,
-            fittest: vec![self.habitat[0].population[0].clone()]
+            fittest: vec![self.habitat[0].population[0].clone()],
+            iteration_counter: 0
         };
 
         println!("original_fitness: {}", simulation_result.original_fitness);
 
-        // let simulation_result_box = Box::new(simulation_result);
         let simulation_result_mutex = Mutex::new(simulation_result);
 
         // Check which type of simulation to run.
@@ -108,6 +110,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 match simulation_result_mutex.lock() {
                     Ok(simulation_result) => {
                         self.simulation_result = (*simulation_result).clone();
+                        self.simulation_result.iteration_counter = end_iteration;
                     },
                     Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
                 }
@@ -132,6 +135,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 match simulation_result_mutex.lock() {
                     Ok(simulation_result) => {
                         self.simulation_result = (*simulation_result).clone();
+                        self.simulation_result.iteration_counter = iteration_counter;
                     },
                     Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
                 }
@@ -156,6 +160,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 match simulation_result_mutex.lock() {
                     Ok(simulation_result) => {
                         self.simulation_result = (*simulation_result).clone();
+                        self.simulation_result.iteration_counter = iteration_counter;
                     },
                     Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
                 }
@@ -173,9 +178,8 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// improvement.
     pub fn print_fitness(&self) {
         for wrapper in &self.simulation_result.fittest {
-            println!("fitness: {}, num_of_mutations: {}",
-                     wrapper.fitness,
-                     wrapper.num_of_mutations);
+            println!("fitness: {}, num_of_mutations: {}, population: {}",
+                     wrapper.fitness, wrapper.num_of_mutations, wrapper.id);
         }
     }
 }

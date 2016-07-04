@@ -101,6 +101,7 @@ fn main() {
     println!("Darwin test: traveling salesman problem");
 
     let population1 = population_builder::PopulationBuilder::<CityItem>::new()
+        .set_id(1)
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
         .reset_limit_increment(100)
@@ -109,6 +110,7 @@ fn main() {
         .finalize().unwrap();
 
     let population2 = population_builder::PopulationBuilder::<CityItem>::new()
+        .set_id(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.04)
         .reset_limit_increment(200)
@@ -117,6 +119,7 @@ fn main() {
         .finalize().unwrap();
 
     let population3 = population_builder::PopulationBuilder::<CityItem>::new()
+        .set_id(3)
         .individuals(100)
         .increasing_exp_mutation_rate(1.05)
         .reset_limit_increment(300)
@@ -125,6 +128,7 @@ fn main() {
         .finalize().unwrap();
 
     let population4 = population_builder::PopulationBuilder::<CityItem>::new()
+        .set_id(4)
         .individuals(100)
         .increasing_exp_mutation_rate(1.06)
         .reset_limit_increment(400)
@@ -133,6 +137,7 @@ fn main() {
         .finalize().unwrap();
 
     let population5 = population_builder::PopulationBuilder::<CityItem>::new()
+        .set_id(5)
         .individuals(100)
         .increasing_exp_mutation_rate(1.07)
         .reset_limit_increment(500)
@@ -157,21 +162,23 @@ fn main() {
         Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 
-            println!("total run time: {} ms", tsp_simulation.total_time_in_ms);
-            // TODO
-            // println!("improvement factor: {}", tsp_simulation.improvement_factor);
-            // println!("number of iterations: {}", tsp_simulation.iteration_counter);
-
             tsp_simulation.print_fitness();
 
             println!("Path and coordinates: ");
 
             // TODO
-            let cities = &tsp_simulation.habitat[0].population[0].individual.city_positions;
-            for index in &tsp_simulation.habitat[0].population[0].individual.path {
+            let cities = &tsp_simulation.simulation_result.fittest[0].individual.city_positions;
+            for index in &tsp_simulation.simulation_result.fittest[0].individual.path {
                 let (x, y) = cities[*index];
                 println!("{} {}", x, y);
             }
+
+            println!("total run time: {} ms", tsp_simulation.total_time_in_ms);
+            println!("improvement factor: {}",
+                tsp_simulation.simulation_result.improvement_factor);
+            println!("number of iterations: {}",
+                tsp_simulation.simulation_result.iteration_counter);
+
         }
     }
 }

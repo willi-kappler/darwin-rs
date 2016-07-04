@@ -16,10 +16,6 @@ use std::sync::Mutex;
 use simulation::SimulationResult;
 use individual::{Individual, IndividualWrapper};
 
-// pub fn new_population() -> Population {
-//
-// }
-
 /// The Population type. TODO
 #[derive(Clone)]
 pub struct Population<T: Individual + Send + Sync> {
@@ -35,12 +31,15 @@ pub struct Population<T: Individual + Send + Sync> {
     /// will be resettet to the start value reset_limit_start.
     /// If reset_limit_end == 0, this feature will be disabled.
     pub reset_limit_end: u32,
-    /// TODO
+    /// The increment for the reset_limit. After the reset_limit value is reached, it will be
+    /// increased by the value of reset_limit_increment.
     pub reset_limit_increment: u32,
     /// The reset counter, if reset_counter >= reset_limit, all the individuals are discarded and
     /// the simulation restarts anew with an increased reset_limit. This prevents local minima,
     /// but also discards the current fittest individual.
     pub reset_counter: u32,
+    /// The ID of the population, only used for statistics.
+    pub id: u32,
 }
 
 impl<T: Individual + Send + Sync + Clone> Population<T> {
@@ -78,10 +77,10 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
                 self.reset_limit += self.reset_limit_increment;
                 if self.reset_limit >= self.reset_limit_end {
                     self.reset_limit = self.reset_limit_start;
-                    println!("reset_limit reset to reset_limit_start");
+                    println!("reset_limit reset to reset_limit_start: {}, id: {}", self.reset_limit_start, self.id);
                 }
                 self.reset_counter = 0;
-                println!("new reset_limit: {}", self.reset_limit);
+                println!("new reset_limit: {}, id: {}", self.reset_limit, self.id);
 
                 // Kill all individuals since we are most likely stuck in a local minimum.
                 // Why is it so ? Because the simulation is still running!
@@ -127,13 +126,13 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
                     // Insert it to the first position (at index 0) so that the order of fitness
                     // is preserved (fittest at index 0, then decreasing fitness).
                     simulation_result.fittest.insert(0, self.population[0].clone());
-                    println!("{}: new fittest: {}",
-                             iteration_counter, simulation_result.fittest[0].fitness);
+                    println!("{}: new fittest: {}, id: {}",
+                             iteration_counter, simulation_result.fittest[0].fitness, self.id);
                 }
 
                 simulation_result.improvement_factor = simulation_result.fittest[0].fitness / simulation_result.original_fitness;
             },
-            Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
+            Err(e) => println!("Mutex (poison) error (simulation_result): {}, id: {}", e, self.id)
         }
         // No need to unlock simulation_result, since it goes out of scope and then
         // drop() (= destructor) is called.

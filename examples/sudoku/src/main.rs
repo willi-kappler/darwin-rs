@@ -157,11 +157,16 @@ fn main() {
     println!("Darwin test: sudoku solver");
 
     let population1 = population_builder::PopulationBuilder::<Sudoku>::new()
+        .set_id(1)
         .individuals(100)
         .increasing_exp_mutation_rate(1.01)
         .finalize().unwrap();
 
-    let population2 = population1.clone();
+    let population2 = population_builder::PopulationBuilder::<Sudoku>::new()
+        .set_id(2)
+        .individuals(100)
+        .increasing_exp_mutation_rate(1.02)
+        .finalize().unwrap();
 
     let sudoku = simulation_builder::SimulationBuilder::<Sudoku>::new()
         .fitness(0.0)
@@ -175,13 +180,6 @@ fn main() {
         Ok(mut sudoku_simulation) => {
             sudoku_simulation.run();
 
-            println!("total run time: {} ms", sudoku_simulation.total_time_in_ms);
-            // TODO
-            // println!("improvement factor: {}",
-            //          sudoku_simulation.improvement_factor);
-            // println!("number of iterations: {}",
-            //          sudoku_simulation.iteration_counter);
-
             sudoku_simulation.print_fitness();
 
             // print solution
@@ -189,11 +187,16 @@ fn main() {
                 for col in 0..9 {
                     // TODO
                     print!("{} | ",
-                           sudoku_simulation.habitat[0].population[0].individual.solved[(row * 9) + col]);
+                           sudoku_simulation.simulation_result.fittest[0].individual.solved[(row * 9) + col]);
                 }
                 println!("\n");
             }
 
+            println!("total run time: {} ms", sudoku_simulation.total_time_in_ms);
+            println!("improvement factor: {}",
+                sudoku_simulation.simulation_result.improvement_factor);
+            println!("number of iterations: {}",
+                sudoku_simulation.simulation_result.iteration_counter);
 
         }
     }
