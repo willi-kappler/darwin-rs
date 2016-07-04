@@ -166,9 +166,8 @@ fn main() {
             // print solution
             for row in 0..8 {
                 for col in 0..8 {
-                    // TODO
                     print!("{} | ",
-                           queens_simulation.habitat[0].population[0].individual.board[(row * 8) + col]);
+                           queens_simulation.simulation_result.fittest[0].individual.board[(row * 8) + col]);
                 }
                 println!("\n");
             }

@@ -150,7 +150,6 @@ fn main() {
 
             println!("Path and coordinates: ");
 
-            // TODO
             let cities = &tsp_simulation.simulation_result.fittest[0].individual.city_positions;
             for index in &tsp_simulation.simulation_result.fittest[0].individual.path {
                 let (x, y) = cities[*index];

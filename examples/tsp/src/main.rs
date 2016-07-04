@@ -11,6 +11,8 @@ extern crate rand;
 extern crate darwin_rs;
 
 use rand::Rng;
+use std::time::Duration;
+use std::thread::sleep;
 
 // Internal modules
 use darwin_rs::individual::Individual;
@@ -93,6 +95,9 @@ impl Individual for CityItem {
             prev_index = index;
         }
 
+        // Seconds, Nanoseconds
+        // sleep(Duration::new(0, 100000));
+
         length
     }
 }
@@ -149,7 +154,7 @@ fn main() {
         // .factor(0.34)
         .fitness(460.0)
         // .fitness(387.0) // use this line for optimal solution
-        .threads(5)
+        .threads(4)
         .add_population(population1)
         .add_population(population2)
         .add_population(population3)
@@ -166,7 +171,6 @@ fn main() {
 
             println!("Path and coordinates: ");
 
-            // TODO
             let cities = &tsp_simulation.simulation_result.fittest[0].individual.city_positions;
             for index in &tsp_simulation.simulation_result.fittest[0].individual.path {
                 let (x, y) = cities[*index];

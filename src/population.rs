@@ -16,7 +16,8 @@ use std::sync::Mutex;
 use simulation::SimulationResult;
 use individual::{Individual, IndividualWrapper};
 
-/// The Population type. TODO
+/// The `Population` type. Contains the actual individuals (through a wrapper) and information
+/// the reset_limit. Use the `PopulationBuilder` in your main program to create populations.
 #[derive(Clone)]
 pub struct Population<T: Individual + Send + Sync> {
     /// The number of individuals for this population.

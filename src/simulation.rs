@@ -36,6 +36,7 @@ pub enum SimulationType {
 }
 
 /// The `Simulation` type. Contains all the information / configuration for the simulation to run.
+/// Use the `SimulationBuilder` in order to create a simulation.
 pub struct Simulation<T: Individual + Send + Sync> {
     /// How should the simulation stop ?
     pub type_of_simulation: SimulationType,
@@ -51,7 +52,9 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub simulation_result: SimulationResult<T>
 }
 
-/// The `SimulationResult` Type. TODO
+/// The `SimulationResult` Type. Holds the simulation results:
+/// All the fittest individuals, the improvement_factor, the iteration_counter and the
+/// original_fitness.
 #[derive(Clone)]
 pub struct SimulationResult<T: Individual + Send + Sync> {
     /// The current improvement factor, that means the ration between the very first and the

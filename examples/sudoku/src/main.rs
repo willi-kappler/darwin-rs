@@ -185,7 +185,6 @@ fn main() {
             // print solution
             for row in 0..9 {
                 for col in 0..9 {
-                    // TODO
                     print!("{} | ",
                            sudoku_simulation.simulation_result.fittest[0].individual.solved[(row * 9) + col]);
                 }
