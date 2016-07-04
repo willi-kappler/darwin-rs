@@ -93,7 +93,12 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
 
         println!("original_fitness: {}", simulation_result.original_fitness);
 
-        let simulation_result = Arc::new(Mutex::new(Box::new(simulation_result)));
+        // Make it explicit to resolve (debug) problem
+        // (Will be removed later...)
+        let simulation_result_box = Box::new(simulation_result);
+        let simulation_result_mutex = Mutex::new(simulation_result_box);
+        let simulation_result_arc = Arc::new(simulation_result_mutex);
+        let simulation_result_cloned = simulation_result_arc.clone();
 
         // Check which type of simulation to run.
         match self.type_of_simulation {
@@ -101,13 +106,13 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 for iteration_counter in 0..end_iteration {
                     (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| {
-                            population.run_body(&simulation_result, iteration_counter);
+                            population.run_body(&simulation_result_cloned, iteration_counter);
                         });
                 };
             }
             SimulationType::EndFactor(end_factor) => {
                 loop {
-                    match simulation_result.lock() {
+                    match simulation_result_cloned.lock() {
                         Ok(simulation_result) => {
                             if simulation_result.improvement_factor <= end_factor {
                                 break;
@@ -119,13 +124,13 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                     iteration_counter += 1;
                     (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| {
-                            population.run_body(&simulation_result, iteration_counter);
+                            population.run_body(&simulation_result_cloned, iteration_counter);
                         });
                 }
             }
             SimulationType::EndFitness(end_fitness) => {
                 loop {
-                    match simulation_result.lock() {
+                    match simulation_result_cloned.lock() {
                         Ok(simulation_result) => {
                             if simulation_result.fittest[0].fitness <= end_fitness {
                                 break;
@@ -137,7 +142,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                     iteration_counter += 1;
                     (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| {
-                            population.run_body(&simulation_result, iteration_counter);
+                            population.run_body(&simulation_result_cloned, iteration_counter);
                         });
                 }
             }
@@ -148,7 +153,10 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         self.total_time_in_ms = elapsed.as_secs() as f64 * 1000.0 + elapsed.subsec_nanos() as f64 / 1000_000.0;
 
         // TODO
-        // match simulation_result.lock() {
+        // This does not work, why ?
+        // reference must be valid for the destruction scope surrounding block at 72:26...
+        // ...but borrowed value is only valid for the block suffix following statement 8 at 100:70
+        // match simulation_result_arc.lock() {
         //     Ok(simulation_result) => {
         //         self.simulation_result = (*(*simulation_result)).clone();
         //     },
