@@ -137,12 +137,26 @@ fn main() {
     let population1 = population_builder::PopulationBuilder::<Queens>::new()
         .set_id(1)
         .individuals(100)
-        .increasing_exp_mutation_rate(1.05)
+        .increasing_exp_mutation_rate(1.03)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
     let population2 = population_builder::PopulationBuilder::<Queens>::new()
         .set_id(2)
+        .individuals(100)
+        .increasing_exp_mutation_rate(1.04)
+        .reset_limit_end(0) // disable the resetting of all individuals
+        .finalize().unwrap();
+
+    let population3 = population_builder::PopulationBuilder::<Queens>::new()
+        .set_id(3)
+        .individuals(100)
+        .increasing_exp_mutation_rate(1.05)
+        .reset_limit_end(0) // disable the resetting of all individuals
+        .finalize().unwrap();
+
+    let population4 = population_builder::PopulationBuilder::<Queens>::new()
+        .set_id(4)
         .individuals(100)
         .increasing_exp_mutation_rate(1.06)
         .reset_limit_end(0) // disable the resetting of all individuals
@@ -153,6 +167,8 @@ fn main() {
         .threads(2)
         .add_population(population1)
         .add_population(population2)
+        .add_population(population3)
+        .add_population(population4)
         .finalize();
 
     match queens {

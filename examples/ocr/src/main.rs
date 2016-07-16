@@ -3,7 +3,7 @@
 // using an evolutionary algorithm.
 //
 // Note that evolutionary algorithms do no guarantee to always find the optimal solution.
-// But they can get very close
+// But they can get very close.
 
 
 extern crate rand;
@@ -23,16 +23,25 @@ use imageproc::stats::root_mean_squared_error;
 
 // internal modules
 use darwin_rs::individual::Individual;
-use darwin_rs::simulation_builder::{SimulationBuilder, Error};
+use darwin_rs::simulation_builder;
+use darwin_rs::population_builder;
 
 #[derive(Debug, Clone)]
-struct OCRItem {
+struct TextBox {
+    x: u32,
+    y: u32,
     text: String,
 }
 
+#[derive(Debug, Clone)]
+struct OCRItem {
+    content: Vec<TextBox>,
+    original_img: Box<ImageBuffer<Luma<u8>, Vec<u8>>>,
+}
+
 impl Individual for OCRItem {
-    fn new() -> OCRItem {
-        OCRItem { text: "abc test".to_string() }
+    fn new<TextBox>(data_source: TextBox) -> OCRItem {
+        OCRItem { content: Vec::new(), original_img: Box::new(data_source) }
     }
 
     fn mutate(&mut self) {}
@@ -93,16 +102,37 @@ fn main() {
     let img_file = Path::new("rendered_text.png");
     let _ = original_img.save(&img_file);
 
-    let tsp_builder = SimulationBuilder::<OCRItem>::new()
-        .factor(0.34)
-        .threads(2)
+
+    let population1 = population_builder::PopulationBuilder::<OCRItem>::new()
+        .set_id(1)
+        .set_data_source(&original_img)
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
+        .reset_limit_increment(100)
+        .reset_limit_start(100)
+        .reset_limit_end(1000)
+        .finalize().unwrap();
+
+    let population2 = population_builder::PopulationBuilder::<OCRItem>::new()
+        .set_id(2)
+        .set_data_source(&original_img)
+        .individuals(100)
+        .increasing_exp_mutation_rate(1.04)
+        .reset_limit_increment(200)
+        .reset_limit_start(100)
+        .reset_limit_end(2000)
+        .finalize().unwrap();
+
+
+    let ocr_builder = simulation_builder::SimulationBuilder::<OCRItem>::new()
+        .fitness(10.0)
+        .threads(2)
+        .add_population(population1)
+        .add_population(population2)
         .finalize();
 
-    match tsp_builder {
-        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
-        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+    match ocr_builder {
+        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut tsp_simulation) => {
             // tsp_simulation.run();
             //

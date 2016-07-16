@@ -18,9 +18,9 @@ use population::Population;
 
 /// This is a helper struct in order to build (configure) a valid population.
 /// See builder pattern: https://en.wikipedia.org/wiki/Builder_pattern
-pub struct PopulationBuilder<T: Individual + Send + Sync> {
+pub struct PopulationBuilder<S, T: Individual> {
     /// The actual simulation
-    population: Population<T>,
+    population: Population<S, T>,
 }
 
 quick_error! {
@@ -30,16 +30,18 @@ quick_error! {
         IndividualsTooLow {}
         /// reset_limit_start must be greater than reset_limit_end
         LimitEndTooLow {}
+        /// The user must specify a data source
+        DataSourceMissing {}
     }
 }
 
-pub type Result<T> = std::result::Result<Population<T>, Error>;
+pub type Result<S, T> = std::result::Result<Population<S, T>, Error>;
 
 /// This implementation contains all the helper method to build (configure) a valid population
-impl<T: Individual + Send + Sync> PopulationBuilder<T> {
+impl<S, T: Individual> PopulationBuilder<S, T> {
     /// Start with this method, it must always be called as the first one.
     /// It creates a default population with some dummy (but invalid) values.
-    pub fn new() -> PopulationBuilder<T> {
+    pub fn new() -> PopulationBuilder<S, T> {
         PopulationBuilder {
             population: Population {
                 num_of_individuals: 10,
@@ -49,22 +51,30 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
                 reset_limit_end: 10000,
                 reset_limit_increment: 1000,
                 reset_counter: 0,
-                id: 1
+                id: 1,
+                data_source: None
             }
         }
     }
 
+    pub fn set_data_source(mut self, data_source: S) -> PopulationBuilder<S, T> {
+        self.population.data_source = Some(data_source);
+        self
+    }
+
     /// Sets the number of individuals and creates the population, must be >= 3
-    pub fn individuals(mut self, individuals: u32) -> PopulationBuilder<T> {
+    pub fn individuals(mut self, individuals: u32) -> PopulationBuilder<S, T> {
         self.population.num_of_individuals = individuals;
 
-        for _ in 0..individuals {
-            self.population.population.push(IndividualWrapper {
-                individual: Individual::new(),
-                fitness: std::f64::MAX,
-                num_of_mutations: 1,
-                id: self.population.id,
-            });
+        if let Some(ref data_source) = self.population.data_source {
+            for _ in 0..individuals {
+                self.population.population.push(IndividualWrapper {
+                    individual: Individual::new(data_source),
+                    fitness: std::f64::MAX,
+                    num_of_mutations: 1,
+                    id: self.population.id,
+                });
+            }
         }
 
         self
@@ -73,7 +83,7 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
     /// Configures the mutation rates (number of mutation runs) for all the individuals
     /// in the population: The first individual will mutate once, the second will mutate twice,
     /// the nth individual will Mutate n-times per iteration.
-    pub fn increasing_mutation_rate(mut self) -> PopulationBuilder<T> {
+    pub fn increasing_mutation_rate(mut self) -> PopulationBuilder<S, T> {
         let mut mutation_rate = 1;
 
         for wrapper in &mut self.population.population {
@@ -89,7 +99,7 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
     /// `increasing_mutation_rate` function above this sets an exponention mutation rate for
     /// all the individuals. The first individual will mutate base^1 times, the second will
     /// mutate base^2 times, and nth will mutate base^n times per iteration.
-    pub fn increasing_exp_mutation_rate(mut self, base: f64) -> PopulationBuilder<T> {
+    pub fn increasing_exp_mutation_rate(mut self, base: f64) -> PopulationBuilder<S, T> {
         let mut mutation_rate = 1;
 
         for wrapper in &mut self.population.population {
@@ -103,7 +113,7 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
     /// Configures the mutation rates (number of mutation runs) for all the individuals in the
     /// population: This allows to specify an arbitrary mutation scheme for each individual.
     /// The number of rates must be equal to the number of individuals.
-    pub fn mutation_rate(mut self, mutation_rate: Vec<u32>) -> PopulationBuilder<T> {
+    pub fn mutation_rate(mut self, mutation_rate: Vec<u32>) -> PopulationBuilder<S, T> {
         // TODO: better error handling
         assert!(self.population.population.len() == mutation_rate.len());
 
@@ -121,7 +131,7 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
     /// then a reset counter is increased each iteration. If that counter is greater than the
     /// limit, all individuals will be resetted, the limit will be increased by 1000 and the
     /// counter is set back to zero. Default value for reset_limit_start is 1000.
-    pub fn reset_limit_start(mut self, reset_limit_start: u32) -> PopulationBuilder<T> {
+    pub fn reset_limit_start(mut self, reset_limit_start: u32) -> PopulationBuilder<S, T> {
         self.population.reset_limit_start = reset_limit_start;
         self
     }
@@ -130,20 +140,20 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
     /// then the reset_limit will be resetted to the start value reset_limit_start.
     /// Default value for reset_limit_end is 100000.
     /// If reset_limit_end == 0 then the reset limit feature will be disabled.
-    pub fn reset_limit_end(mut self, reset_limit_end: u32) -> PopulationBuilder<T> {
+    pub fn reset_limit_end(mut self, reset_limit_end: u32) -> PopulationBuilder<S, T> {
         self.population.reset_limit_end = reset_limit_end;
         self
     }
 
     /// Configure the increment for the reset_limit. If the reset_limit is reached, its value
     /// is incrementet by the amount of reset_limit_increment
-    pub fn reset_limit_increment(mut self, reset_limit_increment: u32) -> PopulationBuilder<T> {
+    pub fn reset_limit_increment(mut self, reset_limit_increment: u32) -> PopulationBuilder<S, T> {
         self.population.reset_limit_increment = reset_limit_increment;
         self
     }
 
     /// Set the population id. Currently this is only used for statistics
-    pub fn set_id(mut self, id: u32) -> PopulationBuilder<T> {
+    pub fn set_id(mut self, id: u32) -> PopulationBuilder<S, T> {
         for individual in &mut self.population.population {
             individual.id = id;
         }
@@ -154,7 +164,7 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
 
     /// This checks the configuration of the simulation and returns an error or Ok if no errors
     /// where found.
-    pub fn finalize(self) -> Result<T> {
+    pub fn finalize(self) -> Result<S, T> {
         match self.population {
             Population { num_of_individuals: 0...2, ..} => {
                 Err(Error::IndividualsTooLow)
@@ -162,6 +172,9 @@ impl<T: Individual + Send + Sync> PopulationBuilder<T> {
             Population { reset_limit_start: start,
                          reset_limit_end: end, ..} if (end > 0) && (start >= end) => {
                 Err(Error::LimitEndTooLow)
+            }
+            Population { data_source: None, ..} => {
+                Err(Error::DataSourceMissing)
             }
             _ => Ok(self.population)
         }

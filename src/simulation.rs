@@ -37,13 +37,13 @@ pub enum SimulationType {
 
 /// The `Simulation` type. Contains all the information / configuration for the simulation to run.
 /// Use the `SimulationBuilder` in order to create a simulation.
-pub struct Simulation<T: Individual + Send + Sync> {
+pub struct Simulation<S: Send + Sync, T: Individual + Send + Sync> {
     /// How should the simulation stop ?
     pub type_of_simulation: SimulationType,
     /// The number of threads to use to speed up calculation.
     pub num_of_threads: usize,
     /// All the populations for the simulation. Contains all individuals for the simulation.
-    pub habitat: Vec<Population<T>>,
+    pub habitat: Vec<Population<S, T>>,
     /// The total run time for the simulation. This will be calculated once the stimulation has
     /// finished.
     pub total_time_in_ms: f64,
@@ -70,7 +70,7 @@ pub struct SimulationResult<T: Individual + Send + Sync> {
 }
 
 /// This implements the two functions `run` and `print_fitness` for the struct `Simulation`.
-impl<T: Individual + Send + Sync + Clone> Simulation<T> {
+impl<S: Send + Sync, T: Individual + Send + Sync + Clone> Simulation<S, T> {
     /// This actually runs the simulation.
     /// Depending on the type of simulation (`EndIteration`, `EndFactor` or `EndFitness`)
     /// the iteration loop will check for the stop condition accordingly.

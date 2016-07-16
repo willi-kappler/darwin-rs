@@ -11,8 +11,8 @@ extern crate rand;
 extern crate darwin_rs;
 
 use rand::Rng;
-use std::time::Duration;
-use std::thread::sleep;
+// use std::time::Duration;
+// use std::thread::sleep;
 
 // Internal modules
 use darwin_rs::individual::Individual;

@@ -19,7 +19,7 @@ use individual::{Individual, IndividualWrapper};
 /// The `Population` type. Contains the actual individuals (through a wrapper) and information
 /// the reset_limit. Use the `PopulationBuilder` in your main program to create populations.
 #[derive(Clone)]
-pub struct Population<T: Individual + Send + Sync> {
+pub struct Population<S, T: Individual> {
     /// The number of individuals for this population.
     pub num_of_individuals: u32,
     /// The actual population (vector of individuals).
@@ -41,9 +41,11 @@ pub struct Population<T: Individual + Send + Sync> {
     pub reset_counter: u32,
     /// The ID of the population, only used for statistics.
     pub id: u32,
+    /// The data source for each individual.
+    pub data_source: Option<S>
 }
 
-impl<T: Individual + Send + Sync + Clone> Population<T> {
+impl<S, T: Individual + Send + Sync + Clone> Population<S, T> {
     /// Just calculates the fitness for each individual.
     pub fn calculate_fitness(&mut self) {
         for wrapper in &mut self.population {
@@ -86,9 +88,11 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
                 // Kill all individuals since we are most likely stuck in a local minimum.
                 // Why is it so ? Because the simulation is still running!
                 // Keep number of mutations.
-                for wrapper in &mut self.population {
-                    wrapper.individual = Individual::new();
-                    wrapper.fitness = wrapper.individual.calculate_fitness();
+                if let Some(ref data_source) = self.data_source {
+                    for wrapper in &mut self.population {
+                        wrapper.individual = Individual::new(data_source);
+                        wrapper.fitness = wrapper.individual.calculate_fitness();
+                    }
                 }
             }
         }
