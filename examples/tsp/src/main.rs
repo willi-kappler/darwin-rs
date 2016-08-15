@@ -155,8 +155,7 @@ fn main() {
 
     let tsp = simulation_builder::SimulationBuilder::<CityItem>::new()
         // .factor(0.34)
-        .fitness(460.0)
-        // .fitness(387.0) // use this line for optimal solution
+        .fitness(459.0)
         .threads(4)
         .add_population(population1)
         .add_population(population2)
