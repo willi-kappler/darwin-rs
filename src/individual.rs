@@ -88,7 +88,7 @@ mod test {
     struct IndividualTest1;
 
     impl Individual for IndividualTest1 {
-        fn new() -> IndividualTest1 {
+        fn new<S>(data_source: S) -> IndividualTest1 {
             IndividualTest1
         }
 
@@ -102,28 +102,25 @@ mod test {
 
     #[test]
     fn compare1() {
-        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 1.2, num_of_mutations: 21};
-        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 5.93, num_of_mutations: 7};
+        let individual1 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 1.2, num_of_mutations: 21, id: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 5.93, num_of_mutations: 7, id: 1};
 
         assert!(individual2 > individual1);
     }
 
     #[test]
     fn compare2() {
-        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 3.78, num_of_mutations: 21};
-        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 7.12, num_of_mutations: 7};
+        let individual1 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 3.78, num_of_mutations: 21, id: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 7.12, num_of_mutations: 7, id: 1};
 
-        assert!(individual2 < individual1);
+        assert!(individual1 < individual2);
     }
 
     #[test]
     fn compare3() {
-        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 21.996, num_of_mutations: 11};
-        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 21.996, num_of_mutations: 34};
+        let individual1 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 21.996, num_of_mutations: 11, id: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 21.996, num_of_mutations: 34, id: 1};
 
         assert!(individual1 == individual2);
     }
-
-
-
 }

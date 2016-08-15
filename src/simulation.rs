@@ -14,7 +14,7 @@
 use std::time::Instant;
 use std::sync::Mutex;
 
-use jobsteal::{make_pool, IntoSplitIterator, SplitIterator};
+use jobsteal::{make_pool, IntoSpliterator, Spliterator};
 
 use individual::{Individual, IndividualWrapper};
 use population::Population;
