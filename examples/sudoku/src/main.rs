@@ -3,6 +3,7 @@
 // using an evolutionary algorithm.
 
 extern crate rand;
+#[macro_use] extern crate lazy_static;
 
 // internal crates
 extern crate darwin_rs;
@@ -13,6 +14,20 @@ use rand::Rng;
 use darwin_rs::individual::Individual;
 use darwin_rs::simulation_builder;
 use darwin_rs::population_builder;
+
+lazy_static! {
+    // Taken from Wikipedia: https://en.wikipedia.org/wiki/Sudoku
+    static ref UNSOLVED_SUDOKU : Vec<u8> =
+        vec![5, 3, 4, 6, 7, 8, 9, 1, 2,
+             6, 7, 2, 1, 9, 5, 3, 4, 8,
+             1, 9, 8, 3, 4, 2, 5, 6, 7,
+             8, 5, 9, 7, 6, 1, 4, 2, 3,
+             4, 2, 6, 8, 5, 3, 7, 9, 1,
+             7, 1, 3, 9, 2, 4, 8, 5, 6,
+             0, 6, 0, 0, 0, 0, 2, 8, 0,
+             0, 0, 0, 4, 1, 9, 0, 0, 5,
+             0, 0, 0, 0, 8, 0, 0, 7, 9];
+}
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
 fn fitness_of_one_cell(sudoku: &[u8], row: usize, col: usize) -> f64 {
@@ -88,16 +103,14 @@ fn fitness_of_one_col(sudoku: &[u8], col: usize) -> f64 {
 
 #[derive(Debug, Clone)]
 struct Sudoku {
-    original: Vec<u8>,
     solved: Vec<u8>
 }
 
 // implement trait functions mutate and calculate_fitness:
 impl Individual for Sudoku {
-    fn new<S>(data_source: S) -> Sudoku {
-        let mut sudoku = Sudoku {
-            original: data_source.clone(),
-            solved: data_source.clone()
+    fn new() -> Sudoku {
+        let sudoku = Sudoku {
+            solved: UNSOLVED_SUDOKU.clone()
         };
 
         sudoku
@@ -106,11 +119,11 @@ impl Individual for Sudoku {
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
-        let mut index: usize = rng.gen_range(0, self.original.len());
+        let mut index: usize = rng.gen_range(0, UNSOLVED_SUDOKU.len());
 
         // pick free (= not pre set) position
-        while self.original[index] != 0 {
-            index = rng.gen_range(0, self.original.len());
+        while UNSOLVED_SUDOKU[index] != 0 {
+            index = rng.gen_range(0, UNSOLVED_SUDOKU.len());
         }
 
         // and set it to a random value
@@ -150,27 +163,19 @@ impl Individual for Sudoku {
 fn main() {
     println!("Darwin test: sudoku solver");
 
-    // Taken from Wikipedia: https://en.wikipedia.org/wiki/Sudoku
-    let original = vec![5, 3, 4, 6, 7, 8, 9, 1, 2, 6, 7, 2, 1, 9, 5, 3, 4, 8, 1, 9, 8, 3, 4, 2,
-                   5, 6, 7, 8, 5, 9, 7, 6, 1, 4, 2, 3, 4, 2, 6, 8, 5, 3, 7, 9, 1, 7, 1, 3,
-                   9, 2, 4, 8, 5, 6, 0, 6, 0, 0, 0, 0, 2, 8, 0, 0, 0, 0, 4, 1, 9, 0, 0, 5,
-                   0, 0, 0, 0, 8, 0, 0, 7, 9];
-
-    let population1 = population_builder::PopulationBuilder::<Vec<u8>,Sudoku>::new()
+    let population1 = population_builder::PopulationBuilder::<Sudoku>::new()
         .set_id(1)
-        .set_data_source(original)
         .individuals(100)
         .increasing_exp_mutation_rate(1.01)
         .finalize().unwrap();
 
-    let population2 = population_builder::PopulationBuilder::<Vec<u8>,Sudoku>::new()
+    let population2 = population_builder::PopulationBuilder::<Sudoku>::new()
         .set_id(2)
-        .set_data_source(original)
         .individuals(100)
         .increasing_exp_mutation_rate(1.02)
         .finalize().unwrap();
 
-    let sudoku = simulation_builder::SimulationBuilder::<Vec<u8>,Sudoku>::new()
+    let sudoku = simulation_builder::SimulationBuilder::<Sudoku>::new()
         .fitness(0.0)
         .threads(2)
         .add_population(population1)
