@@ -10,6 +10,7 @@ extern crate rand;
 extern crate image;
 extern crate imageproc;
 extern crate freetype;
+#[macro_use] extern crate lazy_static;
 
 // internal crates
 extern crate darwin_rs;
@@ -36,12 +37,12 @@ struct TextBox {
 #[derive(Debug, Clone)]
 struct OCRItem {
     content: Vec<TextBox>,
-    original_img: Box<ImageBuffer<Luma<u8>, Vec<u8>>>,
+    // put inside lazy_static: Box<ImageBuffer<Luma<u8>, Vec<u8>>>,
 }
 
 impl Individual for OCRItem {
-    fn new<TextBox>(data_source: TextBox) -> OCRItem {
-        OCRItem { content: Vec::new(), original_img: Box::new(data_source) }
+    fn new() -> OCRItem {
+        OCRItem { content: Vec::new() }
     }
 
     fn mutate(&mut self) {}
@@ -105,7 +106,6 @@ fn main() {
 
     let population1 = population_builder::PopulationBuilder::<OCRItem>::new()
         .set_id(1)
-        .set_data_source(&original_img)
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
         .reset_limit_increment(100)
@@ -115,7 +115,6 @@ fn main() {
 
     let population2 = population_builder::PopulationBuilder::<OCRItem>::new()
         .set_id(2)
-        .set_data_source(&original_img)
         .individuals(100)
         .increasing_exp_mutation_rate(1.04)
         .reset_limit_increment(200)
