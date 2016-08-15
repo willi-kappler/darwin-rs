@@ -56,7 +56,7 @@ impl<T: Individual> PartialOrd for IndividualWrapper<T> {
 /// This trait has to be implemented for the user defined struct.
 pub trait Individual {
     /// This method creates a new individual.
-    fn new<S>(data_source: S) -> Self;
+    fn new() -> Self;
     /// This method mutates the individual. Usually this is a cheap and easy to implement
     /// function. In order to improve the simulation, the user can make this function a bit
     /// "smarter". This is nicely shown in the tsp and tsp2 example. The tsp2 example contains
@@ -88,7 +88,7 @@ mod test {
     struct IndividualTest1;
 
     impl Individual for IndividualTest1 {
-        fn new<S>(data_source: S) -> IndividualTest1 {
+        fn new() -> IndividualTest1 {
             IndividualTest1
         }
 
@@ -102,24 +102,24 @@ mod test {
 
     #[test]
     fn compare1() {
-        let individual1 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 1.2, num_of_mutations: 21, id: 1};
-        let individual2 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 5.93, num_of_mutations: 7, id: 1};
+        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 1.2, num_of_mutations: 21, id: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 5.93, num_of_mutations: 7, id: 1};
 
         assert!(individual2 > individual1);
     }
 
     #[test]
     fn compare2() {
-        let individual1 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 3.78, num_of_mutations: 21, id: 1};
-        let individual2 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 7.12, num_of_mutations: 7, id: 1};
+        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 3.78, num_of_mutations: 21, id: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 7.12, num_of_mutations: 7, id: 1};
 
         assert!(individual1 < individual2);
     }
 
     #[test]
     fn compare3() {
-        let individual1 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 21.996, num_of_mutations: 11, id: 1};
-        let individual2 = IndividualWrapper{individual: IndividualTest1::new(()), fitness: 21.996, num_of_mutations: 34, id: 1};
+        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 21.996, num_of_mutations: 11, id: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 21.996, num_of_mutations: 34, id: 1};
 
         assert!(individual1 == individual2);
     }

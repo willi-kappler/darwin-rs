@@ -77,7 +77,7 @@ fn find_collisions(board: &[u8], row: usize, col: usize) -> u8 {
 
 // implement trait functions mutate and calculate_fitness:
 impl Individual for Queens {
-    fn new<S>(data_source: S) -> Queens {
+    fn new() -> Queens {
         Queens {
             // Start with all queens in one row
             board: vec![
@@ -134,39 +134,35 @@ impl Individual for Queens {
 fn main() {
     println!("Darwin test: queens problem");
 
-    let population1 = population_builder::PopulationBuilder::<(),Queens>::new()
+    let population1 = population_builder::PopulationBuilder::<Queens>::new()
         .set_id(1)
-        .set_data_source(()) // unit value here, since data source is not used in this example
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
-    let population2 = population_builder::PopulationBuilder::<(),Queens>::new()
+    let population2 = population_builder::PopulationBuilder::<Queens>::new()
         .set_id(2)
-        .set_data_source(()) // unit value here, since data source is not used in this example
         .individuals(100)
         .increasing_exp_mutation_rate(1.04)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
-    let population3 = population_builder::PopulationBuilder::<(),Queens>::new()
+    let population3 = population_builder::PopulationBuilder::<Queens>::new()
         .set_id(3)
-        .set_data_source(()) // unit value here, since data source is not used in this example
         .individuals(100)
         .increasing_exp_mutation_rate(1.05)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
-    let population4 = population_builder::PopulationBuilder::<(),Queens>::new()
+    let population4 = population_builder::PopulationBuilder::<Queens>::new()
         .set_id(4)
-        .set_data_source(()) // unit value here, since data source is not used in this example
         .individuals(100)
         .increasing_exp_mutation_rate(1.06)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
-    let queens = simulation_builder::SimulationBuilder::<(),Queens>::new()
+    let queens = simulation_builder::SimulationBuilder::<Queens>::new()
         .fitness(0.0)
         .threads(2)
         .add_population(population1)
