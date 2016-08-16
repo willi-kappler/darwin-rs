@@ -1,6 +1,6 @@
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.2 (2016.07.xx)
+//! Written by Willi Kappler, Version 0.2 (2016.08.xx)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -64,9 +64,8 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
     /// 6. Truncated the big population to its original size and thus gets rid of all the less fittest
     /// individuals (they "die").
     /// 7. Check if the fittest individual (at index 0) in the current sorted population is better
-    /// (= fitter) than the global
-    /// fittest individual of the whole simulation. If yes, the global fittest individual is
-    /// replaced.
+    /// (= fitter) than the global fittest individual of the whole simulation. If yes, the global
+    /// fittest individual is replaced.
     /// 8. Calculate the new improvement factor and prepare for the next iteration.
     pub fn run_body(&mut self, simulation_result: &Mutex<SimulationResult<T>>,
             iteration_counter: u32) {
@@ -136,6 +135,6 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
             Err(e) => println!("Mutex (poison) error (simulation_result): {}, id: {}", e, self.id)
         }
         // No need to unlock simulation_result, since it goes out of scope and then
-        // drop() (= destructor) is called.
+        // drop() (= destructor) is called automatically.
     }
 }

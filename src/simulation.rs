@@ -1,6 +1,6 @@
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.2 (2016.07.xx)
+//! Written by Willi Kappler, Version 0.2 (2016.08.xx)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -65,7 +65,7 @@ pub struct SimulationResult<T: Individual + Send + Sync> {
     /// Vector of fittest individuals. This will change during the simulation as soon as a new
     /// more fittest individual is found and pushed into the first position (index 0).
     pub fittest: Vec<IndividualWrapper<T>>,
-    /// Hoe many iteration did the simulation run
+    /// How many iteration did the simulation run
     pub iteration_counter: u32
 }
 

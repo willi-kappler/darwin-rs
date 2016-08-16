@@ -4,7 +4,7 @@
 # darwin-rs
 This library allows you to write evolutionary algorithms (EA) using the [Rust](https://www.rust-lang.org/) programming language.
 
-Written by Willi Kappler, License: MIT - Version 0.2 (2016.07.xx)
+Written by Willi Kappler, License: MIT - Version 0.2 (2016.08.xx)
 
 **Documentation:** [darwin-rs](https://willi-kappler.github.io/darwin-rs)
 
@@ -25,7 +25,7 @@ Add the following to the Cargo.toml in your project:
 
 ```toml
 [dependencies]
-darwin-rs = "0.1"
+darwin-rs = "0.2"
 ```
 
 And this in the rust source code of your application:
@@ -33,8 +33,9 @@ And this in the rust source code of your application:
 ```rust
 extern crate darwin_rs;
 
-use darwin_rs::simulation_builder::{SimulationBuilder, Error};
-use darwin_rs::individual::{Individual};
+use darwin_rs::individual::Individual;
+use darwin_rs::simulation_builder;
+use darwin_rs::population_builder;
 ```
 
 Basically you have to implement the trait ```Individual``` for your data structure:
@@ -69,6 +70,42 @@ These three methods are needed:
 
 **calculate_fitness(&self) -> f64**: this calculates the fitness value, that is how close is this individual struct instance to the perfect solution ? Lower values means better fit (or less error).
 
+Now you have to create one or more populations that can have different properties:
+
+```rust
+let population1 = population_builder::PopulationBuilder::<MyStruct>::new()
+    .set_id(1)
+    .individuals(100)
+    .increasing_exp_mutation_rate(1.03)
+    .reset_limit_increment(100)
+    .reset_limit_start(100)
+    .reset_limit_end(1000)
+    .finalize().unwrap();
+
+
+let population2 = population_builder::PopulationBuilder::<MyStruct>::new()
+    .set_id(1)
+    .individuals(50)
+    .increasing_exp_mutation_rate(1.04)
+    .reset_limit_increment(200)
+    .reset_limit_start(100)
+    .reset_limit_end(2000)
+    .finalize().unwrap();
+
+
+```
+**set_id()**: Sets the population ID. This can be any positive u32 integer. Currently this is only used for internal statistics, for example: which population does have the most fittest individuals ? This may help you to set the correct parameters for your simulations.
+
+**individuals()**: How many individuals (= distinct copies of your data structure) should the population have ?
+
+**increasing_exp_mutation_rate()**: Sets the mutation rate for each individual: Use exponential mutation rate.
+
+**reset_limit_increment()**: Increase the reset limit by this amount every time the iteration counter reaches the limit
+
+**reset_limit_start()**: The start value of the reset limit.
+
+**reset_limit_end()**: The end value of the reset limit. If this end value is reached the reset limit is reset to the start value above.
+
 
 After that you have to create a new instance of the simulation and provide the settings:
 
@@ -77,39 +114,39 @@ After that you have to create a new instance of the simulation and provide the s
 let my_builder = SimulationBuilder::<MyStruct>::new()
     .factor(0.34)
     .threads(2)
-    .individuals(100)
-    .increasing_exp_mutation_rate(1.03)
+    .add_population(population1)
+    .add_population(population2)
     .finalize();
 
     match my_builder {
-        Err(Error::TooLowEndIteration) => println!("more than 10 iteratons needed"),
-        Err(Error::TooLowIndividuals) => println!("more than 2 individuals needed"),
+        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut my_simulation) => {
             my_simulation.run();
 
             println!("total run time: {} ms", my_simulation.total_time_in_ms);
-            println!("improvement factor: {}", my_simulation.improvement_factor);
-            println!("number of iterations: {}", my_simulation.iteration_counter);
+            println!("improvement factor: {}", my_simulation.simulation_result.improvement_factor);
+            println!("number of iterations: {}", my_simulation.simulation_result.iteration_counter);
 
             my_simulation.print_fitness();
         }
     }
 ```
 
+
 **factor()**: Sets the termination condition: if the improvement factor is better or equal to this value, the simulation stops.
 
 **threads()**: Number of threads to use for the simulation.
 
-**individuals()**: How many individuals (= distinct copies of your data structure) should the simulation have ?
-
-**increasing_exp_mutation_rate()**: Sets the mutation rate for each individual: Use exponential mutation rate.
+**add_population()**: This adds the previously created population to the simulation.
 
 **finalize()**: Finish setup and do sanity check. Returns ```Ok(Simulation)``` if there are no errors in the configuration.
 
-Then just do a match on the result of ```finalize()``` and call ```simulation.run()``` to start the simulation. After the finishing it, you can access some statistics (```total_time_in_ms```, ```improvement_factor```, ```iteration_counter```) and the population of course:
+Then just do a match on the result of ```finalize()``` and call ```simulation.run()``` to start the simulation. After the finishing it, you can access some statistics (```total_time_in_ms```, ```improvement_factor```, ```iteration_counter```) and the populations of course:
 
 ```rust
-    for wrapper in my_simulation.population {...}
+    for population in my_simulation.habitat {
+      for wrapper in population.population {...}
+    }
 ```
 Each individual is wrapped inside a ```Wrapper``` struct that contains additional information needed for the simulation: **fitness** and the **number of mutations**.
 See also the example folder for full working programs.
@@ -139,7 +176,7 @@ TODO:
 - [x] Split up code
 - [x] Allow user to specify start and end of reset limit
 - [ ] Use log file instead of println!()
-- [ ] Use multiple population
+- [x] Use multiple population
 - [ ] Maybe use phantom type for builder pattern to detect configuration error at compile type ? (https://www.reddit.com/r/rust/comments/2pgrz7/required_parameters_utilizing_the_builder_pattern/)
 - [ ] Add super optimization (only allow changes that have an improvement) ?
 - [ ] Add possibility to load and save population / individuals in order to cancel / resume simulation (serde)

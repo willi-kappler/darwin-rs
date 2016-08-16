@@ -1,6 +1,6 @@
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.2 (2016.07.xx)
+//! Written by Willi Kappler, Version 0.2 (2016.08.xx)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
