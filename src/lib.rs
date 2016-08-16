@@ -24,3 +24,9 @@ pub mod simulation;
 pub mod simulation_builder;
 pub mod population;
 pub mod population_builder;
+
+pub use individual::Individual;
+pub use simulation::Simulation;
+pub use simulation_builder::SimulationBuilder;
+pub use population::Population;
+pub use population_builder::PopulationBuilder;
