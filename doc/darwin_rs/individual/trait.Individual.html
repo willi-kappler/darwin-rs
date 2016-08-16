@@ -47,12 +47,14 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-50' class='srclink' href='../../src/darwin_rs/src/individual.rs.html#59-84' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-50' class='srclink' href='../../src/darwin_rs/src/individual.rs.html#62-87' title='goto source code'>[src]</a></span></h1>
 <pre class='rust trait'>pub trait Individual {
     fn <a href='#tymethod.new' class='fnname'>new</a>() -&gt; Self;
     fn <a href='#tymethod.mutate' class='fnname'>mutate</a>(&amp;mut self);
     fn <a href='#tymethod.calculate_fitness' class='fnname'>calculate_fitness</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>;
-}</pre><div class='docblock'><p>This trait has to be implemented for the user defined struct.</p>
+}</pre><div class='docblock'><p>This trait has to be implemented for the user defined struct.
+Tip: Use <a href="https://github.com/rust-lang-nursery/lazy-static.rs">lazy_static</a> to share large
+data structure between individuals (see TSP example).</p>
 </div>
             <h2 id='required-methods'>Required Methods</h2>
             <div class='methods'>

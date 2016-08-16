@@ -47,12 +47,12 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-6' class='srclink' href='../../src/darwin_rs/src/individual.rs.html#1-128' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-6' class='srclink' href='../../src/darwin_rs/src/individual.rs.html#1-131' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>This module defines the trait and the data structure needed for specifying each individual in a population.</p>
 
 <p>darwin-rs: evolutionary algorithms with Rust</p>
 
-<p>Written by Willi Kappler, Version 0.2 (2016.08.xx)</p>
+<p>Written by Willi Kappler, Version 0.2 (2016.08.17)</p>
 
 <p>Repository: <a href="https://github.com/willi-kappler/darwin-rs">https://github.com/willi-kappler/darwin-rs</a></p>
 
@@ -76,7 +76,9 @@ has to run in one iteration.</p>
                            <td><a class='trait' href='trait.Individual.html'
                                   title='darwin_rs::individual::Individual'>Individual</a></td>
                            <td class='docblock short'>
-                                <p>This trait has to be implemented for the user defined struct.</p>
+                                <p>This trait has to be implemented for the user defined struct.
+Tip: Use <a href="https://github.com/rust-lang-nursery/lazy-static.rs">lazy_static</a> to share large
+data structure between individuals (see TSP example).</p>
                            </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>

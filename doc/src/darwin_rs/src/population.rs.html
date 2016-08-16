@@ -192,12 +192,14 @@
 <span id="148">148</span>
 <span id="149">149</span>
 <span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! This module defines structure and methods for a population that is needed by a smulation.</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! darwin-rs: evolutionary algorithms with Rust</span>
 <span class='doccomment'>//!</span>
-<span class='doccomment'>//! Written by Willi Kappler, Version 0.2 (2016.08.xx)</span>
+<span class='doccomment'>//! Written by Willi Kappler, Version 0.2 (2016.08.17)</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! Repository: https://github.com/willi-kappler/darwin-rs</span>
 <span class='doccomment'>//!</span>
@@ -236,7 +238,9 @@
     <span class='doccomment'>/// the simulation restarts anew with an increased `reset_limit`. This prevents local minima,</span>
     <span class='doccomment'>/// but also discards the current fittest individual.</span>
     <span class='kw'>pub</span> <span class='ident'>reset_counter</span>: <span class='ident'>u32</span>,
-    <span class='doccomment'>/// The ID of the population, only used for statistics.</span>
+    <span class='doccomment'>/// The ID of the population, only used for statistics. For example: which population does</span>
+    <span class='doccomment'>/// have the most fittest individuals ? This may help you to set the correct parameters for</span>
+    <span class='doccomment'>/// your simulations.</span>
     <span class='kw'>pub</span> <span class='ident'>id</span>: <span class='ident'>u32</span>,
 }
 

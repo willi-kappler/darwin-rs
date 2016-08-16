@@ -170,12 +170,15 @@
 <span id="126">126</span>
 <span id="127">127</span>
 <span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! This module defines the trait and the data structure needed for specifying each individual in a population.</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! darwin-rs: evolutionary algorithms with Rust</span>
 <span class='doccomment'>//!</span>
-<span class='doccomment'>//! Written by Willi Kappler, Version 0.2 (2016.08.xx)</span>
+<span class='doccomment'>//! Written by Willi Kappler, Version 0.2 (2016.08.17)</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! Repository: https://github.com/willi-kappler/darwin-rs</span>
 <span class='doccomment'>//!</span>
@@ -229,6 +232,9 @@
 }
 
 <span class='doccomment'>/// This trait has to be implemented for the user defined struct.</span>
+<span class='doccomment'>/// Tip: Use [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs) to share large</span>
+<span class='doccomment'>/// data structure between individuals (see TSP example).</span>
+
 <span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>Individual</span> {
     <span class='doccomment'>/// This method creates a new individual.</span>
     <span class='kw'>fn</span> <span class='ident'>new</span>() <span class='op'>-&gt;</span> <span class='self'>Self</span>;
