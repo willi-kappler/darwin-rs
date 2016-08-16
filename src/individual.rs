@@ -56,6 +56,9 @@ impl<T: Individual> PartialOrd for IndividualWrapper<T> {
 }
 
 /// This trait has to be implemented for the user defined struct.
+/// Tip: Use [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs) to share large
+/// data structure between individuals (see TSP example).
+
 pub trait Individual {
     /// This method creates a new individual.
     fn new() -> Self;

@@ -41,7 +41,9 @@ pub struct Population<T: Individual> {
     /// the simulation restarts anew with an increased `reset_limit`. This prevents local minima,
     /// but also discards the current fittest individual.
     pub reset_counter: u32,
-    /// The ID of the population, only used for statistics.
+    /// The ID of the population, only used for statistics. For example: which population does
+    /// have the most fittest individuals ? This may help you to set the correct parameters for
+    /// your simulations.
     pub id: u32,
 }
 
