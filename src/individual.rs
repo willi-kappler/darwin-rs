@@ -1,3 +1,5 @@
+//! This module defines the trait and the data structure needed for specifying each individual in a population.
+//!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
 //! Written by Willi Kappler, Version 0.2 (2016.08.xx)
@@ -21,7 +23,7 @@ use std::cmp::Ordering;
 pub struct IndividualWrapper<T: Individual> {
     /// The actual individual, user defined struct.
     pub individual: T,
-    /// the current calculated fitness for this individual.
+    /// The current calculated fitness for this individual.
     pub fitness: f64,
     /// The number of mutation this individual is doing in one iteration.
     pub num_of_mutations: u32,

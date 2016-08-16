@@ -1,3 +1,5 @@
+//! This module defines helper functions (builder pattern) to create a valid population.
+//!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
 //! Written by Willi Kappler, Version 0.2 (2016.08.xx)
@@ -28,7 +30,7 @@ quick_error! {
     pub enum PopError {
         /// The number of individuals is too low, should be >= 3
         IndividualsTooLow {}
-        /// reset_limit_start must be greater than reset_limit_end
+        /// `reset_limit_start` must be greater than `reset_limit_end`
         LimitEndTooLow {}
     }
 }

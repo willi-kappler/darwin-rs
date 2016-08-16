@@ -1,3 +1,5 @@
+//! This module defines helper functions (builder pattern) to create a valid simulation.
+//!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
 //! Written by Willi Kappler, Version 0.2 (2016.08.xx)

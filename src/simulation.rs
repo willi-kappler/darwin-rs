@@ -1,3 +1,5 @@
+//! This module defines structures and methods for an EA simulation.
+//!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
 //! Written by Willi Kappler, Version 0.2 (2016.08.xx)
@@ -47,7 +49,7 @@ pub struct Simulation<T: Individual + Send + Sync> {
     /// The total run time for the simulation. This will be calculated once the stimulation has
     /// finished.
     pub total_time_in_ms: f64,
-    /// The result of the simulation: improvement_factor, original_fitness and a vector of
+    /// The result of the simulation: `improvement_factor`, `original_fitness` and a vector of
     /// fittest individuals
     pub simulation_result: SimulationResult<T>
 }
