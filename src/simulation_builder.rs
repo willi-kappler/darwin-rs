@@ -26,13 +26,13 @@ pub struct SimulationBuilder<T: Individual + Send + Sync> {
 
 quick_error! {
     #[derive(Debug)]
-    pub enum Error {
+    pub enum SimError {
         /// The number of iteration is too low, should be >= 10
         EndIterationTooLow {}
     }
 }
 
-pub type Result<T> = std::result::Result<Simulation<T>, Error>;
+pub type Result<T> = std::result::Result<Simulation<T>, SimError>;
 
 /// This implementation contains all the helper method to build (configure) a valid simulation
 impl<T: Individual + Send + Sync> SimulationBuilder<T> {
@@ -93,7 +93,7 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     pub fn finalize(self) -> Result<T> {
         match self.simulation {
             Simulation { type_of_simulation: SimulationType::EndIteration(0...9), .. } => {
-                Err(Error::EndIterationTooLow)
+                Err(SimError::EndIterationTooLow)
             }
             _ => Ok(self.simulation),
         }

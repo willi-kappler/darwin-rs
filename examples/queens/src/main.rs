@@ -10,9 +10,7 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // internal modules
-use darwin_rs::individual::Individual;
-use darwin_rs::simulation_builder;
-use darwin_rs::population_builder;
+use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
 
 #[derive(Debug, Clone)]
 struct Queens {
@@ -134,35 +132,35 @@ impl Individual for Queens {
 fn main() {
     println!("Darwin test: queens problem");
 
-    let population1 = population_builder::PopulationBuilder::<Queens>::new()
+    let population1 = PopulationBuilder::<Queens>::new()
         .set_id(1)
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
-    let population2 = population_builder::PopulationBuilder::<Queens>::new()
+    let population2 = PopulationBuilder::<Queens>::new()
         .set_id(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.04)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
-    let population3 = population_builder::PopulationBuilder::<Queens>::new()
+    let population3 = PopulationBuilder::<Queens>::new()
         .set_id(3)
         .individuals(100)
         .increasing_exp_mutation_rate(1.05)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
-    let population4 = population_builder::PopulationBuilder::<Queens>::new()
+    let population4 = PopulationBuilder::<Queens>::new()
         .set_id(4)
         .individuals(100)
         .increasing_exp_mutation_rate(1.06)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
-    let queens = simulation_builder::SimulationBuilder::<Queens>::new()
+    let queens = SimulationBuilder::<Queens>::new()
         .fitness(0.0)
         .threads(2)
         .add_population(population1)
@@ -172,7 +170,7 @@ fn main() {
         .finalize();
 
     match queens {
-        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut queens_simulation) => {
             queens_simulation.run();
 

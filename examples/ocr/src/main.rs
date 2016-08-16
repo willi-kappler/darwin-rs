@@ -23,9 +23,7 @@ use image::imageops::replace;
 use imageproc::stats::root_mean_squared_error;
 
 // internal modules
-use darwin_rs::individual::Individual;
-use darwin_rs::simulation_builder;
-use darwin_rs::population_builder;
+use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
 
 #[derive(Debug, Clone)]
 struct TextBox {
@@ -104,7 +102,7 @@ fn main() {
     let _ = original_img.save(&img_file);
 
 
-    let population1 = population_builder::PopulationBuilder::<OCRItem>::new()
+    let population1 = PopulationBuilder::<OCRItem>::new()
         .set_id(1)
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
@@ -113,7 +111,7 @@ fn main() {
         .reset_limit_end(1000)
         .finalize().unwrap();
 
-    let population2 = population_builder::PopulationBuilder::<OCRItem>::new()
+    let population2 = PopulationBuilder::<OCRItem>::new()
         .set_id(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.04)
@@ -123,7 +121,7 @@ fn main() {
         .finalize().unwrap();
 
 
-    let ocr_builder = simulation_builder::SimulationBuilder::<OCRItem>::new()
+    let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(10.0)
         .threads(2)
         .add_population(population1)
@@ -131,7 +129,7 @@ fn main() {
         .finalize();
 
     match ocr_builder {
-        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut tsp_simulation) => {
             // tsp_simulation.run();
             //

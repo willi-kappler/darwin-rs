@@ -14,9 +14,7 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // Internal modules
-use darwin_rs::individual::Individual;
-use darwin_rs::simulation_builder;
-use darwin_rs::population_builder;
+use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
 
 lazy_static! {
     static ref CITY_POSITIONS : Vec<(f64, f64)> =
@@ -126,19 +124,19 @@ impl Individual for CityItem {
 fn main() {
     println!("Darwin test: traveling salesman problem");
 
-    let population1 = population_builder::PopulationBuilder::<CityItem>::new()
+    let population1 = PopulationBuilder::<CityItem>::new()
         .set_id(1)
         .individuals(100)
         .increasing_exp_mutation_rate(1.03)
         .finalize().unwrap();
 
-    let population2 = population_builder::PopulationBuilder::<CityItem>::new()
+    let population2 = PopulationBuilder::<CityItem>::new()
         .set_id(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.04)
         .finalize().unwrap();
 
-    let tsp = simulation_builder::SimulationBuilder::<CityItem>::new()
+    let tsp = SimulationBuilder::<CityItem>::new()
         .fitness(459.0) // optimal solution
         .threads(2)
         .add_population(population1)
@@ -146,7 +144,7 @@ fn main() {
         .finalize();
 
     match tsp {
-        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 

@@ -11,9 +11,7 @@ extern crate darwin_rs;
 use rand::Rng;
 
 // internal modules
-use darwin_rs::individual::Individual;
-use darwin_rs::simulation_builder;
-use darwin_rs::population_builder;
+use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
 
 lazy_static! {
     // Taken from Wikipedia: https://en.wikipedia.org/wiki/Sudoku
@@ -163,19 +161,19 @@ impl Individual for Sudoku {
 fn main() {
     println!("Darwin test: sudoku solver");
 
-    let population1 = population_builder::PopulationBuilder::<Sudoku>::new()
+    let population1 = PopulationBuilder::<Sudoku>::new()
         .set_id(1)
         .individuals(100)
         .increasing_exp_mutation_rate(1.01)
         .finalize().unwrap();
 
-    let population2 = population_builder::PopulationBuilder::<Sudoku>::new()
+    let population2 = PopulationBuilder::<Sudoku>::new()
         .set_id(2)
         .individuals(100)
         .increasing_exp_mutation_rate(1.02)
         .finalize().unwrap();
 
-    let sudoku = simulation_builder::SimulationBuilder::<Sudoku>::new()
+    let sudoku = SimulationBuilder::<Sudoku>::new()
         .fitness(0.0)
         .threads(2)
         .add_population(population1)
@@ -183,7 +181,7 @@ fn main() {
         .finalize();
 
     match sudoku {
-        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut sudoku_simulation) => {
             sudoku_simulation.run();
 

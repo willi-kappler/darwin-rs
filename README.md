@@ -33,9 +33,7 @@ And this in the rust source code of your application:
 ```rust
 extern crate darwin_rs;
 
-use darwin_rs::individual::Individual;
-use darwin_rs::simulation_builder;
-use darwin_rs::population_builder;
+use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
 ```
 
 Basically you have to implement the trait ```Individual``` for your data structure:
@@ -70,10 +68,12 @@ These three methods are needed:
 
 **calculate_fitness(&self) -> f64**: this calculates the fitness value, that is how close is this individual struct instance to the perfect solution ? Lower values means better fit (or less error).
 
+Tip: Use [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs) to share large data structure between individuals (see TSP example).
+
 Now you have to create one or more populations that can have different properties:
 
 ```rust
-let population1 = population_builder::PopulationBuilder::<MyStruct>::new()
+let population1 = PopulationBuilder::<MyStruct>::new()
     .set_id(1)
     .individuals(100)
     .increasing_exp_mutation_rate(1.03)
@@ -83,7 +83,7 @@ let population1 = population_builder::PopulationBuilder::<MyStruct>::new()
     .finalize().unwrap();
 
 
-let population2 = population_builder::PopulationBuilder::<MyStruct>::new()
+let population2 = PopulationBuilder::<MyStruct>::new()
     .set_id(1)
     .individuals(50)
     .increasing_exp_mutation_rate(1.04)
@@ -119,7 +119,7 @@ let my_builder = SimulationBuilder::<MyStruct>::new()
     .finalize();
 
     match my_builder {
-        Err(simulation_builder::Error::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
         Ok(mut my_simulation) => {
             my_simulation.run();
 
