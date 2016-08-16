@@ -4,7 +4,7 @@
 # darwin-rs
 This library allows you to write evolutionary algorithms (EA) using the [Rust](https://www.rust-lang.org/) programming language.
 
-Written by Willi Kappler, License: MIT - Version 0.2 (2016.08.xx)
+Written by Willi Kappler, License: MIT - Version 0.2 (2016.08.17)
 
 **Documentation:** [darwin-rs](https://willi-kappler.github.io/darwin-rs)
 
