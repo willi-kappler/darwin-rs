@@ -53,8 +53,8 @@ pub struct Simulation<T: Individual + Send + Sync> {
 }
 
 /// The `SimulationResult` Type. Holds the simulation results:
-/// All the fittest individuals, the improvement_factor, the iteration_counter and the
-/// original_fitness.
+/// All the fittest individuals, the `improvement_factor`, the `iteration_counter` and the
+/// `original_fitness`.
 #[derive(Clone)]
 pub struct SimulationResult<T: Individual + Send + Sync> {
     /// The current improvement factor, that means the ration between the very first and the

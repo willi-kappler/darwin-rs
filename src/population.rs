@@ -17,7 +17,7 @@ use simulation::SimulationResult;
 use individual::{Individual, IndividualWrapper};
 
 /// The `Population` type. Contains the actual individuals (through a wrapper) and information
-/// the reset_limit. Use the `PopulationBuilder` in your main program to create populations.
+/// the `reset_limit`. Use the `PopulationBuilder` in your main program to create populations.
 #[derive(Clone)]
 pub struct Population<T: Individual> {
     /// The number of individuals for this population.
