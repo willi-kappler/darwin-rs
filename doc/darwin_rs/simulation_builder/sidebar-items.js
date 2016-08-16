@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["SimError",""]],"struct":[["SimulationBuilder","This is a helper struct in order to build (configure) a valid simulation. See builder pattern: https://en.wikipedia.org/wiki/Builder_pattern"]],"type":[["Result",""]]});

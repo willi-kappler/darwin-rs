@@ -47,10 +47,10 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-345' class='srclink' href='../../../src/jobsteal/iter/collect.rs.html#21-26' title='goto source code'>[src]</a></span></h1>
-<pre class='rust fn'>pub fn collect&lt;I: <a class='trait' href='../../../jobsteal/iter/trait.IntoSplitIterator.html' title='jobsteal::iter::IntoSplitIterator'>IntoSplitIterator</a>, T&gt;(iter: I, spawner: &amp;<a class='struct' href='../../../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>) -&gt; T <span class='where'>where I::Item: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a>, T: <a class='trait' href='https://doc.rust-lang.org/nightly/core/iter/trait.FromIterator.html' title='core::iter::FromIterator'>FromIterator</a>&lt;I::Item&gt; + <a class='trait' href='../../../jobsteal/iter/collect/trait.Combine.html' title='jobsteal::iter::collect::Combine'>Combine</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a></span></pre><div class='docblock'><p>Collect the elements of this iterator into a collection.</p>
+               </span><a id='src-293' class='srclink' href='../../../src/jobsteal/iter/collect.rs.html#21-26' title='goto source code'>[src]</a></span></h1>
+<pre class='rust fn'>pub fn collect&lt;I: <a class='trait' href='../../../jobsteal/iter/trait.IntoSpliterator.html' title='jobsteal::iter::IntoSpliterator'>IntoSpliterator</a>, T&gt;(iter: I, spawner: &amp;<a class='struct' href='../../../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>) -&gt; T <span class='where'>where I::Item: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a>, T: <a class='trait' href='https://doc.rust-lang.org/nightly/core/iter/traits/trait.FromIterator.html' title='core::iter::traits::FromIterator'>FromIterator</a>&lt;I::Item&gt; + <a class='trait' href='../../../jobsteal/iter/collect/trait.Combine.html' title='jobsteal::iter::collect::Combine'>Combine</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a></span></pre><div class='docblock'><p>Collect the elements of this iterator into a collection.</p>
 
-<p>This is more easily used through <code>SplitIterator::collect()</code>.</p>
+<p>This is more easily used through <code>Spliterator::collect()</code>.</p>
 
 <p>Note that this works by repeatedly combining the outputs of
 FromIterator, so it may lead to more allocations than anticipated.</p>
@@ -77,6 +77,8 @@ FromIterator, so it may lead to more allocations than anticipated.</p>
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 

@@ -47,8 +47,8 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-1067' class='srclink' href='../../src/jobsteal/iter/mod.rs.html#282-308' title='goto source code'>[src]</a></span></h1>
-<pre class='rust trait'>pub trait Split: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/iter/trait.IntoIterator.html' title='core::iter::IntoIterator'>IntoIterator</a> {
+               </span><a id='src-1076' class='srclink' href='../../src/jobsteal/iter/mod.rs.html#283-309' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait Split: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/iter/traits/trait.IntoIterator.html' title='core::iter::traits::IntoIterator'>IntoIterator</a> {
     fn <a href='#tymethod.should_split' class='fnname'>should_split</a>(&amp;self, mul: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f32.html'>f32</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>&gt;;
     fn <a href='#tymethod.split' class='fnname'>split</a>(self, <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a>Self, Self<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a>;
 
@@ -81,11 +81,11 @@ a known lower bound (potentially zero) and an optional upper bound.</p>
 </div></div>
         <h2 id='implementors'>Implementors</h2>
         <ul class='item-list' id='implementors-list'>
-    <li><code>impl&lt;T: <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>&gt; <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a> for <a class='struct' href='../../jobsteal/iter/struct.Hide.html' title='jobsteal::iter::Hide'>Hide</a>&lt;<a class='struct' href='../../jobsteal/iter/struct.CostMul.html' title='jobsteal::iter::CostMul'>CostMul</a>&lt;T&gt;&gt;</code></li>
-<li><code>impl&lt;T: <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>&gt; <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a> for <a class='struct' href='../../jobsteal/iter/struct.Hide.html' title='jobsteal::iter::Hide'>Hide</a>&lt;<a class='struct' href='../../jobsteal/iter/struct.Enumerate.html' title='jobsteal::iter::Enumerate'>Enumerate</a>&lt;T&gt;&gt;</code></li>
-<li><code>impl&lt;A: <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>, B: <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>&gt; <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a> for <a class='struct' href='../../jobsteal/iter/struct.Hide.html' title='jobsteal::iter::Hide'>Hide</a>&lt;<a class='struct' href='../../jobsteal/iter/struct.Zip.html' title='jobsteal::iter::Zip'>Zip</a>&lt;A, B&gt;&gt;</code></li>
-<li><code>impl&lt;'a, T: 'a + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt; <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a> for <a class='struct' href='../../jobsteal/iter/struct.SliceSplit.html' title='jobsteal::iter::SliceSplit'>SliceSplit</a>&lt;'a, T&gt;</code></li>
-<li><code>impl&lt;'a, T: 'a + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a>&gt; <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a> for <a class='struct' href='../../jobsteal/iter/struct.SliceSplitMut.html' title='jobsteal::iter::SliceSplitMut'>SliceSplitMut</a>&lt;'a, T&gt;</code></li>
+    <li><code>impl&lt;T: <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>&gt; Split for <a class='struct' href='../../jobsteal/iter/struct.Hide.html' title='jobsteal::iter::Hide'>Hide</a>&lt;<a class='struct' href='../../jobsteal/iter/struct.CostMul.html' title='jobsteal::iter::CostMul'>CostMul</a>&lt;T&gt;&gt;</code></li>
+<li><code>impl&lt;T: <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>&gt; Split for <a class='struct' href='../../jobsteal/iter/struct.Hide.html' title='jobsteal::iter::Hide'>Hide</a>&lt;<a class='struct' href='../../jobsteal/iter/struct.Enumerate.html' title='jobsteal::iter::Enumerate'>Enumerate</a>&lt;T&gt;&gt;</code></li>
+<li><code>impl&lt;A: <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>, B: <a class='trait' href='../../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>&gt; Split for <a class='struct' href='../../jobsteal/iter/struct.Hide.html' title='jobsteal::iter::Hide'>Hide</a>&lt;<a class='struct' href='../../jobsteal/iter/struct.Zip.html' title='jobsteal::iter::Zip'>Zip</a>&lt;A, B&gt;&gt;</code></li>
+<li><code>impl&lt;'a, T: 'a + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt; Split for <a class='struct' href='../../jobsteal/iter/struct.SliceSplit.html' title='jobsteal::iter::SliceSplit'>SliceSplit</a>&lt;'a, T&gt;</code></li>
+<li><code>impl&lt;'a, T: 'a + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a>&gt; Split for <a class='struct' href='../../jobsteal/iter/struct.SliceSplitMut.html' title='jobsteal::iter::SliceSplitMut'>SliceSplitMut</a>&lt;'a, T&gt;</code></li>
 </ul><script type="text/javascript" async
                          src="../../implementors/jobsteal/iter/trait.Split.js">
                  </script></section>
@@ -111,6 +111,8 @@ a known lower bound (potentially zero) and an optional upper bound.</p>
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 

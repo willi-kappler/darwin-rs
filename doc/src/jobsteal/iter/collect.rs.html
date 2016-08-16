@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="Source to the Rust file `/home/willi/.cargo/registry/src/github.com-88ac128001ac3a9a/jobsteal-0.4.3/src/iter/collect.rs`.">
+    <meta name="description" content="Source to the Rust file `/home/ESD/willi/.cargo/registry/src/github.com-1ecc6299db9ec823/jobsteal-0.5.1/src/iter/collect.rs`.">
     <meta name="keywords" content="rust, rustlang, rust-lang">
 
     <title>collect.rs.html -- source</title>
@@ -118,34 +118,34 @@
 <span id="74">74</span>
 <span id="75">75</span>
 </pre><pre class='rust '>
-<span class='doccomment'>//! Collect SplitIterators into collections.</span>
+<span class='doccomment'>//! Collect Spliterators into collections.</span>
 
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>iter</span>::<span class='ident'>FromIterator</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>marker</span>::<span class='ident'>PhantomData</span>;
 
-<span class='kw'>use</span> <span class='ident'>super</span>::{<span class='ident'>Callback</span>, <span class='ident'>Consumer</span>, <span class='ident'>IntoSplitIterator</span>, <span class='ident'>Split</span>, <span class='ident'>SplitIterator</span>};
+<span class='kw'>use</span> <span class='kw'>super</span>::{<span class='ident'>Callback</span>, <span class='ident'>Consumer</span>, <span class='ident'>IntoSpliterator</span>, <span class='ident'>Split</span>, <span class='ident'>Spliterator</span>};
 <span class='kw'>use</span> <span class='ident'>Spawner</span>;
 
 <span class='doccomment'>/// Items that can be combined with another of the same type.</span>
 <span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>Combine</span> {
     <span class='doccomment'>/// Combine `self` with `other`.</span>
-    <span class='kw'>fn</span> <span class='ident'>combine</span>(<span class='self'>self</span>, <span class='ident'>other</span>: <span class='kw'>Self</span>) <span class='op'>-&gt;</span> <span class='kw'>Self</span>;
+    <span class='kw'>fn</span> <span class='ident'>combine</span>(<span class='self'>self</span>, <span class='ident'>other</span>: <span class='self'>Self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>;
 }
 
 <span class='doccomment'>/// Collect the elements of this iterator into a collection.</span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// This is more easily used through `SplitIterator::collect()`.</span>
+<span class='doccomment'>/// This is more easily used through `Spliterator::collect()`.</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// Note that this works by repeatedly combining the outputs of</span>
 <span class='doccomment'>/// FromIterator, so it may lead to more allocations than anticipated.</span>
-<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>collect</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>IntoSplitIterator</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='ident'>iter</span>: <span class='ident'>I</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>) <span class='op'>-&gt;</span> <span class='ident'>T</span>
+<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>collect</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>IntoSpliterator</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='ident'>iter</span>: <span class='ident'>I</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>) <span class='op'>-&gt;</span> <span class='ident'>T</span>
 <span class='kw'>where</span> <span class='ident'>I</span>::<span class='ident'>Item</span>: <span class='ident'>Send</span>, <span class='ident'>T</span>: <span class='ident'>FromIterator</span><span class='op'>&lt;</span><span class='ident'>I</span>::<span class='ident'>Item</span><span class='op'>&gt;</span> <span class='op'>+</span> <span class='ident'>Combine</span> <span class='op'>+</span> <span class='ident'>Send</span> {
     <span class='kw'>let</span> (<span class='ident'>base</span>, <span class='ident'>consumer</span>) <span class='op'>=</span> <span class='ident'>iter</span>.<span class='ident'>into_split_iter</span>().<span class='ident'>destructure</span>();
 
     <span class='ident'>collect_helper</span>::<span class='op'>&lt;</span><span class='ident'>I</span>::<span class='ident'>SplitIter</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='ident'>base</span>, <span class='kw-2'>&amp;</span><span class='ident'>consumer</span>, <span class='ident'>spawner</span>)
 }
 
-<span class='kw'>fn</span> <span class='ident'>collect_helper</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>SplitIterator</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='ident'>base</span>: <span class='ident'>I</span>::<span class='ident'>Base</span>, <span class='ident'>consumer</span>: <span class='kw-2'>&amp;</span><span class='ident'>I</span>::<span class='ident'>Consumer</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>) <span class='op'>-&gt;</span> <span class='ident'>T</span>
+<span class='kw'>fn</span> <span class='ident'>collect_helper</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>Spliterator</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='ident'>base</span>: <span class='ident'>I</span>::<span class='ident'>Base</span>, <span class='ident'>consumer</span>: <span class='kw-2'>&amp;</span><span class='ident'>I</span>::<span class='ident'>Consumer</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>) <span class='op'>-&gt;</span> <span class='ident'>T</span>
 <span class='kw'>where</span> <span class='ident'>I</span>::<span class='ident'>Item</span>: <span class='ident'>Send</span>, <span class='ident'>T</span>: <span class='ident'>FromIterator</span><span class='op'>&lt;</span><span class='ident'>I</span>::<span class='ident'>Item</span><span class='op'>&gt;</span> <span class='op'>+</span> <span class='ident'>Combine</span> <span class='op'>+</span> <span class='ident'>Send</span> {
     <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>idx</span>) <span class='op'>=</span> <span class='ident'>base</span>.<span class='ident'>should_split</span>(<span class='number'>1.0</span>) {
         <span class='kw'>let</span> (<span class='ident'>b1</span>, <span class='ident'>b2</span>) <span class='op'>=</span> <span class='ident'>base</span>.<span class='ident'>split</span>(<span class='ident'>idx</span>);
@@ -171,7 +171,7 @@
 }
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> <span class='ident'>Combine</span> <span class='kw'>for</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
-    <span class='kw'>fn</span> <span class='ident'>combine</span>(<span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='kw-2'>mut</span> <span class='ident'>other</span>: <span class='kw'>Self</span>) <span class='op'>-&gt;</span> <span class='kw'>Self</span> {
+    <span class='kw'>fn</span> <span class='ident'>combine</span>(<span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='kw-2'>mut</span> <span class='ident'>other</span>: <span class='self'>Self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span> {
         <span class='self'>self</span>.<span class='ident'>append</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>other</span>);
         <span class='self'>self</span>
     }
@@ -179,7 +179,7 @@
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
 <span class='kw'>mod</span> <span class='ident'>tests</span> {
-    <span class='kw'>use</span> ::{<span class='ident'>IntoSplitIterator</span>, <span class='ident'>SplitIterator</span>, <span class='ident'>pool_harness</span>};
+    <span class='kw'>use</span> ::{<span class='ident'>IntoSpliterator</span>, <span class='ident'>Spliterator</span>, <span class='ident'>pool_harness</span>};
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>collect_basics</span>() {
@@ -216,6 +216,8 @@
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 

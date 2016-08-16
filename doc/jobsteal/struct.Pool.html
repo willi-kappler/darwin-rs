@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-1340' class='srclink' href='../src/jobsteal/lib.rs.html#340-344' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-1334' class='srclink' href='../src/jobsteal/lib.rs.html#269-272' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct Pool {
     // some fields omitted
 }</pre><div class='docblock'><p>The work pool manages worker threads in a work-stealing fork-join thread pool.</p>
@@ -57,14 +57,8 @@ semantics to the standard library <code>thread::spawn</code>, in that the work p
 fully own its data.</p>
 
 <p><code>Pool</code> also provides a facility for spawning scoped jobs via the &quot;scope&quot; function.</p>
-</div><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl <a class='struct' href='../jobsteal/struct.Pool.html' title='jobsteal::Pool'>Pool</a></code></h3><div class='impl-items'><h4 id='method.synchronize' class='method'><code>fn <a href='#method.synchronize' class='fnname'>synchronize</a>(&amp;mut self)</code></h4>
-<div class='docblock'><p>Finish all current jobs which are queued, and synchronize the workers until
-it&#39;s time to start again.</p>
-
-<p>If any of the threads have panicked, that panic
-will be propagated to this thread. Until the next job is submitted,
-workers will block, allowing other threads to have higher priority.</p>
-</div><h4 id='method.scope' class='method'><code>fn <a href='#method.scope' class='fnname'>scope</a>&lt;'pool, 'new, F, R&gt;(&amp;'pool mut self, f: F) -&gt; R <span class='where'>where F: 'new + <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnOnce.html' title='core::ops::FnOnce'>FnOnce</a>(&amp;<a class='struct' href='../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>&lt;'pool, 'new&gt;) -&gt; R, R: 'new</span></code></h4>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../jobsteal/struct.Pool.html' title='jobsteal::Pool'>Pool</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1337' class='srclink' href='../src/jobsteal/lib.rs.html#274-393' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.scope' class='method'><code>fn <a href='#method.scope' class='fnname'>scope</a>&lt;'pool, 'new, F, R&gt;(&amp;'pool mut self, f: F) -&gt; R <span class='where'>where F: 'new + <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnOnce.html' title='core::ops::FnOnce'>FnOnce</a>(&amp;<a class='struct' href='../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>&lt;'pool, 'new&gt;) -&gt; R, R: 'new</span></code></h4>
 <div class='docblock'><p>Create a new spawning scope for submitting jobs.</p>
 
 <p>This is shorthand for <code>my_pool.spawner().scope(|scope| ...)</code>.</p>
@@ -95,17 +89,16 @@ to as far as either the next call to <code>synchronize</code> or the pool&#39;s 
 <p>In the general case, it is safe to submit jobs which only strictly outlive the pool.
 However, there is always the chance that the pool could be leaked, violating the
 invariant that the job is completed while its data is still alive.</p>
-</div><h4 id='method.spin_up' class='method'><code>fn <a href='#method.spin_up' class='fnname'>spin_up</a>(&amp;mut self)</code></h4>
-<div class='docblock'><p>Spin up all the workers, in case they were in a paused
-state.</p>
 </div><h4 id='method.spawner' class='method'><code>fn <a href='#method.spawner' class='fnname'>spawner</a>&lt;'a&gt;(&amp;'a mut self) -&gt; <a class='struct' href='../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>&lt;'a, 'static&gt;</code></h4>
 <div class='docblock'><p>Get the pool&#39;s spawner.</p>
 
 <p>This will initally only accept jobs which outive &#39;static,
 but the scope can be focused further.
 See the <code>Spawner</code> documentation for more information.</p>
-</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html' title='core::ops::Drop'>Drop</a> for <a class='struct' href='../jobsteal/struct.Pool.html' title='jobsteal::Pool'>Pool</a></code></h3><div class='impl-items'><h4 id='method.drop' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html#tymethod.drop' class='fnname'>drop</a>(&amp;mut self)</code></h4>
-</div></section>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html' title='core::ops::Drop'>Drop</a> for <a class='struct' href='../jobsteal/struct.Pool.html' title='jobsteal::Pool'>Pool</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1386' class='srclink' href='../src/jobsteal/lib.rs.html#395-410' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.drop' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html#tymethod.drop' class='fnname'>drop</a>(&amp;mut self)</code></h4>
+<div class='docblock'><p>A method called when the value goes out of scope. <a href="https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html#tymethod.drop">Read more</a></p>
+</div></div></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>
@@ -128,6 +121,8 @@ See the <code>Spawner</code> documentation for more information.</p>
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 

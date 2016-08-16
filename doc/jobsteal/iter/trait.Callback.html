@@ -47,10 +47,10 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-1197' class='srclink' href='../../src/jobsteal/iter/mod.rs.html#479-483' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-1232' class='srclink' href='../../src/jobsteal/iter/mod.rs.html#514-518' title='goto source code'>[src]</a></span></h1>
 <pre class='rust trait'>pub trait Callback&lt;T&gt;: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a> {
     type <a href='#associatedtype.Out' class='type'>Out</a>;
-    fn <a href='#tymethod.call' class='fnname'>call</a>&lt;I: <a class='trait' href='https://doc.rust-lang.org/nightly/core/iter/trait.Iterator.html' title='core::iter::Iterator'>Iterator</a>&lt;Item=T&gt;&gt;(self, I) -&gt; Self::<a class='trait' href='../../jobsteal/iter/trait.Callback.html' title='jobsteal::iter::Callback'>Out</a>;
+    fn <a href='#tymethod.call' class='fnname'>call</a>&lt;I: <a class='trait' href='https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html' title='core::iter::iterator::Iterator'>Iterator</a>&lt;Item=T&gt;&gt;(self, I) -&gt; Self::<a class='trait' href='../../jobsteal/iter/trait.Callback.html' title='jobsteal::iter::Callback'>Out</a>;
 }</pre><div class='docblock'><p>A callback which takes an iterator of the given item type,
 processes it, and produces a result.</p>
 
@@ -61,10 +61,11 @@ processes it, and produces a result.</p>
         <h3 id='associatedtype.Out' class='method stab '><code>type <a href='#associatedtype.Out' class='type'>Out</a></code></h3></div>
             <h2 id='required-methods'>Required Methods</h2>
             <div class='methods'>
-        <h3 id='tymethod.call' class='method stab '><code>fn <a href='#tymethod.call' class='fnname'>call</a>&lt;I: <a class='trait' href='https://doc.rust-lang.org/nightly/core/iter/trait.Iterator.html' title='core::iter::Iterator'>Iterator</a>&lt;Item=T&gt;&gt;(self, I) -&gt; Self::<a class='trait' href='../../jobsteal/iter/trait.Callback.html' title='jobsteal::iter::Callback'>Out</a></code></h3></div>
+        <h3 id='tymethod.call' class='method stab '><code>fn <a href='#tymethod.call' class='fnname'>call</a>&lt;I: <a class='trait' href='https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html' title='core::iter::iterator::Iterator'>Iterator</a>&lt;Item=T&gt;&gt;(self, I) -&gt; Self::<a class='trait' href='../../jobsteal/iter/trait.Callback.html' title='jobsteal::iter::Callback'>Out</a></code></h3></div>
         <h2 id='implementors'>Implementors</h2>
         <ul class='item-list' id='implementors-list'>
-    </ul><script type="text/javascript" async
+    <li><code>impl&lt;F, T&gt; Callback&lt;T&gt; for F <span class='where'>where F: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnMut.html' title='core::ops::FnMut'>FnMut</a>(T)</span></code></li>
+</ul><script type="text/javascript" async
                          src="../../implementors/jobsteal/iter/trait.Callback.js">
                  </script></section>
     <section id='search' class="content hidden"></section>
@@ -89,6 +90,8 @@ processes it, and produces a result.</p>
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 

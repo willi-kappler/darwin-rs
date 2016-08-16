@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Population` struct in crate `darwin_rs`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Population">
+
+    <title>darwin_rs::population::Population - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>darwin_rs</a>::<wbr><a href='index.html'>population</a></p><script>window.sidebarCurrent = {name: 'Population', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>darwin_rs</a>::<wbr><a href='index.html'>population</a>::<wbr><a class='struct' href=''>Population</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-215' class='srclink' href='../../src/darwin_rs/src/population.rs.html#24-46' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Population&lt;T: <a class='trait' href='../../darwin_rs/individual/trait.Individual.html' title='darwin_rs::individual::Individual'>Individual</a>&gt; {
+    pub num_of_individuals: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub population: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../darwin_rs/individual/struct.IndividualWrapper.html' title='darwin_rs::individual::IndividualWrapper'>IndividualWrapper</a>&lt;T&gt;&gt;,
+    pub reset_limit: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub reset_limit_start: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub reset_limit_end: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub reset_limit_increment: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub reset_counter: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub id: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+}</pre><div class='docblock'><p>The <code>Population</code> type. Contains the actual individuals (through a wrapper) and informations
+like the <code>reset_limit</code>. Use the <code>PopulationBuilder</code> in your main program to create populations.</p>
+</div><h2 class='fields'>Fields</h2>
+<table><tr class='stab '>
+                             <td id='structfield.num_of_individuals'><code>num_of_individuals</code></td><td><div class='docblock'><p>The number of individuals for this population.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.population'><code>population</code></td><td><div class='docblock'><p>The actual population (vector of individuals).</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.reset_limit'><code>reset_limit</code></td><td><div class='docblock'><p>The amount of iteration to wait until all individuals will be resetted.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.reset_limit_start'><code>reset_limit_start</code></td><td><div class='docblock'><p>The start value of the reset limit</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.reset_limit_end'><code>reset_limit_end</code></td><td><div class='docblock'><p>The end value of the reset limit, if <code>reset_limit</code> &gt;= <code>reset_limit_end</code>, then the <code>reset_limit</code>
+will be resettet to the start value <code>reset_limit_start</code>.
+If <code>reset_limit_end</code> == 0, this feature will be disabled.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.reset_limit_increment'><code>reset_limit_increment</code></td><td><div class='docblock'><p>The increment for the <code>reset_limit</code>. After the reset_limit value is reached, it will be
+increased by the value of <code>reset_limit_increment</code>.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.reset_counter'><code>reset_counter</code></td><td><div class='docblock'><p>The reset counter, if <code>reset_counter</code> &gt;= <code>reset_limit</code>, all the individuals are discarded and
+the simulation restarts anew with an increased <code>reset_limit</code>. This prevents local minima,
+but also discards the current fittest individual.</p>
+</div></td></tr><tr class='stab '>
+                             <td id='structfield.id'><code>id</code></td><td><div class='docblock'><p>The ID of the population, only used for statistics.</p>
+</div></td></tr></table><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T: <a class='trait' href='../../darwin_rs/individual/trait.Individual.html' title='darwin_rs::individual::Individual'>Individual</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a>&gt; <a class='struct' href='../../darwin_rs/population/struct.Population.html' title='darwin_rs::population::Population'>Population</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-237' class='srclink' href='../../src/darwin_rs/src/population.rs.html#48-150' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.calculate_fitness' class='method'><code>fn <a href='#method.calculate_fitness' class='fnname'>calculate_fitness</a>(&amp;mut self)</code></h4>
+<div class='docblock'><p>Just calculates the fitness for each individual.</p>
+</div><h4 id='method.run_body' class='method'><code>fn <a href='#method.run_body' class='fnname'>run_body</a>(&amp;mut self, simulation_result: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/sync/mutex/struct.Mutex.html' title='std::sync::mutex::Mutex'>Mutex</a>&lt;<a class='struct' href='../../darwin_rs/simulation/struct.SimulationResult.html' title='darwin_rs::simulation::SimulationResult'>SimulationResult</a>&lt;T&gt;&gt;, iteration_counter: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>)</code></h4>
+<div class='docblock'><p>This is the body that gets called for every iteration.
+This function does the following:</p>
+
+<ol>
+<li><p>Check if the reset limit is reached. If it is, this whole population is
+discarded and re-initialized from the start. All the information about the
+current fittest individual is lost. This is done to avoid local minima.</p></li>
+<li><p>Clone the current population.</p></li>
+<li><p>Mutate the current population using the <code>mutate_population</code> function.</p></li>
+<li><p>Merge the newly mutated population and the original cloned population into one big
+population twice the size.</p></li>
+<li><p>Sort this new big population by fitness. So the fittest individual is at position 0.</p></li>
+<li><p>Truncated the big population to its original size and thus gets rid of all the less fittest
+individuals (they &quot;die&quot;).</p></li>
+<li><p>Check if the fittest individual (at index 0) in the current sorted population is better
+(= fitter) than the global fittest individual of the whole simulation. If yes, the global
+fittest individual is replaced.</p></li>
+<li><p>Calculate the new improvement factor and prepare for the next iteration.</p></li>
+</ol>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 id='derived_implementations'>Derived Implementations </h3><h3 class='impl'><span class='in-band'><code>impl&lt;T: <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> + <a class='trait' href='../../darwin_rs/individual/trait.Individual.html' title='darwin_rs::individual::Individual'>Individual</a>&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../../darwin_rs/population/struct.Population.html' title='darwin_rs::population::Population'>Population</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-225' class='srclink' href='../../src/darwin_rs/src/population.rs.html#23' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../../darwin_rs/population/struct.Population.html' title='darwin_rs::population::Population'>Population</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "darwin_rs";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

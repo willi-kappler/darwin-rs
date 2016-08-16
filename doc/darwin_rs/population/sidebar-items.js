@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Population","The `Population` type. Contains the actual individuals (through a wrapper) and informations like the `reset_limit`. Use the `PopulationBuilder` in your main program to create populations."]]});

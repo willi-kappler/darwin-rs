@@ -47,12 +47,12 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-0' class='srclink' href='../src/jobsteal/lib.rs.html#1-693' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-0' class='srclink' href='../src/jobsteal/lib.rs.html#1-548' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>A work-stealing fork-join thread pool used to perform work asynchronously.
 Tasks submitted are intended to be short-lived. Long running asynchronous tasks should use another method.
 This crate is fairly experimental and should be used with caution.</p>
 </div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
-<table><tr><td><code>pub use iter::{<a class='trait' href='../jobsteal/iter/trait.IntoSplitIterator.html' title='jobsteal::iter::IntoSplitIterator'>IntoSplitIterator</a>, <a class='trait' href='../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>, <a class='trait' href='../jobsteal/iter/trait.SplitIterator.html' title='jobsteal::iter::SplitIterator'>SplitIterator</a>};</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table><tr><td><code>pub use iter::{<a class='trait' href='../jobsteal/iter/trait.BorrowSpliterator.html' title='jobsteal::iter::BorrowSpliterator'>BorrowSpliterator</a>, <a class='trait' href='../jobsteal/iter/trait.BorrowSpliteratorMut.html' title='jobsteal::iter::BorrowSpliteratorMut'>BorrowSpliteratorMut</a>, <a class='trait' href='../jobsteal/iter/trait.IntoSpliterator.html' title='jobsteal::iter::IntoSpliterator'>IntoSpliterator</a>, <a class='trait' href='../jobsteal/iter/trait.Split.html' title='jobsteal::iter::Split'>Split</a>, <a class='trait' href='../jobsteal/iter/trait.Spliterator.html' title='jobsteal::iter::Spliterator'>Spliterator</a>};</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
                        <tr class=' module-item'>
                            <td><a class='mod' href='iter/index.html'
@@ -106,6 +106,8 @@ This crate is fairly experimental and should be used with caution.</p>
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 

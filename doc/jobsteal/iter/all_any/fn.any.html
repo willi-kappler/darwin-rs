@@ -47,8 +47,8 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-308' class='srclink' href='../../../src/jobsteal/iter/all_any.rs.html#50-61' title='goto source code'>[src]</a></span></h1>
-<pre class='rust fn'>pub fn any&lt;I: <a class='trait' href='../../../jobsteal/iter/trait.IntoSplitIterator.html' title='jobsteal::iter::IntoSplitIterator'>IntoSplitIterator</a>, P: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt;(iter: I, spawner: &amp;<a class='struct' href='../../../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>, pred: P) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a> <span class='where'>where P: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.Fn.html' title='core::ops::Fn'>Fn</a>(I::Item) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></span></pre><div class='docblock'><p>Consumes the iterator, returning true if any element fulfills the predicate
+               </span><a id='src-256' class='srclink' href='../../../src/jobsteal/iter/all_any.rs.html#50-61' title='goto source code'>[src]</a></span></h1>
+<pre class='rust fn'>pub fn any&lt;I: <a class='trait' href='../../../jobsteal/iter/trait.IntoSpliterator.html' title='jobsteal::iter::IntoSpliterator'>IntoSpliterator</a>, P: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt;(iter: I, spawner: &amp;<a class='struct' href='../../../jobsteal/struct.Spawner.html' title='jobsteal::Spawner'>Spawner</a>, pred: P) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a> <span class='where'>where P: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.Fn.html' title='core::ops::Fn'>Fn</a>(I::Item) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></span></pre><div class='docblock'><p>Consumes the iterator, returning true if any element fulfills the predicate
 and false otherwise.</p>
 </div></section>
     <section id='search' class="content hidden"></section>
@@ -73,6 +73,8 @@ and false otherwise.</p>
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 

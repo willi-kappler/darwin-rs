@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `ExactSizeSpliterator` trait in crate `jobsteal`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, ExactSizeSpliterator">
+
+    <title>jobsteal::iter::ExactSizeSpliterator - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>jobsteal</a>::<wbr><a href='index.html'>iter</a></p><script>window.sidebarCurrent = {name: 'ExactSizeSpliterator', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content trait">
+<h1 class='fqn'><span class='in-band'>Trait <a href='../index.html'>jobsteal</a>::<wbr><a href='index.html'>iter</a>::<wbr><a class='trait' href=''>ExactSizeSpliterator</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-997' class='srclink' href='../../src/jobsteal/iter/mod.rs.html#220-223' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait ExactSizeSpliterator: <a class='trait' href='../../jobsteal/iter/trait.Spliterator.html' title='jobsteal::iter::Spliterator'>Spliterator</a> {
+    fn <a href='#tymethod.size' class='fnname'>size</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>;
+}</pre><div class='docblock'><p>An iterator for which the exact number of elements is known.</p>
+
+<p>If this is implemented for an iterator,<code>size_hint</code> for that iterator
+must return a pair of the exact size.</p>
+</div>
+            <h2 id='required-methods'>Required Methods</h2>
+            <div class='methods'>
+        <h3 id='tymethod.size' class='method stab '><code>fn <a href='#tymethod.size' class='fnname'>size</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a></code></h3><div class='docblock'><p>Get the number of elements in this iterator.</p>
+</div></div>
+        <h2 id='implementors'>Implementors</h2>
+        <ul class='item-list' id='implementors-list'>
+    <li><code>impl&lt;T: <a class='trait' href='../../jobsteal/iter/trait.ExactSizeSpliterator.html' title='jobsteal::iter::ExactSizeSpliterator'>ExactSizeSpliterator</a>&gt; ExactSizeSpliterator for <a class='struct' href='../../jobsteal/iter/struct.CostMul.html' title='jobsteal::iter::CostMul'>CostMul</a>&lt;T&gt;</code></li>
+<li><code>impl&lt;T: <a class='trait' href='../../jobsteal/iter/trait.ExactSizeSpliterator.html' title='jobsteal::iter::ExactSizeSpliterator'>ExactSizeSpliterator</a>&gt; ExactSizeSpliterator for <a class='struct' href='../../jobsteal/iter/struct.Enumerate.html' title='jobsteal::iter::Enumerate'>Enumerate</a>&lt;T&gt;</code></li>
+<li><code>impl&lt;T: <a class='trait' href='../../jobsteal/iter/trait.ExactSizeSpliterator.html' title='jobsteal::iter::ExactSizeSpliterator'>ExactSizeSpliterator</a>, F: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt; ExactSizeSpliterator for <a class='struct' href='../../jobsteal/iter/struct.Map.html' title='jobsteal::iter::Map'>Map</a>&lt;T, F&gt; <span class='where'>where <a class='struct' href='../../jobsteal/iter/struct.Map.html' title='jobsteal::iter::Map'>Map</a>&lt;T, F&gt;: <a class='trait' href='../../jobsteal/iter/trait.Spliterator.html' title='jobsteal::iter::Spliterator'>Spliterator</a></span></code></li>
+<li><code>impl&lt;A: <a class='trait' href='../../jobsteal/iter/trait.ExactSizeSpliterator.html' title='jobsteal::iter::ExactSizeSpliterator'>ExactSizeSpliterator</a>, B: <a class='trait' href='../../jobsteal/iter/trait.ExactSizeSpliterator.html' title='jobsteal::iter::ExactSizeSpliterator'>ExactSizeSpliterator</a>&gt; ExactSizeSpliterator for <a class='struct' href='../../jobsteal/iter/struct.Zip.html' title='jobsteal::iter::Zip'>Zip</a>&lt;A, B&gt;</code></li>
+<li><code>impl&lt;'a, T: 'a + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a>&gt; ExactSizeSpliterator for <a class='struct' href='../../jobsteal/iter/struct.SliceSplit.html' title='jobsteal::iter::SliceSplit'>SliceSplit</a>&lt;'a, T&gt;</code></li>
+<li><code>impl&lt;'a, T: 'a + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a>&gt; ExactSizeSpliterator for <a class='struct' href='../../jobsteal/iter/struct.SliceSplitMut.html' title='jobsteal::iter::SliceSplitMut'>SliceSplitMut</a>&lt;'a, T&gt;</code></li>
+</ul><script type="text/javascript" async
+                         src="../../implementors/jobsteal/iter/trait.ExactSizeSpliterator.js">
+                 </script></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "jobsteal";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

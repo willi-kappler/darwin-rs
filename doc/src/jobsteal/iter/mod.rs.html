@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="Source to the Rust file `/home/willi/.cargo/registry/src/github.com-88ac128001ac3a9a/jobsteal-0.4.3/src/iter/mod.rs`.">
+    <meta name="description" content="Source to the Rust file `/home/ESD/willi/.cargo/registry/src/github.com-1ecc6299db9ec823/jobsteal-0.5.1/src/iter/mod.rs`.">
     <meta name="keywords" content="rust, rustlang, rust-lang">
 
     <title>mod.rs.html -- source</title>
@@ -572,21 +572,56 @@
 <span id="528">528</span>
 <span id="529">529</span>
 <span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! Jobsteal&#39;s Parallel iterators.</span>
 <span class='doccomment'>//!</span>
-<span class='doccomment'>//! The `SplitIterator` trait handles parallel iteration,</span>
+<span class='doccomment'>//! The `Spliterator` trait handles parallel iteration,</span>
 <span class='doccomment'>//! and the `Split` trait deals with items which can be the</span>
-<span class='doccomment'>//! base of a SplitIterator.</span>
+<span class='doccomment'>//! base of a Spliterator.</span>
 <span class='doccomment'>//!</span>
-<span class='doccomment'>//! Using `SplitIterators`, we can write code that feels single-threaded</span>
+<span class='doccomment'>//! Using `Spliterators`, we can write code that feels single-threaded</span>
 <span class='doccomment'>//! and simple that actually gets dispatched optimally onto the thread pool.</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! Here&#39;s an example where we take a list of 16000 numbers, filter it by</span>
 <span class='doccomment'>//! whether they&#39;re even, and then perform an action for each one...in parallel!</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! ```rust</span>
-<span class='doccomment'>//! use jobsteal::{make_pool, IntoSplitIterator, SplitIterator};</span>
+<span class='doccomment'>//! use jobsteal::{make_pool, IntoSpliterator, Spliterator};</span>
 <span class='doccomment'>//!</span>
 <span class='doccomment'>//! let mut pool = make_pool(4).unwrap();</span>
 <span class='doccomment'>//!</span>
@@ -596,7 +631,7 @@
 <span class='doccomment'>//!     .for_each(&amp;pool.spawner(), |x| drop(x)); // do an action for each item!</span>
 <span class='doccomment'>//! ```</span>
 <span class='doccomment'>//!</span>
-<span class='doccomment'>//! These `SplitIterator`s can be used almost exactly like Rust&#39;s normal iterators!</span>
+<span class='doccomment'>//! These `Spliterator`s can be used almost exactly like Rust&#39;s normal iterators!</span>
 <span class='doccomment'>//! The only difference is that when they&#39;re being &quot;consumed&quot; by something like</span>
 <span class='doccomment'>//! `for_each`, `collect`, `fold`, or `any`, they take one of jobsteal&#39;s spawners</span>
 <span class='doccomment'>//! as an argument. This allows them to distribute the work across the threads of</span>
@@ -604,7 +639,7 @@
 
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>iter</span>::<span class='ident'>FromIterator</span>;
 
-<span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>Spawner</span>;
+<span class='kw'>use</span> <span class='kw'>super</span>::<span class='ident'>Spawner</span>;
 
 <span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>all_any</span>;
 <span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>collect</span>;
@@ -615,6 +650,7 @@
 <span class='kw'>mod</span> <span class='ident'>filter</span>;
 <span class='kw'>mod</span> <span class='ident'>flat_map</span>;
 <span class='kw'>mod</span> <span class='ident'>map</span>;
+<span class='kw'>mod</span> <span class='ident'>vec</span>;
 <span class='kw'>mod</span> <span class='ident'>zip</span>;
 
 <span class='kw'>pub</span> <span class='kw'>use</span> <span class='self'>self</span>::<span class='ident'>collect</span>::<span class='ident'>Combine</span>;
@@ -633,13 +669,13 @@
 <span class='doccomment'>/// It is automatically implemented for data which implements `Split`,</span>
 <span class='doccomment'>/// which is a lot easier to implement.</span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// `SplitIterator` only needs to be manually implemented by those who are</span>
+<span class='doccomment'>/// `Spliterator` only needs to be manually implemented by those who are</span>
 <span class='doccomment'>/// trying to make their own adapters. Those individuals may want to look</span>
 <span class='doccomment'>/// at the source of iterator adapters like `Map` and `Filter`. The good news</span>
-<span class='doccomment'>/// is that all the `SplitIterator` adapers are implemented using only public</span>
+<span class='doccomment'>/// is that all the `Spliterator` adapers are implemented using only public</span>
 <span class='doccomment'>/// and safe jobsteal code, so anybody can create their own. The bad news is</span>
 <span class='doccomment'>/// that it does get fairly complex.</span>
-<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>SplitIterator</span>: <span class='ident'>Sized</span> {
+<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>Spliterator</span>: <span class='ident'>Sized</span> {
     <span class='doccomment'>/// The item this iterator produces.</span>
     <span class='kw'>type</span> <span class='ident'>Item</span>;
 
@@ -648,21 +684,21 @@
 
     <span class='doccomment'>/// A consumer which can act as an ad-hoc iterator adapter</span>
     <span class='doccomment'>/// chain while being shared across threads.</span>
-    <span class='kw'>type</span> <span class='ident'>Consumer</span>: <span class='ident'>Consumer</span><span class='op'>&lt;</span><span class='ident'>Self</span>::<span class='ident'>Base</span>, <span class='ident'>Item</span><span class='op'>=</span><span class='ident'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span>;
+    <span class='kw'>type</span> <span class='ident'>Consumer</span>: <span class='ident'>Consumer</span><span class='op'>&lt;</span><span class='self'>Self</span>::<span class='ident'>Base</span>, <span class='ident'>Item</span><span class='op'>=</span><span class='self'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span>;
 
     <span class='doccomment'>/// Destructure this iterator into a splittable base and</span>
     <span class='doccomment'>/// a shareable consumer of that base.</span>
-    <span class='kw'>fn</span> <span class='ident'>destructure</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> (<span class='ident'>Self</span>::<span class='ident'>Base</span>, <span class='ident'>Self</span>::<span class='ident'>Consumer</span>);
+    <span class='kw'>fn</span> <span class='ident'>destructure</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> (<span class='self'>Self</span>::<span class='ident'>Base</span>, <span class='self'>Self</span>::<span class='ident'>Consumer</span>);
 
     <span class='doccomment'>/// Clone the items of this iterator to get owned copies.</span>
-    <span class='kw'>fn</span> <span class='ident'>cloned</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Clone</span><span class='op'>&gt;</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Cloned</span><span class='op'>&lt;</span><span class='kw'>Self</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='kw'>Self</span>: <span class='ident'>SplitIterator</span><span class='op'>&lt;</span><span class='ident'>Item</span><span class='op'>=</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>T</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>cloned</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Clone</span><span class='op'>&gt;</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Cloned</span><span class='op'>&lt;</span><span class='self'>Self</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='self'>Self</span>: <span class='ident'>Spliterator</span><span class='op'>&lt;</span><span class='ident'>Item</span><span class='op'>=</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>T</span><span class='op'>&gt;</span> {
         <span class='ident'>Cloned</span> {
             <span class='ident'>parent</span>: <span class='self'>self</span>,
         }
     }
 
     <span class='doccomment'>/// Enumerate items by their index.</span>
-    <span class='kw'>fn</span> <span class='ident'>enumerate</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Enumerate</span><span class='op'>&lt;</span><span class='kw'>Self</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>enumerate</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Enumerate</span><span class='op'>&lt;</span><span class='self'>Self</span><span class='op'>&gt;</span> {
         <span class='ident'>Enumerate</span> {
             <span class='ident'>parent</span>: <span class='self'>self</span>,
             <span class='ident'>off</span>: <span class='number'>0</span>,
@@ -670,7 +706,7 @@
     }
 
     <span class='doccomment'>/// Filter items by some predicate.</span>
-    <span class='kw'>fn</span> <span class='ident'>filter</span><span class='op'>&lt;</span><span class='ident'>F</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>pred</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='ident'>Filter</span><span class='op'>&lt;</span><span class='kw'>Self</span>, <span class='ident'>F</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>Fn</span>(<span class='kw-2'>&amp;</span><span class='ident'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
+    <span class='kw'>fn</span> <span class='ident'>filter</span><span class='op'>&lt;</span><span class='ident'>F</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>pred</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='ident'>Filter</span><span class='op'>&lt;</span><span class='self'>Self</span>, <span class='ident'>F</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>Fn</span>(<span class='kw-2'>&amp;</span><span class='self'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
         <span class='ident'>Filter</span> {
             <span class='ident'>parent</span>: <span class='self'>self</span>,
             <span class='ident'>pred</span>: <span class='ident'>pred</span>,
@@ -678,8 +714,8 @@
     }
 
     <span class='doccomment'>/// Produce an iterator for each element, and then yield the elements of those iterators.</span>
-    <span class='kw'>fn</span> <span class='ident'>flat_map</span><span class='op'>&lt;</span><span class='ident'>U</span>, <span class='ident'>F</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>flat_map</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='ident'>FlatMap</span><span class='op'>&lt;</span><span class='kw'>Self</span>, <span class='ident'>F</span><span class='op'>&gt;</span>
-    <span class='kw'>where</span> <span class='ident'>U</span>: <span class='ident'>IntoIterator</span>, <span class='ident'>F</span>: <span class='ident'>Fn</span>(<span class='ident'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>U</span> {
+    <span class='kw'>fn</span> <span class='ident'>flat_map</span><span class='op'>&lt;</span><span class='ident'>U</span>, <span class='ident'>F</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>flat_map</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='ident'>FlatMap</span><span class='op'>&lt;</span><span class='self'>Self</span>, <span class='ident'>F</span><span class='op'>&gt;</span>
+    <span class='kw'>where</span> <span class='ident'>U</span>: <span class='ident'>IntoIterator</span>, <span class='ident'>F</span>: <span class='ident'>Fn</span>(<span class='self'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>U</span> {
         <span class='ident'>FlatMap</span> {
             <span class='ident'>parent</span>: <span class='self'>self</span>,
             <span class='ident'>flat_map</span>: <span class='ident'>flat_map</span>
@@ -687,7 +723,7 @@
     }
 
     <span class='doccomment'>/// Map the items of this iterator to another type using the supplied function.</span>
-    <span class='kw'>fn</span> <span class='ident'>map</span><span class='op'>&lt;</span><span class='ident'>F</span>: <span class='ident'>Sync</span>, <span class='ident'>U</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>map</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='ident'>Map</span><span class='op'>&lt;</span><span class='kw'>Self</span>, <span class='ident'>F</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>Fn</span>(<span class='ident'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>U</span> {
+    <span class='kw'>fn</span> <span class='ident'>map</span><span class='op'>&lt;</span><span class='ident'>F</span>: <span class='ident'>Sync</span>, <span class='ident'>U</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>map</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='ident'>Map</span><span class='op'>&lt;</span><span class='self'>Self</span>, <span class='ident'>F</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>Fn</span>(<span class='self'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>U</span> {
         <span class='ident'>Map</span> {
             <span class='ident'>parent</span>: <span class='self'>self</span>,
             <span class='ident'>map</span>: <span class='ident'>map</span>,
@@ -696,7 +732,7 @@
 
     <span class='doccomment'>/// Zip this iterator with another, combining their items</span>
     <span class='doccomment'>/// in a tuple.</span>
-    <span class='kw'>fn</span> <span class='ident'>zip</span><span class='op'>&lt;</span><span class='ident'>B</span>: <span class='ident'>IntoSplitIterator</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>other</span>: <span class='ident'>B</span>) <span class='op'>-&gt;</span> <span class='ident'>Zip</span><span class='op'>&lt;</span><span class='kw'>Self</span>, <span class='ident'>B</span>::<span class='ident'>SplitIter</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>zip</span><span class='op'>&lt;</span><span class='ident'>B</span>: <span class='ident'>IntoSpliterator</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>other</span>: <span class='ident'>B</span>) <span class='op'>-&gt;</span> <span class='ident'>Zip</span><span class='op'>&lt;</span><span class='self'>Self</span>, <span class='ident'>B</span>::<span class='ident'>SplitIter</span><span class='op'>&gt;</span> {
         <span class='ident'>Zip</span> {
             <span class='ident'>a</span>: <span class='self'>self</span>,
             <span class='ident'>b</span>: <span class='ident'>other</span>.<span class='ident'>into_split_iter</span>(),
@@ -705,20 +741,20 @@
 
     <span class='doccomment'>/// Whether any of the elements fulfill the supplied predicate.</span>
     <span class='kw'>fn</span> <span class='ident'>any</span><span class='op'>&lt;</span><span class='ident'>P</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>pred</span>: <span class='ident'>P</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span>
-    <span class='kw'>where</span> <span class='ident'>P</span>: <span class='ident'>Fn</span>(<span class='ident'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
+    <span class='kw'>where</span> <span class='ident'>P</span>: <span class='ident'>Fn</span>(<span class='self'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
         <span class='ident'>all_any</span>::<span class='ident'>any</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>, <span class='ident'>pred</span>)
     }
 
     <span class='doccomment'>/// Whether all of the elements fulfill the supplied predicate.</span>
     <span class='kw'>fn</span> <span class='ident'>all</span><span class='op'>&lt;</span><span class='ident'>P</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>pred</span>: <span class='ident'>P</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span>
-    <span class='kw'>where</span> <span class='ident'>P</span>: <span class='ident'>Fn</span>(<span class='ident'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
+    <span class='kw'>where</span> <span class='ident'>P</span>: <span class='ident'>Fn</span>(<span class='self'>Self</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
         <span class='ident'>all_any</span>::<span class='ident'>all</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>, <span class='ident'>pred</span>)
     }
 
     <span class='doccomment'>/// Consume this iterator, performing an action for each item.</span>
-    <span class='kw'>fn</span> <span class='ident'>for_each</span><span class='op'>&lt;</span><span class='ident'>F</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>f</span>: <span class='ident'>F</span>) <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Fn</span>(<span class='ident'>Self</span>::<span class='ident'>Item</span>) {
+    <span class='kw'>fn</span> <span class='ident'>for_each</span><span class='op'>&lt;</span><span class='ident'>F</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>f</span>: <span class='ident'>F</span>) <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Fn</span>(<span class='self'>Self</span>::<span class='ident'>Item</span>) {
         <span class='kw'>let</span> (<span class='ident'>base</span>, <span class='ident'>consumer</span>) <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>destructure</span>();
-        <span class='ident'>for_each_helper</span>::<span class='op'>&lt;</span><span class='kw'>Self</span>, <span class='ident'>F</span><span class='op'>&gt;</span>(<span class='ident'>base</span>, <span class='kw-2'>&amp;</span><span class='ident'>consumer</span>, <span class='ident'>spawner</span>, <span class='kw-2'>&amp;</span><span class='ident'>f</span>);
+        <span class='ident'>for_each_helper</span>::<span class='op'>&lt;</span><span class='self'>Self</span>, <span class='ident'>F</span><span class='op'>&gt;</span>(<span class='ident'>base</span>, <span class='kw-2'>&amp;</span><span class='ident'>consumer</span>, <span class='ident'>spawner</span>, <span class='kw-2'>&amp;</span><span class='ident'>f</span>);
     }
 
     <span class='doccomment'>/// Collect the items of this iterator into a combinable collection.</span>
@@ -727,7 +763,7 @@
     <span class='doccomment'>/// so this will probably lead to more allocations than a single-threaded</span>
     <span class='doccomment'>/// iterator `collect`.</span>
     <span class='kw'>fn</span> <span class='ident'>collect</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Send</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>) <span class='op'>-&gt;</span> <span class='ident'>T</span>
-    <span class='kw'>where</span> <span class='ident'>Self</span>::<span class='ident'>Item</span>: <span class='ident'>Send</span>, <span class='ident'>T</span>: <span class='ident'>FromIterator</span><span class='op'>&lt;</span><span class='ident'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span> <span class='op'>+</span> <span class='ident'>Combine</span> <span class='op'>+</span> <span class='ident'>Send</span> {
+    <span class='kw'>where</span> <span class='self'>Self</span>::<span class='ident'>Item</span>: <span class='ident'>Send</span>, <span class='ident'>T</span>: <span class='ident'>FromIterator</span><span class='op'>&lt;</span><span class='self'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span> <span class='op'>+</span> <span class='ident'>Combine</span> <span class='op'>+</span> <span class='ident'>Send</span> {
         <span class='ident'>collect</span>::<span class='ident'>collect</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>)
     }
 
@@ -739,8 +775,8 @@
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// There will not be any safety issues caused by non-commutative operations,</span>
     <span class='doccomment'>/// but there may be some incorrectness.</span>
-    <span class='kw'>fn</span> <span class='ident'>fold</span><span class='op'>&lt;</span><span class='ident'>F</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>initial</span>: <span class='ident'>Self</span>::<span class='ident'>Item</span>, <span class='ident'>folder</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>Item</span>
-    <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>fold</span>::<span class='ident'>Folder</span><span class='op'>&lt;</span><span class='ident'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span>, <span class='ident'>Self</span>::<span class='ident'>Item</span>: <span class='ident'>Send</span> {
+    <span class='kw'>fn</span> <span class='ident'>fold</span><span class='op'>&lt;</span><span class='ident'>F</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>initial</span>: <span class='self'>Self</span>::<span class='ident'>Item</span>, <span class='ident'>folder</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>Item</span>
+    <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>fold</span>::<span class='ident'>Folder</span><span class='op'>&lt;</span><span class='self'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span>, <span class='self'>Self</span>::<span class='ident'>Item</span>: <span class='ident'>Send</span> {
         <span class='ident'>fold</span>::<span class='ident'>fold</span>(<span class='self'>self</span>, <span class='ident'>spawner</span>, <span class='ident'>initial</span>, <span class='ident'>folder</span>)
     }
 
@@ -765,7 +801,7 @@
     <span class='doccomment'>/// `with_cost_mul(0.0)` will cause the data to never split, and</span>
     <span class='doccomment'>/// `with_cost_mul(f32::INFINITY)` will cause the data to split whenever</span>
     <span class='doccomment'>/// possible.</span>
-    <span class='kw'>fn</span> <span class='ident'>with_cost_mul</span>(<span class='self'>self</span>, <span class='ident'>mul</span>: <span class='ident'>f32</span>) <span class='op'>-&gt;</span> <span class='ident'>CostMul</span><span class='op'>&lt;</span><span class='kw'>Self</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>with_cost_mul</span>(<span class='self'>self</span>, <span class='ident'>mul</span>: <span class='ident'>f32</span>) <span class='op'>-&gt;</span> <span class='ident'>CostMul</span><span class='op'>&lt;</span><span class='self'>Self</span><span class='op'>&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>mul</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='ident'>mul</span> <span class='op'>&lt;</span> <span class='number'>0.0</span> { <span class='op'>-</span><span class='ident'>mul</span> } <span class='kw'>else</span> { <span class='ident'>mul</span> };
         <span class='ident'>CostMul</span> {
             <span class='ident'>parent</span>: <span class='self'>self</span>,
@@ -775,7 +811,7 @@
 }
 
 <span class='kw'>fn</span> <span class='ident'>for_each_helper</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>F</span><span class='op'>&gt;</span>(<span class='ident'>base</span>: <span class='ident'>T</span>::<span class='ident'>Base</span>, <span class='ident'>consumer</span>: <span class='kw-2'>&amp;</span><span class='ident'>T</span>::<span class='ident'>Consumer</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>f</span>: <span class='kw-2'>&amp;</span><span class='ident'>F</span>)
-<span class='kw'>where</span> <span class='ident'>T</span>: <span class='ident'>SplitIterator</span>, <span class='ident'>F</span>: <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Fn</span>(<span class='ident'>T</span>::<span class='ident'>Item</span>) {
+<span class='kw'>where</span> <span class='ident'>T</span>: <span class='ident'>Spliterator</span>, <span class='ident'>F</span>: <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Fn</span>(<span class='ident'>T</span>::<span class='ident'>Item</span>) {
     <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>idx</span>) <span class='op'>=</span> <span class='ident'>base</span>.<span class='ident'>should_split</span>(<span class='number'>1.0</span>) {
         <span class='kw'>let</span> (<span class='ident'>b1</span>, <span class='ident'>b2</span>) <span class='op'>=</span> <span class='ident'>base</span>.<span class='ident'>split</span>(<span class='ident'>idx</span>);
         <span class='ident'>spawner</span>.<span class='ident'>join</span>(
@@ -791,7 +827,7 @@
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// If this is implemented for an iterator,`size_hint` for that iterator</span>
 <span class='doccomment'>/// must return a pair of the exact size.</span>
-<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>ExactSizeSplitIterator</span>: <span class='ident'>SplitIterator</span> {
+<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>ExactSizeSpliterator</span>: <span class='ident'>Spliterator</span> {
     <span class='doccomment'>/// Get the number of elements in this iterator.</span>
     <span class='kw'>fn</span> <span class='ident'>size</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>usize</span>;
 }
@@ -854,7 +890,7 @@
 }
 
 <span class='doccomment'>/// Data which can be split in two at an index.</span>
-<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>Split</span>: <span class='ident'>Send</span> <span class='op'>+</span> <span class='ident'>IntoIterator</span> {
+<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>Split</span>: <span class='ident'>Sized</span> <span class='op'>+</span> <span class='ident'>Send</span> <span class='op'>+</span> <span class='ident'>IntoIterator</span> {
     <span class='doccomment'>/// Whether this should split.</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// This is given a multiplier, which tells you to treat the data</span>
@@ -873,7 +909,7 @@
     <span class='doccomment'>/// Split the data at the specified index.</span>
     <span class='doccomment'>/// Note that this may not always be the same as the index</span>
     <span class='doccomment'>/// you return from should_split.</span>
-    <span class='kw'>fn</span> <span class='ident'>split</span>(<span class='self'>self</span>, <span class='ident'>usize</span>) <span class='op'>-&gt;</span> (<span class='kw'>Self</span>, <span class='kw'>Self</span>);
+    <span class='kw'>fn</span> <span class='ident'>split</span>(<span class='self'>self</span>, <span class='ident'>usize</span>) <span class='op'>-&gt;</span> (<span class='self'>Self</span>, <span class='self'>Self</span>);
 
     <span class='doccomment'>/// A hint for the size of this data, containing</span>
     <span class='doccomment'>/// a known lower bound (potentially zero) and an optional upper bound.</span>
@@ -882,12 +918,12 @@
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Split</span><span class='op'>&gt;</span> <span class='ident'>SplitIterator</span> <span class='kw'>for</span> <span class='ident'>T</span> {
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Split</span><span class='op'>&gt;</span> <span class='ident'>Spliterator</span> <span class='kw'>for</span> <span class='ident'>T</span> {
     <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='ident'>T</span>::<span class='ident'>Item</span>;
-    <span class='kw'>type</span> <span class='ident'>Base</span> <span class='op'>=</span> <span class='kw'>Self</span>;
+    <span class='kw'>type</span> <span class='ident'>Base</span> <span class='op'>=</span> <span class='self'>Self</span>;
     <span class='kw'>type</span> <span class='ident'>Consumer</span> <span class='op'>=</span> ();
 
-    <span class='kw'>fn</span> <span class='ident'>destructure</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> (<span class='kw'>Self</span>, ()) {
+    <span class='kw'>fn</span> <span class='ident'>destructure</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> (<span class='self'>Self</span>, ()) {
         (<span class='self'>self</span>, ())
     }
 
@@ -896,69 +932,103 @@
     }
 }
 
-<span class='doccomment'>/// Things that can be turned into a `SplitIterator`.</span>
-<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>IntoSplitIterator</span> {
+<span class='doccomment'>/// Things that can be turned into a `Spliterator`.</span>
+<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>IntoSpliterator</span> {
     <span class='doccomment'>/// The item the split iterator will produce.</span>
     <span class='kw'>type</span> <span class='ident'>Item</span>;
 
     <span class='doccomment'>/// The iterator this will turn into.</span>
-    <span class='kw'>type</span> <span class='ident'>SplitIter</span>: <span class='ident'>SplitIterator</span><span class='op'>&lt;</span><span class='ident'>Item</span><span class='op'>=</span><span class='ident'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span>;
+    <span class='kw'>type</span> <span class='ident'>SplitIter</span>: <span class='ident'>Spliterator</span><span class='op'>&lt;</span><span class='ident'>Item</span><span class='op'>=</span><span class='self'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>SplitIter</span>;
+    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span>;
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>SplitIterator</span><span class='op'>&gt;</span> <span class='ident'>IntoSplitIterator</span> <span class='kw'>for</span> <span class='ident'>T</span> {
-    <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='op'>&lt;</span><span class='kw'>Self</span> <span class='kw'>as</span> <span class='ident'>SplitIterator</span><span class='op'>&gt;</span>::<span class='ident'>Item</span>;
-    <span class='kw'>type</span> <span class='ident'>SplitIter</span> <span class='op'>=</span> <span class='kw'>Self</span>;
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Spliterator</span><span class='op'>&gt;</span> <span class='ident'>IntoSpliterator</span> <span class='kw'>for</span> <span class='ident'>T</span> {
+    <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='op'>&lt;</span><span class='self'>Self</span> <span class='kw'>as</span> <span class='ident'>Spliterator</span><span class='op'>&gt;</span>::<span class='ident'>Item</span>;
+    <span class='kw'>type</span> <span class='ident'>SplitIter</span> <span class='op'>=</span> <span class='self'>Self</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>SplitIter</span> {
+    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span> {
         <span class='self'>self</span>
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> <span class='ident'>IntoSplitIterator</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> [<span class='ident'>T</span>] {
+<span class='doccomment'>/// Things that can have a `Spliterator` borrowed from them.</span>
+<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>BorrowSpliterator</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
+    <span class='kw'>type</span> <span class='ident'>Item</span>: <span class='lifetime'>&#39;a</span>;
+    <span class='kw'>type</span> <span class='ident'>SplitIter</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Spliterator</span><span class='op'>&lt;</span><span class='ident'>Item</span><span class='op'>=</span><span class='self'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span>;
+
+    <span class='kw'>fn</span> <span class='ident'>split_iter</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span>;
+}
+
+<span class='doccomment'>/// Things that can have a `Spliterator` borrowed mutably from them.</span>
+<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>BorrowSpliteratorMut</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
+    <span class='kw'>type</span> <span class='ident'>Item</span>: <span class='lifetime'>&#39;a</span>;
+    <span class='kw'>type</span> <span class='ident'>SplitIter</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Spliterator</span><span class='op'>&lt;</span><span class='ident'>Item</span><span class='op'>=</span><span class='self'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;</span>;
+
+    <span class='kw'>fn</span> <span class='ident'>split_iter_mut</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span>;
+}
+
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> <span class='ident'>IntoSpliterator</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> [<span class='ident'>T</span>] {
     <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>T</span>;
     <span class='kw'>type</span> <span class='ident'>SplitIter</span> <span class='op'>=</span> <span class='ident'>SliceSplit</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>SplitIter</span> {
+    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span> {
         <span class='ident'>SliceSplit</span>(<span class='self'>self</span>)
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Send</span><span class='op'>&gt;</span> <span class='ident'>IntoSplitIterator</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> [<span class='ident'>T</span>] {
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Send</span><span class='op'>&gt;</span> <span class='ident'>IntoSpliterator</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> [<span class='ident'>T</span>] {
     <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> <span class='ident'>T</span>;
     <span class='kw'>type</span> <span class='ident'>SplitIter</span> <span class='op'>=</span> <span class='ident'>SliceSplitMut</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>SplitIter</span> {
+    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span> {
         <span class='ident'>SliceSplitMut</span>(<span class='self'>self</span>)
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> <span class='ident'>IntoSplitIterator</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> <span class='ident'>IntoSpliterator</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
     <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>T</span>;
     <span class='kw'>type</span> <span class='ident'>SplitIter</span> <span class='op'>=</span> <span class='ident'>SliceSplit</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>SplitIter</span> {
+    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span> {
         <span class='ident'>SliceSplit</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>)
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Send</span><span class='op'>&gt;</span> <span class='ident'>IntoSplitIterator</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Send</span><span class='op'>&gt;</span> <span class='ident'>IntoSpliterator</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
     <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> <span class='ident'>T</span>;
     <span class='kw'>type</span> <span class='ident'>SplitIter</span> <span class='op'>=</span> <span class='ident'>SliceSplitMut</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>SplitIter</span> {
+    <span class='kw'>fn</span> <span class='ident'>into_split_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span> {
         <span class='ident'>SliceSplitMut</span>(<span class='self'>self</span>)
+    }
+}
+
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> <span class='ident'>BorrowSpliterator</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+    <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>T</span>;
+    <span class='kw'>type</span> <span class='ident'>SplitIter</span> <span class='op'>=</span> <span class='ident'>SliceSplit</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span>;
+
+    <span class='kw'>fn</span> <span class='ident'>split_iter</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span> {
+        <span class='ident'>SliceSplit</span>(<span class='kw-2'>&amp;</span><span class='op'>*</span><span class='self'>self</span>)
+    }
+}
+
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Send</span><span class='op'>&gt;</span> <span class='ident'>BorrowSpliteratorMut</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+    <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> <span class='ident'>T</span>;
+    <span class='kw'>type</span> <span class='ident'>SplitIter</span> <span class='op'>=</span> <span class='ident'>SliceSplitMut</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span>;
+
+    <span class='kw'>fn</span> <span class='ident'>split_iter_mut</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>SplitIter</span> {
+        <span class='ident'>SliceSplitMut</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='self'>self</span>)
     }
 }
 
 <span class='doccomment'>/// Used to mask data so that implementations don&#39;t conflict.</span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// Specifically, this is used in the implementation of `SplitIterator`</span>
-<span class='doccomment'>/// for `Zip`, by hiding the base. This is because `SplitIterator` requires</span>
+<span class='doccomment'>/// Specifically, this is used in the implementation of `Spliterator`</span>
+<span class='doccomment'>/// for `Zip`, by hiding the base. This is because `Spliterator` requires</span>
 <span class='doccomment'>/// that the base be `Split`. However, for `Split` types, there is a blanket</span>
-<span class='doccomment'>/// impl for `SplitIterator` for convenience, so if we didn&#39;t mask the type,</span>
-<span class='doccomment'>/// there would be conflicting implementations of `SplitIterator` for `Zip`.</span>
+<span class='doccomment'>/// impl for `Spliterator` for convenience, so if we didn&#39;t mask the type,</span>
+<span class='doccomment'>/// there would be conflicting implementations of `Spliterator` for `Zip`.</span>
 <span class='doccomment'>/// This will be obsoleted when specialization becomes stable.</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// Numerous other iterator adapters also use this, but will all be cleared</span>
@@ -972,7 +1042,7 @@
 <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>SliceSplitMut</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> [<span class='ident'>T</span>]);
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>Clone</span> <span class='kw'>for</span> <span class='ident'>SliceSplit</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span> {
-    <span class='kw'>fn</span> <span class='ident'>clone</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw'>Self</span> {
+    <span class='kw'>fn</span> <span class='ident'>clone</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span> {
         <span class='ident'>SliceSplit</span>(<span class='self'>self</span>.<span class='number'>0</span>)
     }
 }
@@ -981,14 +1051,14 @@
     <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> [<span class='ident'>T</span>] <span class='kw'>as</span> <span class='ident'>IntoIterator</span><span class='op'>&gt;</span>::<span class='ident'>Item</span>;
     <span class='kw'>type</span> <span class='ident'>IntoIter</span> <span class='op'>=</span> <span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> [<span class='ident'>T</span>] <span class='kw'>as</span> <span class='ident'>IntoIterator</span><span class='op'>&gt;</span>::<span class='ident'>IntoIter</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>into_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>IntoIter</span> { <span class='self'>self</span>.<span class='number'>0</span>.<span class='ident'>into_iter</span>() }
+    <span class='kw'>fn</span> <span class='ident'>into_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>IntoIter</span> { <span class='self'>self</span>.<span class='number'>0</span>.<span class='ident'>into_iter</span>() }
 }
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>IntoIterator</span> <span class='kw'>for</span> <span class='ident'>SliceSplitMut</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span> {
     <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> [<span class='ident'>T</span>] <span class='kw'>as</span> <span class='ident'>IntoIterator</span><span class='op'>&gt;</span>::<span class='ident'>Item</span>;
     <span class='kw'>type</span> <span class='ident'>IntoIter</span> <span class='op'>=</span> <span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='kw-2'>mut</span> [<span class='ident'>T</span>] <span class='kw'>as</span> <span class='ident'>IntoIterator</span><span class='op'>&gt;</span>::<span class='ident'>IntoIter</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>into_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>IntoIter</span> { <span class='self'>self</span>.<span class='number'>0</span>.<span class='ident'>into_iter</span>() }
+    <span class='kw'>fn</span> <span class='ident'>into_iter</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>IntoIter</span> { <span class='self'>self</span>.<span class='number'>0</span>.<span class='ident'>into_iter</span>() }
 }
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> <span class='ident'>Split</span> <span class='kw'>for</span> <span class='ident'>SliceSplit</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span> {
@@ -998,7 +1068,7 @@
         <span class='kw'>else</span> { <span class='prelude-val'>None</span> }
     }
 
-    <span class='kw'>fn</span> <span class='ident'>split</span>(<span class='self'>self</span>, <span class='ident'>idx</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> (<span class='kw'>Self</span>, <span class='kw'>Self</span>) {
+    <span class='kw'>fn</span> <span class='ident'>split</span>(<span class='self'>self</span>, <span class='ident'>idx</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> (<span class='self'>Self</span>, <span class='self'>Self</span>) {
         <span class='kw'>let</span> (<span class='ident'>a</span>, <span class='ident'>b</span>) <span class='op'>=</span> <span class='self'>self</span>.<span class='number'>0</span>.<span class='ident'>split_at</span>(<span class='ident'>idx</span>);
         (
             <span class='ident'>SliceSplit</span>(<span class='ident'>a</span>),
@@ -1020,7 +1090,7 @@
         <span class='kw'>else</span> { <span class='prelude-val'>None</span> }
     }
 
-    <span class='kw'>fn</span> <span class='ident'>split</span>(<span class='self'>self</span>, <span class='ident'>idx</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> (<span class='kw'>Self</span>, <span class='kw'>Self</span>) {
+    <span class='kw'>fn</span> <span class='ident'>split</span>(<span class='self'>self</span>, <span class='ident'>idx</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> (<span class='self'>Self</span>, <span class='self'>Self</span>) {
         <span class='kw'>let</span> (<span class='ident'>a</span>, <span class='ident'>b</span>) <span class='op'>=</span> <span class='self'>self</span>.<span class='number'>0</span>.<span class='ident'>split_at_mut</span>(<span class='ident'>idx</span>);
         (
             <span class='ident'>SliceSplitMut</span>(<span class='ident'>a</span>),
@@ -1035,13 +1105,13 @@
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> <span class='ident'>ExactSizeSplitIterator</span> <span class='kw'>for</span> <span class='ident'>SliceSplit</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span> {
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span><span class='op'>&gt;</span> <span class='ident'>ExactSizeSpliterator</span> <span class='kw'>for</span> <span class='ident'>SliceSplit</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span> {
     <span class='kw'>fn</span> <span class='ident'>size</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>usize</span> {
         <span class='self'>self</span>.<span class='number'>0</span>.<span class='ident'>len</span>()
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Send</span><span class='op'>&gt;</span> <span class='ident'>ExactSizeSplitIterator</span> <span class='kw'>for</span> <span class='ident'>SliceSplitMut</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span> {
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='lifetime'>&#39;a</span> <span class='op'>+</span> <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Send</span><span class='op'>&gt;</span> <span class='ident'>ExactSizeSpliterator</span> <span class='kw'>for</span> <span class='ident'>SliceSplitMut</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>T</span><span class='op'>&gt;</span> {
     <span class='kw'>fn</span> <span class='ident'>size</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>usize</span> {
         <span class='self'>self</span>.<span class='number'>0</span>.<span class='ident'>len</span>()
     }
@@ -1054,7 +1124,7 @@
 <span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>Callback</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>: <span class='ident'>Sized</span> {
     <span class='kw'>type</span> <span class='ident'>Out</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>call</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>Iterator</span><span class='op'>&lt;</span><span class='ident'>Item</span><span class='op'>=</span><span class='ident'>T</span><span class='op'>&gt;&gt;</span>(<span class='self'>self</span>, <span class='ident'>I</span>) <span class='op'>-&gt;</span> <span class='ident'>Self</span>::<span class='ident'>Out</span>;
+    <span class='kw'>fn</span> <span class='ident'>call</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>Iterator</span><span class='op'>&lt;</span><span class='ident'>Item</span><span class='op'>=</span><span class='ident'>T</span><span class='op'>&gt;&gt;</span>(<span class='self'>self</span>, <span class='ident'>I</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span>::<span class='ident'>Out</span>;
 }
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>F</span>, <span class='ident'>T</span><span class='op'>&gt;</span> <span class='ident'>Callback</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>F</span> <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>FnMut</span>(<span class='ident'>T</span>) {
@@ -1068,7 +1138,7 @@
 }
 
 <span class='doccomment'>/// A consumer takes an `IntoIterator`, which is usually the</span>
-<span class='doccomment'>/// `Base` of a `SplitIterator`, produces the desired iterator,</span>
+<span class='doccomment'>/// `Base` of a `Spliterator`, produces the desired iterator,</span>
 <span class='doccomment'>/// and passes it to the callback given.</span>
 <span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>Consumer</span><span class='op'>&lt;</span><span class='ident'>In</span>: <span class='ident'>IntoIterator</span><span class='op'>&gt;</span>: <span class='ident'>Sync</span> {
     <span class='kw'>type</span> <span class='ident'>Item</span>;
@@ -1076,20 +1146,20 @@
     <span class='doccomment'>/// Consume the iterator, typically by passing it on to the</span>
     <span class='doccomment'>/// parent consumer along with a callback which will receive</span>
     <span class='doccomment'>/// a producer of items to transform.</span>
-    <span class='kw'>fn</span> <span class='ident'>consume</span><span class='op'>&lt;</span><span class='ident'>C</span>: <span class='ident'>Callback</span><span class='op'>&lt;</span><span class='ident'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;&gt;</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>i</span>: <span class='ident'>In</span>, <span class='ident'>cb</span>: <span class='ident'>C</span>) <span class='op'>-&gt;</span> <span class='ident'>C</span>::<span class='ident'>Out</span>;
+    <span class='kw'>fn</span> <span class='ident'>consume</span><span class='op'>&lt;</span><span class='ident'>C</span>: <span class='ident'>Callback</span><span class='op'>&lt;</span><span class='self'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;&gt;</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>i</span>: <span class='ident'>In</span>, <span class='ident'>cb</span>: <span class='ident'>C</span>) <span class='op'>-&gt;</span> <span class='ident'>C</span>::<span class='ident'>Out</span>;
 }
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>In</span>: <span class='ident'>IntoIterator</span><span class='op'>&gt;</span> <span class='ident'>Consumer</span><span class='op'>&lt;</span><span class='ident'>In</span><span class='op'>&gt;</span> <span class='kw'>for</span> () {
     <span class='kw'>type</span> <span class='ident'>Item</span> <span class='op'>=</span> <span class='ident'>In</span>::<span class='ident'>Item</span>;
 
-    <span class='kw'>fn</span> <span class='ident'>consume</span><span class='op'>&lt;</span><span class='ident'>C</span>: <span class='ident'>Callback</span><span class='op'>&lt;</span><span class='ident'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;&gt;</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>i</span>: <span class='ident'>In</span>, <span class='ident'>cb</span>: <span class='ident'>C</span>) <span class='op'>-&gt;</span> <span class='ident'>C</span>::<span class='ident'>Out</span> {
+    <span class='kw'>fn</span> <span class='ident'>consume</span><span class='op'>&lt;</span><span class='ident'>C</span>: <span class='ident'>Callback</span><span class='op'>&lt;</span><span class='self'>Self</span>::<span class='ident'>Item</span><span class='op'>&gt;&gt;</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>i</span>: <span class='ident'>In</span>, <span class='ident'>cb</span>: <span class='ident'>C</span>) <span class='op'>-&gt;</span> <span class='ident'>C</span>::<span class='ident'>Out</span> {
         <span class='ident'>cb</span>.<span class='ident'>call</span>(<span class='ident'>i</span>.<span class='ident'>into_iter</span>())
     }
 }
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
 <span class='kw'>mod</span> <span class='ident'>tests</span> {
-    <span class='kw'>use</span> ::{<span class='ident'>pool_harness</span>, <span class='ident'>IntoSplitIterator</span>, <span class='ident'>SplitIterator</span>};
+    <span class='kw'>use</span> ::{<span class='ident'>pool_harness</span>, <span class='ident'>IntoSpliterator</span>, <span class='ident'>Spliterator</span>};
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>doubling</span>() {
@@ -1126,6 +1196,8 @@
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `PopulationBuilder` struct in crate `darwin_rs`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, PopulationBuilder">
+
+    <title>darwin_rs::population_builder::PopulationBuilder - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>darwin_rs</a>::<wbr><a href='index.html'>population_builder</a></p><script>window.sidebarCurrent = {name: 'PopulationBuilder', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>darwin_rs</a>::<wbr><a href='index.html'>population_builder</a>::<wbr><a class='struct' href=''>PopulationBuilder</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-271' class='srclink' href='../../src/darwin_rs/src/population_builder.rs.html#23-26' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct PopulationBuilder&lt;T: <a class='trait' href='../../darwin_rs/individual/trait.Individual.html' title='darwin_rs::individual::Individual'>Individual</a>&gt; {
+    // some fields omitted
+}</pre><div class='docblock'><p>This is a helper struct in order to build (configure) a valid population.
+See builder pattern: <a href="https://en.wikipedia.org/wiki/Builder_pattern">https://en.wikipedia.org/wiki/Builder_pattern</a></p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T: <a class='trait' href='../../darwin_rs/individual/trait.Individual.html' title='darwin_rs::individual::Individual'>Individual</a>&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-306' class='srclink' href='../../src/darwin_rs/src/population_builder.rs.html#41-171' title='goto source code'>[src]</a></span></h3>
+<div class='docblock'><p>This implementation contains all the helper method to build (configure) a valid population</p>
+</div><div class='impl-items'><h4 id='method.new' class='method'><code>fn <a href='#method.new' class='fnname'>new</a>() -&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Start with this method, it must always be called as the first one.
+It creates a default population with some dummy (but invalid) values.</p>
+</div><h4 id='method.individuals' class='method'><code>fn <a href='#method.individuals' class='fnname'>individuals</a>(self, individuals: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Sets the number of individuals and creates the population, must be &gt;= 3</p>
+</div><h4 id='method.increasing_mutation_rate' class='method'><code>fn <a href='#method.increasing_mutation_rate' class='fnname'>increasing_mutation_rate</a>(self) -&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals
+in the population: The first individual will mutate once, the second will mutate twice,
+the nth individual will Mutate n-times per iteration.</p>
+</div><h4 id='method.increasing_exp_mutation_rate' class='method'><code>fn <a href='#method.increasing_exp_mutation_rate' class='fnname'>increasing_exp_mutation_rate</a>(self, base: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a>) -&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals in the
+population: Instead of a linear growing mutation rate like in the
+<code>increasing_mutation_rate</code> function above this sets an exponention mutation rate for
+all the individuals. The first individual will mutate base<sup>1</sup> times, the second will
+mutate base<sup>2</sup> times, and nth will mutate base<sup>n</sup> times per iteration.</p>
+</div><h4 id='method.mutation_rate' class='method'><code>fn <a href='#method.mutation_rate' class='fnname'>mutation_rate</a>(self, mutation_rate: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt;) -&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Configures the mutation rates (number of mutation runs) for all the individuals in the
+population: This allows to specify an arbitrary mutation scheme for each individual.
+The number of rates must be equal to the number of individuals.</p>
+</div><h4 id='method.reset_limit_start' class='method'><code>fn <a href='#method.reset_limit_start' class='fnname'>reset_limit_start</a>(self, reset_limit_start: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Configures the reset limit for the population. If reset_limit_end is greater than zero
+then a reset counter is increased each iteration. If that counter is greater than the
+limit, all individuals will be resetted, the limit will be increased by 1000 and the
+counter is set back to zero. Default value for reset_limit_start is 1000.</p>
+</div><h4 id='method.reset_limit_end' class='method'><code>fn <a href='#method.reset_limit_end' class='fnname'>reset_limit_end</a>(self, reset_limit_end: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Configures the end value for the reset_limit. If the reset_limit &gt;= reset_limit_end
+then the reset_limit will be resetted to the start value reset_limit_start.
+Default value for reset_limit_end is 100000.
+If reset_limit_end == 0 then the reset limit feature will be disabled.</p>
+</div><h4 id='method.reset_limit_increment' class='method'><code>fn <a href='#method.reset_limit_increment' class='fnname'>reset_limit_increment</a>(self, reset_limit_increment: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Configure the increment for the reset_limit. If the reset_limit is reached, its value
+is incrementet by the amount of reset_limit_increment</p>
+</div><h4 id='method.set_id' class='method'><code>fn <a href='#method.set_id' class='fnname'>set_id</a>(self, id: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='struct' href='../../darwin_rs/population_builder/struct.PopulationBuilder.html' title='darwin_rs::population_builder::PopulationBuilder'>PopulationBuilder</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Set the population id. Currently this is only used for statistics</p>
+</div><h4 id='method.finalize' class='method'><code>fn <a href='#method.finalize' class='fnname'>finalize</a>(self) -&gt; <a class='type' href='../../darwin_rs/population_builder/type.Result.html' title='darwin_rs::population_builder::Result'>Result</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>This checks the configuration of the simulation and returns an PopError or Ok if no PopErrors
+where found.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "darwin_rs";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

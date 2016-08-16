@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="Source to the Rust file `/home/willi/.cargo/registry/src/github.com-88ac128001ac3a9a/jobsteal-0.4.3/src/iter/all_any.rs`.">
+    <meta name="description" content="Source to the Rust file `/home/ESD/willi/.cargo/registry/src/github.com-1ecc6299db9ec823/jobsteal-0.5.1/src/iter/all_any.rs`.">
     <meta name="keywords" content="rust, rustlang, rust-lang">
 
     <title>all_any.rs.html -- source</title>
@@ -151,10 +151,10 @@
 <span id="107">107</span>
 <span id="108">108</span>
 </pre><pre class='rust '>
-<span class='doccomment'>//! Whether all or any of the elements in a `SplitIterator` fulfill a predicate.</span>
+<span class='doccomment'>//! Whether all or any of the elements in a `Spliterator` fulfill a predicate.</span>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>sync</span>::<span class='ident'>atomic</span>::{<span class='ident'>AtomicBool</span>, <span class='ident'>Ordering</span>};
 
-<span class='kw'>use</span> <span class='ident'>super</span>::{<span class='ident'>Callback</span>, <span class='ident'>Consumer</span>, <span class='ident'>IntoSplitIterator</span>, <span class='ident'>Split</span>, <span class='ident'>SplitIterator</span>};
+<span class='kw'>use</span> <span class='kw'>super</span>::{<span class='ident'>Callback</span>, <span class='ident'>Consumer</span>, <span class='ident'>IntoSpliterator</span>, <span class='ident'>Split</span>, <span class='ident'>Spliterator</span>};
 <span class='kw'>use</span> <span class='ident'>Spawner</span>;
 
 <span class='kw'>struct</span> <span class='ident'>AnyCallback</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>P</span>: <span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
@@ -163,7 +163,7 @@
 }
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>P</span>: <span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>Clone</span> <span class='kw'>for</span> <span class='ident'>AnyCallback</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>P</span><span class='op'>&gt;</span> {
-    <span class='kw'>fn</span> <span class='ident'>clone</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw'>Self</span> {
+    <span class='kw'>fn</span> <span class='ident'>clone</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='self'>Self</span> {
         <span class='ident'>AnyCallback</span> {
             <span class='ident'>global</span>: <span class='self'>self</span>.<span class='ident'>global</span>,
             <span class='ident'>pred</span>: <span class='self'>self</span>.<span class='ident'>pred</span>,
@@ -180,18 +180,18 @@
             <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> <span class='ident'>iter</span> {
                 <span class='comment'>// short-circuit as soon as we find a good item.</span>
                 <span class='kw'>if</span> (<span class='self'>self</span>.<span class='ident'>pred</span>)(<span class='ident'>i</span>) {
-                    <span class='self'>self</span>.<span class='ident'>global</span>.<span class='ident'>store</span>(<span class='boolval'>true</span>, <span class='ident'>Ordering</span>::<span class='ident'>SeqCst</span>);
-                    <span class='kw'>return</span> <span class='boolval'>true</span>;
+                    <span class='self'>self</span>.<span class='ident'>global</span>.<span class='ident'>store</span>(<span class='boolvalue'>true</span>, <span class='ident'>Ordering</span>::<span class='ident'>SeqCst</span>);
+                    <span class='kw'>return</span> <span class='boolvalue'>true</span>;
                 }
             }
         }
-        <span class='kw'>return</span> <span class='boolval'>false</span>;
+        <span class='kw'>return</span> <span class='boolvalue'>false</span>;
     }
 }
 
 <span class='doccomment'>/// Consumes the iterator, returning true if all elements fulfill the predicate</span>
 <span class='doccomment'>/// and false otherwise.</span>
-<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>all</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>IntoSplitIterator</span>, <span class='ident'>P</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='ident'>iter</span>: <span class='ident'>I</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>pred</span>: <span class='ident'>P</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span>
+<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>all</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>IntoSpliterator</span>, <span class='ident'>P</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='ident'>iter</span>: <span class='ident'>I</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>pred</span>: <span class='ident'>P</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span>
 <span class='kw'>where</span> <span class='ident'>P</span>: <span class='ident'>Fn</span>(<span class='ident'>I</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
     <span class='comment'>// all just asks if there are any that don&#39;t fulfill the predicate.</span>
     <span class='comment'>// if the answer to that question is true, then not all of them do.</span>
@@ -200,9 +200,9 @@
 
 <span class='doccomment'>/// Consumes the iterator, returning true if any element fulfills the predicate</span>
 <span class='doccomment'>/// and false otherwise.</span>
-<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>any</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>IntoSplitIterator</span>, <span class='ident'>P</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='ident'>iter</span>: <span class='ident'>I</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>pred</span>: <span class='ident'>P</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span>
+<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>any</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>IntoSpliterator</span>, <span class='ident'>P</span>: <span class='ident'>Sync</span><span class='op'>&gt;</span>(<span class='ident'>iter</span>: <span class='ident'>I</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>pred</span>: <span class='ident'>P</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span>
 <span class='kw'>where</span> <span class='ident'>P</span>: <span class='ident'>Fn</span>(<span class='ident'>I</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
-    <span class='kw'>let</span> <span class='ident'>global</span> <span class='op'>=</span> <span class='ident'>AtomicBool</span>::<span class='ident'>new</span>(<span class='boolval'>false</span>);
+    <span class='kw'>let</span> <span class='ident'>global</span> <span class='op'>=</span> <span class='ident'>AtomicBool</span>::<span class='ident'>new</span>(<span class='boolvalue'>false</span>);
     <span class='kw'>let</span> <span class='ident'>cb</span> <span class='op'>=</span> <span class='ident'>AnyCallback</span> {
         <span class='ident'>global</span>: <span class='kw-2'>&amp;</span><span class='ident'>global</span>,
         <span class='ident'>pred</span>: <span class='kw-2'>&amp;</span><span class='ident'>pred</span>,
@@ -213,7 +213,7 @@
     <span class='ident'>any_helper</span>::<span class='op'>&lt;</span><span class='ident'>I</span>::<span class='ident'>SplitIter</span>, <span class='ident'>P</span><span class='op'>&gt;</span>(<span class='ident'>base</span>, <span class='kw-2'>&amp;</span><span class='ident'>consumer</span>, <span class='ident'>spawner</span>, <span class='ident'>cb</span>)
 }
 
-<span class='kw'>fn</span> <span class='ident'>any_helper</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>SplitIterator</span>, <span class='ident'>P</span><span class='op'>&gt;</span>(<span class='ident'>base</span>: <span class='ident'>I</span>::<span class='ident'>Base</span>, <span class='ident'>consumer</span>: <span class='kw-2'>&amp;</span><span class='ident'>I</span>::<span class='ident'>Consumer</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>cb</span>: <span class='ident'>AnyCallback</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span>
+<span class='kw'>fn</span> <span class='ident'>any_helper</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>Spliterator</span>, <span class='ident'>P</span><span class='op'>&gt;</span>(<span class='ident'>base</span>: <span class='ident'>I</span>::<span class='ident'>Base</span>, <span class='ident'>consumer</span>: <span class='kw-2'>&amp;</span><span class='ident'>I</span>::<span class='ident'>Consumer</span>, <span class='ident'>spawner</span>: <span class='kw-2'>&amp;</span><span class='ident'>Spawner</span>, <span class='ident'>cb</span>: <span class='ident'>AnyCallback</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span>
 <span class='kw'>where</span> <span class='ident'>P</span>: <span class='ident'>Sync</span> <span class='op'>+</span> <span class='ident'>Fn</span>(<span class='ident'>I</span>::<span class='ident'>Item</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
     <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>idx</span>) <span class='op'>=</span> <span class='ident'>base</span>.<span class='ident'>should_split</span>(<span class='number'>1.0</span>) {
         <span class='kw'>let</span> (<span class='ident'>b1</span>, <span class='ident'>b2</span>) <span class='op'>=</span> <span class='ident'>base</span>.<span class='ident'>split</span>(<span class='ident'>idx</span>);
@@ -233,14 +233,14 @@
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
 <span class='kw'>mod</span> <span class='ident'>tests</span> {
-    <span class='kw'>use</span> ::{<span class='ident'>IntoSplitIterator</span>, <span class='ident'>SplitIterator</span>, <span class='ident'>pool_harness</span>};
+    <span class='kw'>use</span> ::{<span class='ident'>BorrowSpliterator</span>, <span class='ident'>Spliterator</span>, <span class='ident'>pool_harness</span>};
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>any_even</span>() {
         <span class='kw'>let</span> <span class='ident'>v</span> <span class='op'>=</span> (<span class='number'>0</span>..<span class='number'>5000</span>).<span class='ident'>map</span>(<span class='op'>|</span><span class='ident'>x</span><span class='op'>|</span> <span class='ident'>x</span> <span class='op'>*</span> <span class='number'>2</span>).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;&gt;</span>();
         <span class='ident'>pool_harness</span>(<span class='op'>|</span><span class='ident'>pool</span><span class='op'>|</span> {
 
-            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>v</span>.<span class='ident'>into_split_iter</span>().<span class='ident'>cloned</span>()
+            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>v</span>.<span class='ident'>split_iter</span>().<span class='ident'>cloned</span>()
                 .<span class='ident'>any</span>(<span class='kw-2'>&amp;</span><span class='ident'>pool</span>.<span class='ident'>spawner</span>(), <span class='op'>|</span><span class='ident'>x</span><span class='op'>|</span> <span class='ident'>x</span> <span class='op'>%</span> <span class='number'>2</span> <span class='op'>==</span> <span class='number'>0</span>);
             <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>x</span>);
         })
@@ -251,7 +251,7 @@
         <span class='kw'>let</span> <span class='ident'>v</span> <span class='op'>=</span> (<span class='number'>0</span>..<span class='number'>5000</span>).<span class='ident'>map</span>(<span class='op'>|</span><span class='ident'>x</span><span class='op'>|</span> <span class='ident'>x</span> <span class='op'>*</span> <span class='number'>2</span> <span class='op'>+</span> <span class='number'>1</span>).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;&gt;</span>();
 
         <span class='ident'>pool_harness</span>(<span class='op'>|</span><span class='ident'>pool</span><span class='op'>|</span> {
-            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>v</span>.<span class='ident'>into_split_iter</span>()
+            <span class='kw'>let</span> <span class='ident'>x</span> <span class='op'>=</span> <span class='ident'>v</span>.<span class='ident'>split_iter</span>()
                 .<span class='ident'>cloned</span>()
                 .<span class='ident'>all</span>(<span class='kw-2'>&amp;</span><span class='ident'>pool</span>.<span class='ident'>spawner</span>(), <span class='op'>|</span><span class='ident'>x</span><span class='op'>|</span> <span class='ident'>x</span> <span class='op'>%</span> <span class='number'>2</span> <span class='op'>==</span> <span class='number'>0</span>);
 
@@ -282,6 +282,8 @@
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 
