@@ -20,8 +20,7 @@ use rand::Rng;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use image::{GenericImage, ImageBuffer, Luma};
-use image::imageops::replace;
+use image::{ImageBuffer, Luma};
 use imageproc::stats::root_mean_squared_error;
 use simplelog::{SimpleLogger, LogLevelFilter};
 use std::sync::Mutex;
@@ -193,7 +192,7 @@ fn main() {
 
     let population1 = PopulationBuilder::<OCRItem>::new()
         .set_id(1)
-        .individuals(100)
+        .individuals(30)
         .increasing_exp_mutation_rate(1.1)
         .reset_limit_increment(100)
         .reset_limit_start(100)
@@ -202,19 +201,28 @@ fn main() {
 
     let population2 = PopulationBuilder::<OCRItem>::new()
         .set_id(2)
-        .individuals(100)
-        .increasing_exp_mutation_rate(1.2)
+        .individuals(30)
+        .increasing_exp_mutation_rate(1.15)
         .reset_limit_increment(200)
         .reset_limit_start(100)
         .reset_limit_end(2000)
         .finalize().unwrap();
 
+    let population3 = PopulationBuilder::<OCRItem>::new()
+        .set_id(3)
+        .individuals(30)
+        .increasing_exp_mutation_rate(1.2)
+        .reset_limit_increment(300)
+        .reset_limit_start(100)
+        .reset_limit_end(3000)
+        .finalize().unwrap();
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(10.0)
-        .threads(4)
+        .threads(2)
         .add_population(population1)
         .add_population(population2)
+        .add_population(population3)
         .finalize();
 
     match ocr_builder {
