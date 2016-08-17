@@ -81,29 +81,29 @@ impl Individual for CityItem {
         }
 
         // Compared to examples/tsp/ here we add a second operation:
-        // Additionaly to swaping indices we also roate (shift) items around.
+        // Additionaly to swaping indices we also rotate (shift) items around.
         // And just by adding this second mutation operation, the resulst converge
         // much faster to the optimum.
         // You can add a third operation her if you want (for ex. mirrorig), or
         // try to leave the swap opersion out, just to see if it runs better.
 
         // Choose mutate operation
-        let operation: u8 = rng.gen_range(1, 2);
+        let operation: u8 = rng.gen_range(0, 2);
 
         match operation {
             0 => {
                 // Just swap two positions
                 self.path.swap(index1, index2);
-            }
+            },
             1 => {
                 // Rotate (shift) items
                 let tmp = self.path.remove(index1);
                 self.path.insert(index2, tmp);
-            }
+            },
             2 => {
                 // Add your new operation here, for ex. mirror between index1 and index2:
 
-            }
+            },
             _ => println!("unknown operation: {}", operation),
         }
     }
