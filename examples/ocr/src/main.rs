@@ -17,13 +17,13 @@ extern crate simplelog;
 extern crate darwin_rs;
 
 use rand::Rng;
+use rand::distributions::{Weighted, WeightedChoice, IndependentSample};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use image::{ImageBuffer, Luma};
 use imageproc::stats::root_mean_squared_error;
 use simplelog::{SimpleLogger, LogLevelFilter};
-use std::sync::Mutex;
 use std::str;
 
 // internal modules
@@ -38,16 +38,27 @@ lazy_static!{
         println!("bytes read: {}", bytes_read);
 
         let collection = rusttype::FontCollection::from_bytes(font_data);
-        let font = collection.into_font().unwrap();
-        font
+        collection.into_font().unwrap()
     };
 }
 
 lazy_static! {
-    static ref ORIGINAL_IMG: Mutex<ImageBuffer<Luma<u8>, Vec<u8>>> = {
-        let original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
-        Mutex::new(original_img)
+    static ref ORIGINAL_IMG: ImageBuffer<Luma<u8>, Vec<u8>> = {
+        let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
+        draw_text_line(&mut original_img, &FONT, 10, 10, "This is a test text!");
+        draw_text_line(&mut original_img, &FONT, 10, 40, "Just to see how good OCR works...");
+        original_img
     };
+}
+
+#[derive(Debug, Clone)]
+enum MOperation {
+    AddEmptyTextBox,
+    RemoveTextBox,
+    MoveTextAround,
+    AddRandomCharacter,
+    RemoveCharacter,
+    SwapTwoCharacters
 }
 
 #[derive(Debug, Clone)]
@@ -70,30 +81,37 @@ impl Individual for OCRItem {
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
-        let operation: u8 = rng.gen_range(0, 6);
+        let mut items = vec!(
+            Weighted { weight: 1, item: MOperation::AddEmptyTextBox },
+            Weighted { weight: 1, item: MOperation::RemoveTextBox },
+            Weighted { weight: 2, item: MOperation::MoveTextAround },
+            Weighted { weight: 10, item: MOperation::AddRandomCharacter },
+            Weighted { weight: 10, item: MOperation::RemoveCharacter },
+            Weighted { weight: 10, item: MOperation::SwapTwoCharacters }
+        );
+        let weighted_choice = WeightedChoice::new(&mut items);
 
-        match operation {
-            0 => { // Add a new empty text box
+        match weighted_choice.ind_sample(&mut rng) {
+            MOperation::AddEmptyTextBox => { // Add a new empty text box
                 self.content.push( TextBox{ x: 0, y: 0, text: Vec::new() } );
             },
-            1 => { // Remove a text box
+            MOperation::RemoveTextBox => { // Remove a text box
                 if self.content.len() > 1 { // Leave at least one text box.
                     let remove_index = rng.gen_range(0, self.content.len());
                     let _ = self.content.remove(remove_index as usize);
                 }
             },
-            2 => { // Move the text box around
+            MOperation::MoveTextAround => { // Move the text box around
                 if self.content.len() > 0 {
                     let move_index = rng.gen_range(0, self.content.len());
-                    let canvas = ORIGINAL_IMG.lock().unwrap();
-                    let new_x = rng.gen_range(0, canvas.width());
-                    let new_y = rng.gen_range(0, canvas.height());
+                    let new_x = rng.gen_range(0, ORIGINAL_IMG.width());
+                    let new_y = rng.gen_range(0, ORIGINAL_IMG.height());
 
                     self.content[move_index].x = new_x;
                     self.content[move_index].y = new_y;
                 }
             },
-            3 => { // Add a random character to the text box
+            MOperation::AddRandomCharacter => { // Add a random character to the text box
                 if self.content.len() > 0 {
                     let content_index = rng.gen_range(0, self.content.len());
                     let add_char_index = if self.content[content_index].text.is_empty() { 0 }
@@ -103,7 +121,7 @@ impl Individual for OCRItem {
                     self.content[content_index].text.insert(add_char_index, random_ascii_value);
                 }
             },
-            4 => { // Remove a character from the text box
+            MOperation::RemoveCharacter => { // Remove a character from the text box
                 if self.content.len() > 0 {
                     let content_index = rng.gen_range(0, self.content.len());
                     if self.content[content_index].text.len() > 1 { // Leave at least one char
@@ -113,7 +131,7 @@ impl Individual for OCRItem {
                     }
                 }
             },
-            5 => { // Swap two characters inside a text box
+            MOperation::SwapTwoCharacters => { // Swap two characters inside a text box
                 if self.content.len() > 0 {
                     let content_index = rng.gen_range(0, self.content.len());
                     if self.content[content_index].text.len() > 1 { // Need at least two chars to swap
@@ -125,7 +143,6 @@ impl Individual for OCRItem {
                     }
                 }
             },
-            _ => println!("unknown operation: {}", operation),
         }
     }
 
@@ -140,9 +157,7 @@ impl Individual for OCRItem {
             }
         }
 
-        let canvas = ORIGINAL_IMG.lock().unwrap();
-
-        root_mean_squared_error(&*canvas, &constructed_img)
+        root_mean_squared_error(&*ORIGINAL_IMG, &constructed_img)
     }
 }
 
@@ -180,20 +195,13 @@ fn main() {
 
     let _ = SimpleLogger::init(LogLevelFilter::Info);
 
-    {
-        let mut canvas = ORIGINAL_IMG.lock().unwrap();
-
-        draw_text_line(&mut canvas, &FONT, 10, 10, "This is a test text!");
-        draw_text_line(&mut canvas, &FONT, 10, 40, "Just to see how good OCR works...");
-
-        let img_file = Path::new("rendered_text.png");
-        let _ = canvas.save(&img_file);
-    }
+    let img_file = Path::new("rendered_text.png");
+    let _ = ORIGINAL_IMG.save(&img_file);
 
     let population1 = PopulationBuilder::<OCRItem>::new()
         .set_id(1)
-        .individuals(30)
-        .increasing_exp_mutation_rate(1.1)
+        .individuals(40)
+        .increasing_exp_mutation_rate(1.10)
         .reset_limit_increment(100)
         .reset_limit_start(100)
         .reset_limit_end(1000)
@@ -201,8 +209,8 @@ fn main() {
 
     let population2 = PopulationBuilder::<OCRItem>::new()
         .set_id(2)
-        .individuals(30)
-        .increasing_exp_mutation_rate(1.15)
+        .individuals(40)
+        .increasing_exp_mutation_rate(1.13)
         .reset_limit_increment(200)
         .reset_limit_start(100)
         .reset_limit_end(2000)
@@ -210,8 +218,17 @@ fn main() {
 
     let population3 = PopulationBuilder::<OCRItem>::new()
         .set_id(3)
-        .individuals(30)
-        .increasing_exp_mutation_rate(1.2)
+        .individuals(40)
+        .increasing_exp_mutation_rate(1.16)
+        .reset_limit_increment(300)
+        .reset_limit_start(100)
+        .reset_limit_end(3000)
+        .finalize().unwrap();
+
+    let population4 = PopulationBuilder::<OCRItem>::new()
+        .set_id(4)
+        .individuals(40)
+        .increasing_exp_mutation_rate(1.19)
         .reset_limit_increment(300)
         .reset_limit_start(100)
         .reset_limit_end(3000)
@@ -219,10 +236,11 @@ fn main() {
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(10.0)
-        .threads(2)
+        .threads(3)
         .add_population(population1)
         .add_population(population2)
         .add_population(population3)
+        .add_population(population4)
         .finalize();
 
     match ocr_builder {
