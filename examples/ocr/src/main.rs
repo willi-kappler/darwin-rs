@@ -9,7 +9,7 @@
 extern crate rand;
 extern crate image;
 extern crate imageproc;
-extern crate freetype;
+extern crate rusttype;
 #[macro_use] extern crate lazy_static;
 extern crate simplelog;
 
@@ -18,11 +18,13 @@ extern crate darwin_rs;
 
 use rand::Rng;
 use std::fs::File;
+use std::io::Read;
 use std::path::Path;
 use image::{GenericImage, ImageBuffer, Luma};
 use image::imageops::replace;
 use imageproc::stats::root_mean_squared_error;
 use simplelog::{SimpleLogger, LogLevelFilter};
+use rusttype::{FontCollection};
 
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
@@ -53,34 +55,38 @@ impl Individual for OCRItem {
 }
 
 fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
-                  face: &freetype::Face,
-                  x: u32,
-                  y: u32,
+                  font: &rusttype::Font,
+                  pos_x: i32,
+                  pos_y: i32,
                   text: &str) {
-    let mut pos_x = x;
-    let pos_y = y;
 
-    for char in text.chars() {
-        // println!("processing char: {}, pos_x: {}", char, pos_x);
-        face.load_char(char as usize, freetype::face::RENDER).unwrap();
-        let glyph = face.glyph();
-        let bm = glyph.bitmap();
+    let height: f32 = 18.0;
+    let pixel_height = height.ceil() as u32;
 
-        if !char.is_whitespace() {
-            let bm_slice = bm.buffer().to_vec();
+    let scale = rusttype::Scale { x: height * 1.0, y: height };
+    let v_metrics = font.v_metrics(scale);
+    let offset = rusttype::point(0.0, v_metrics.ascent);
+    let glyphs: Vec<rusttype::PositionedGlyph> = font.layout(text, scale, offset).collect();
 
-            let rendered_char: ImageBuffer<Luma<u8>, Vec<u8>> =
-                ImageBuffer::from_vec(bm.pitch() as u32, bm.rows() as u32, bm_slice).unwrap();
-            replace(canvas,
-                    &rendered_char,
-                    pos_x + (glyph.bitmap_left() as u32),
-                    pos_y - (glyph.bitmap_top() as u32));
+/*
+    let width = glyphs.iter().rev()
+            .filter_map(|g| g.pixel_bounding_box()
+            .map(|b| b.min.x as f32 + g.unpositioned().h_metrics().advance_width))
+            .next().unwrap_or(0.0).ceil() as u32;
+*/
+
+    for g in glyphs {
+        if let Some(bb) = g.pixel_bounding_box() {
+            g.draw(|x, y, v| {
+                let x = ((x as i32) + bb.min.x + pos_x) as u32;
+                let y = ((y as i32) + bb.min.y + pos_y) as u32;
+                if x >= 0 && y >= 0 && x <= canvas.width() && y <= canvas.height() {
+                    canvas.put_pixel(x, y, Luma::<u8>{ data: [(v * 255.0) as u8] } );
+                }
+            })
         }
-
-        let step_x = ((glyph.get_glyph().unwrap().advance_x()) >> 16) as u32;
-
-        pos_x = pos_x + step_x;
     }
+
 }
 
 fn main() {
@@ -91,16 +97,17 @@ fn main() {
     let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
     let mut contructed_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
 
-    let ft_library = freetype::Library::init().unwrap();
-    let face = ft_library.new_face("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 0).unwrap();
-    face.set_char_size(40 * 64, 0, 50, 0).unwrap();
+    let mut file = File::open("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf").unwrap();
+    let mut font_data: Vec<u8> = Vec::new();
+    let bytes_read = file.read_to_end(&mut font_data).unwrap();
+    println!("bytes read: {}", bytes_read);
 
-    draw_text_line(&mut original_img, &face, 10, 30, "This is a test text!");
-    draw_text_line(&mut original_img,
-                   &face,
-                   10,
-                   60,
-                   "Just to see how good OCR works...");
+    let collection = rusttype::FontCollection::from_bytes(font_data);
+    let font = collection.into_font().unwrap();
+
+    draw_text_line(&mut original_img, &font, 10, 10, "This is a test text!");
+    draw_text_line(&mut original_img, &font, 10, 40,
+        "Just to see how good OCR works...");
 
     let img_file = Path::new("rendered_text.png");
     let _ = original_img.save(&img_file);
