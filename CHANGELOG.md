@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.3 - 2016-xx
+- Write output into a log file instead of using print!()
+
 ## 0.2 - 2016-08-17
 - Split up code into several files
 - Allow user to specify start and end value for reset limit
