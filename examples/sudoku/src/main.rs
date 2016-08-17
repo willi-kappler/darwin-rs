@@ -4,11 +4,13 @@
 
 extern crate rand;
 #[macro_use] extern crate lazy_static;
+extern crate simplelog;
 
 // internal crates
 extern crate darwin_rs;
 
 use rand::Rng;
+use simplelog::{SimpleLogger, LogLevelFilter};
 
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
@@ -160,6 +162,8 @@ impl Individual for Sudoku {
 
 fn main() {
     println!("Darwin test: sudoku solver");
+
+    let _ = SimpleLogger::init(LogLevelFilter::Info);
 
     let population1 = PopulationBuilder::<Sudoku>::new()
         .set_id(1)

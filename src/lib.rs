@@ -17,6 +17,7 @@
 // #![plugin(clippy)]
 
 #[macro_use] extern crate quick_error;
+#[macro_use] extern crate log;
 extern crate jobsteal;
 
 pub mod individual;

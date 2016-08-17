@@ -173,10 +173,7 @@ TODO:
 - [ ] Add more documentation comments for library
 - [ ] Add test cases
 - [ ] Add more examples (ocr, ...)
-- [x] Split up code
-- [x] Allow user to specify start and end of reset limit
-- [ ] Use log file instead of println!()
-- [x] Use multiple population
+- [x] Use log file instead of println!()
 - [ ] Maybe use phantom type for builder pattern to detect configuration error at compile type ? (https://www.reddit.com/r/rust/comments/2pgrz7/required_parameters_utilizing_the_builder_pattern/)
 - [ ] Add super optimization (only allow changes that have an improvement) ?
 - [ ] Add possibility to load and save population / individuals in order to cancel / resume simulation (serde)

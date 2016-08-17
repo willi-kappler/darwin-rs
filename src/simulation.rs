@@ -99,7 +99,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             iteration_counter: 0
         };
 
-        println!("original_fitness: {}", simulation_result.original_fitness);
+        info!("original_fitness: {}", simulation_result.original_fitness);
 
         let simulation_result_mutex = Mutex::new(simulation_result);
 
@@ -117,7 +117,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                         self.simulation_result = (*simulation_result).clone();
                         self.simulation_result.iteration_counter = end_iteration;
                     },
-                    Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
+                    Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
                 }
             }
             SimulationType::EndFactor(end_factor) => {
@@ -128,7 +128,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                                 break;
                             }
                         },
-                        Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
+                        Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
                     }
 
                     iteration_counter += 1;
@@ -142,7 +142,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                         self.simulation_result = (*simulation_result).clone();
                         self.simulation_result.iteration_counter = iteration_counter;
                     },
-                    Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
+                    Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
                 }
             }
             SimulationType::EndFitness(end_fitness) => {
@@ -153,7 +153,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                                 break;
                             }
                         },
-                        Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
+                        Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
                     }
 
                     iteration_counter += 1;
@@ -167,7 +167,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                         self.simulation_result = (*simulation_result).clone();
                         self.simulation_result.iteration_counter = iteration_counter;
                     },
-                    Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
+                    Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
                 }
             }
         }
@@ -183,7 +183,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// improvement.
     pub fn print_fitness(&self) {
         for wrapper in &self.simulation_result.fittest {
-            println!("fitness: {}, num_of_mutations: {}, population: {}",
+            info!("fitness: {}, num_of_mutations: {}, population: {}",
                      wrapper.fitness, wrapper.num_of_mutations, wrapper.id);
         }
     }

@@ -3,11 +3,13 @@
 // using an evolutionary algorithm.
 
 extern crate rand;
+extern crate simplelog;
 
 // internal crates
 extern crate darwin_rs;
 
 use rand::Rng;
+use simplelog::{SimpleLogger, LogLevelFilter};
 
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
@@ -131,6 +133,8 @@ impl Individual for Queens {
 
 fn main() {
     println!("Darwin test: queens problem");
+
+    let _ = SimpleLogger::init(LogLevelFilter::Info);
 
     let population1 = PopulationBuilder::<Queens>::new()
         .set_id(1)

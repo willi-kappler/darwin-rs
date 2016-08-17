@@ -7,11 +7,13 @@
 
 extern crate rand;
 #[macro_use] extern crate lazy_static;
+extern crate simplelog;
 
 // Internal crates
 extern crate darwin_rs;
 
 use rand::Rng;
+use simplelog::{SimpleLogger, LogLevelFilter};
 
 // Internal modules
 use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
@@ -103,6 +105,8 @@ impl Individual for CityItem {
 
 fn main() {
     println!("Darwin test: traveling salesman problem");
+
+    let _ = SimpleLogger::init(LogLevelFilter::Info);
 
     let population1 = PopulationBuilder::<CityItem>::new()
         .set_id(1)

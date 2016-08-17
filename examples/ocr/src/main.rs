@@ -11,6 +11,7 @@ extern crate image;
 extern crate imageproc;
 extern crate freetype;
 #[macro_use] extern crate lazy_static;
+extern crate simplelog;
 
 // internal crates
 extern crate darwin_rs;
@@ -21,6 +22,7 @@ use std::path::Path;
 use image::{GenericImage, ImageBuffer, Luma};
 use image::imageops::replace;
 use imageproc::stats::root_mean_squared_error;
+use simplelog::{SimpleLogger, LogLevelFilter};
 
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
@@ -83,6 +85,8 @@ fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
 
 fn main() {
     println!("Darwin test: optical character recognition");
+
+    let _ = SimpleLogger::init(LogLevelFilter::Info);
 
     let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
     let mut contructed_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);

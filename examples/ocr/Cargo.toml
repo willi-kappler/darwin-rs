@@ -10,5 +10,6 @@ image = "0.10"
 imageproc = "0.6"
 freetype-rs = "0.8"
 lazy_static = "0.1.*"
+simplelog = "0.2"
 
 darwin-rs = {path = "../../../darwin-rs"}
