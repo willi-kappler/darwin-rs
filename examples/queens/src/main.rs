@@ -123,7 +123,7 @@ impl Individual for Queens {
     }
 
     // fitness means here: how many queens are colliding
-    fn calculate_fitness(&self) -> f64 {
+    fn calculate_fitness(&mut self) -> f64 {
         let mut num_of_collisions = 0;
 
         for row in 0..8 {

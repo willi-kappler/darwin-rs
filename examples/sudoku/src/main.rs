@@ -126,7 +126,7 @@ impl Individual for Sudoku {
     }
 
     // fitness means here: how many errors
-    fn calculate_fitness(&self) -> f64 {
+    fn calculate_fitness(&mut self) -> f64 {
         let mut result = 0.0;
 
         for i in 0..9 {

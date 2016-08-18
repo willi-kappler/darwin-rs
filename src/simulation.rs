@@ -15,7 +15,7 @@
 
 use std::time::Instant;
 
-use jobsteal::{make_pool, IntoSpliterator, Spliterator};
+use jobsteal::{make_pool, BorrowSpliteratorMut, Spliterator};
 
 use individual::{Individual, IndividualWrapper};
 use population::Population;
@@ -104,10 +104,8 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         match self.type_of_simulation {
             SimulationType::EndIteration(end_iteration) => {
                 for _ in 0..end_iteration {
-                    (&mut self.habitat).into_split_iter().for_each(
-                        &pool.spawner(), |population| {
-                            population.run_body();
-                        });
+                    self.habitat.split_iter_mut().for_each(
+                        &pool.spawner(), |population| { population.run_body(); });
 
                     self.update_results();
                 };
@@ -117,10 +115,8 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             SimulationType::EndFactor(end_factor) => {
                 loop {
                     iteration_counter += 1;
-                    (&mut self.habitat).into_split_iter().for_each(
-                        &pool.spawner(), |population| {
-                            population.run_body();
-                        });
+                    self.habitat.split_iter_mut().for_each(
+                        &pool.spawner(), |population| { population.run_body(); });
 
                     self.update_results();
 
@@ -134,10 +130,8 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             SimulationType::EndFitness(end_fitness) => {
                 loop {
                     iteration_counter += 1;
-                    (&mut self.habitat).into_split_iter().for_each(
-                        &pool.spawner(), |population| {
-                            population.run_body();
-                        });
+                    self.habitat.split_iter_mut().for_each(
+                        &pool.spawner(), |population| { population.run_body(); });
 
                     self.update_results();
 
@@ -169,6 +163,8 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         for population in self.habitat.iter() {
             if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
                 self.simulation_result.fittest.insert(0, population.population[0].clone());
+                // Keep at most 10 individuals, TODO: make this number user configurable.
+                self.simulation_result.fittest.truncate(10);
                 info!("new fittest: fitness: {}, population id: {}", population.population[0].fitness,
                     population.id);
             }

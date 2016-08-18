@@ -81,7 +81,7 @@ pub trait Individual {
     /// The lower the fitness value, the better (healthier) the individual is and the closer
     /// the individual is to the perfect solution. This can also correspont to the number of
     /// errors like for example in the sudoku or queens problem case.
-    fn calculate_fitness(&self) -> f64;
+    fn calculate_fitness(&mut self) -> f64;
     /// This method resets each individual to an initial state.
     /// For example in the "queens" case it would reset the queens position randomly
     /// (or all in the first row)
@@ -98,7 +98,7 @@ mod test {
         fn mutate(&mut self) {
         }
 
-        fn calculate_fitness(&self) -> f64 {
+        fn calculate_fitness(&mut self) -> f64 {
             0.0
         }
 

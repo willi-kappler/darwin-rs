@@ -94,7 +94,7 @@ impl Individual for CityItem {
     }
 
     // fitness means here: the length of the route, the shorter the better
-    fn calculate_fitness(&self) -> f64 {
+    fn calculate_fitness(&mut self) -> f64 {
         let mut prev_index = &(self.cities.len() - 1);
         let mut length: f64 = 0.0;
 

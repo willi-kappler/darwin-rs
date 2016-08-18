@@ -6,6 +6,7 @@ authors = ["Willi Kappler, grandor@gmx.de"]
 [dependencies]
 time = "0.1"
 rand = "0.3"
+log = "0.3"
 image = "0.10"
 imageproc = "0.6"
 rusttype = "0.2"

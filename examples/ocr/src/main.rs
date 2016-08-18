@@ -7,6 +7,7 @@
 
 
 extern crate rand;
+#[macro_use] extern crate log;
 extern crate image;
 extern crate imageproc;
 extern crate rusttype;
@@ -28,20 +29,29 @@ use std::str;
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
 
-fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<FindPos1<'a>> {
+fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
     let mut result = Vec::new();
 
     let shared = Arc::new(config.clone());
 
     for _ in 0..count {
-        result.push( FindPos1 {
-            x: 0,
-            y: 0,
+        result.push( OCRItem {
+            content: vec![
+                // Start with letter 'A' in each line
+                TextBox{ x: 10, y: 10, text: vec![65] },
+                TextBox{ x: 10, y: 40, text: vec![65] }],
             config: shared.clone()
         });
     }
 
     result
+}
+
+#[derive(Clone)]
+struct TextBox {
+    x: u32,
+    y: u32,
+    text: Vec<u8>
 }
 
 #[derive(Clone)]
@@ -51,45 +61,78 @@ struct OCRConfig<'a> {
 }
 
 #[derive(Clone)]
-struct FindPos1<'a> {
-    x: u32,
-    y: u32,
+struct OCRItem<'a> {
+    content: Vec<TextBox>,
     config: Arc<OCRConfig<'a>>
 }
 
-impl<'a> Individual for FindPos1<'a> {
+impl<'a> Individual for OCRItem<'a> {
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
-        self.x = rng.gen_range(0, self.config.original_img.width());
-        self.y = rng.gen_range(0, self.config.original_img.height());
+        let content_line = rng.gen_range(0, 2);
+
+        let operation = rng.gen_range(0, 4);
+
+        let index1 = rng.gen_range(0, self.content[content_line].text.len());
+
+        match operation {
+            0 => {
+                // Add character
+                let new_char = rng.gen_range(32, 127); // All printable ASCII characters
+                self.content[content_line].text.insert(index1, new_char);
+            },
+            1 => {
+                // Remove character
+                if self.content[content_line].text.len() > 1 {
+                    // Leave at least one character
+                    self.content[content_line].text.remove(index1);
+                }
+            },
+            2 => {
+                // Change character
+                let new_char = rng.gen_range(32, 127); // All printable ASCII characters
+                self.content[content_line].text[index1] = new_char;
+            },
+            3 => {
+                // Swap characters
+                let index2 = rng.gen_range(0, self.content[content_line].text.len());
+                let temp = self.content[content_line].text[index1];
+                self.content[content_line].text[index1] = self.content[content_line].text[index2];
+                self.content[content_line].text[index2] = temp;
+            },
+            4 => {
+                // You can think of more operations: shift / rotate, mirror, ...
+            }
+            n => info!("mutate(): unknown operation: {}", n)
+        }
     }
 
-    fn calculate_fitness(&self) -> f64 {
-        let mut constructed_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
+    fn calculate_fitness(&mut self) -> f64 {
+        let mut constructed_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(120, 70);
 
-        draw_text_line(&mut constructed_img, &self.config.font, self.x as i32, self.y as i32, "T");
+        draw_text_line(&mut constructed_img, &self.config.font,
+            self.content[0].x as i32, self.content[0].y as i32,
+            str::from_utf8(&self.content[0].text).unwrap());
+
+        draw_text_line(&mut constructed_img, &self.config.font,
+            self.content[1].x as i32, self.content[1].y as i32,
+            str::from_utf8(&self.content[1].text).unwrap());
 
         root_mean_squared_error(&self.config.original_img, &constructed_img)
     }
 
     fn reset(&mut self) {
-        self.x = 0;
-        self.y = 0;
+        self.content = vec![
+        TextBox{ x: 10, y: 10, text: vec![65] },
+        TextBox{ x: 10, y: 40, text: vec![65] }];
     }
-
 }
 
-
-
 fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
-                  font: &rusttype::Font,
-                  pos_x: i32,
-                  pos_y: i32,
-                  text: &str) {
+    font: &rusttype::Font, pos_x: i32, pos_y: i32, text: &str) {
 
     let height: f32 = 18.0;
-
     let scale = rusttype::Scale { x: height * 1.0, y: height };
     let v_metrics = font.v_metrics(scale);
     let offset = rusttype::point(0.0, v_metrics.ascent);
@@ -98,10 +141,10 @@ fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
     for g in glyphs {
         if let Some(bb) = g.pixel_bounding_box() {
             g.draw(|x, y, v| {
-                let x = ((x as i32) + bb.min.x + pos_x) as u32;
-                let y = ((y as i32) + bb.min.y + pos_y) as u32;
-                if x < canvas.width() && y < canvas.height() {
-                    canvas.put_pixel(x, y, Luma::<u8>{ data: [(v * 255.0) as u8] } );
+                let x = (x as i32) + bb.min.x + pos_x;
+                let y = (y as i32) + bb.min.y + pos_y;
+                if x >=0 && y >= 0 && x < canvas.width() as i32 && y < canvas.height() as i32 {
+                    canvas.put_pixel(x as u32, y as u32, Luma::<u8>{ data: [(v * 255.0) as u8] } );
                 }
             })
         }
@@ -114,19 +157,17 @@ fn main() {
 
     let _ = SimpleLogger::init(LogLevelFilter::Info);
 
-
     // TODO: use fontconfig-rs in the future: https://github.com/abonander/fontconfig-rs
     let mut file = File::open("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf").unwrap();
     let mut font_data: Vec<u8> = Vec::new();
-    let bytes_read = file.read_to_end(&mut font_data).unwrap();
-    // println!("bytes read: {}", bytes_read);
+    let _ = file.read_to_end(&mut font_data).unwrap();
 
     let collection = rusttype::FontCollection::from_bytes(font_data);
     let font = collection.into_font().unwrap();
 
-    let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
-    draw_text_line(&mut original_img, &font, 10, 10, "This is a test text!");
-    draw_text_line(&mut original_img, &font, 10, 40, "Just to see how good OCR works...");
+    let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(120, 70);
+    draw_text_line(&mut original_img, &font, 10, 10, "Darwin-rs");
+    draw_text_line(&mut original_img, &font, 10, 40, "OCR test!");
 
     let img_file = Path::new("rendered_text.png");
     let _ = original_img.save(&img_file);
@@ -135,7 +176,7 @@ fn main() {
 
     let initial_population = make_population(50, &ocr_config);
 
-    let population1 = PopulationBuilder::<FindPos1>::new()
+    let population1 = PopulationBuilder::<OCRItem>::new()
         .set_id(1)
         .initial_population(&initial_population)
         .increasing_exp_mutation_rate(1.02)
@@ -144,10 +185,30 @@ fn main() {
         .reset_limit_end(5000)
         .finalize().unwrap();
 
-    let ocr_builder = SimulationBuilder::<FindPos1>::new()
-        .fitness(34.14)
-        .threads(1)
+    let population2 = PopulationBuilder::<OCRItem>::new()
+        .set_id(2)
+        .initial_population(&initial_population)
+        .increasing_exp_mutation_rate(1.04)
+        .reset_limit_increment(200)
+        .reset_limit_start(100)
+        .reset_limit_end(5000)
+        .finalize().unwrap();
+
+    let population3 = PopulationBuilder::<OCRItem>::new()
+        .set_id(3)
+        .initial_population(&initial_population)
+        .increasing_exp_mutation_rate(1.06)
+        .reset_limit_increment(300)
+        .reset_limit_start(100)
+        .reset_limit_end(5000)
+        .finalize().unwrap();
+
+    let ocr_builder = SimulationBuilder::<OCRItem>::new()
+        .fitness(0.0)
+        .threads(2)
         .add_population(population1)
+        .add_population(population2)
+        .add_population(population3)
         .finalize();
 
     match ocr_builder {
@@ -159,9 +220,10 @@ fn main() {
             println!("improvement factor: {}", ocr_simulation.simulation_result.improvement_factor);
             println!("number of iterations: {}", ocr_simulation.simulation_result.iteration_counter);
 
-            let ref pos = ocr_simulation.simulation_result.fittest[0].individual;
-            println!("x: {}, y: {}", pos.x, pos.y);
-
+            let ref item = ocr_simulation.simulation_result.fittest[0].individual;
+            let line1 = str::from_utf8(&item.content[0].text).unwrap();
+            let line2 = str::from_utf8(&item.content[1].text).unwrap();
+            println!("line1: {}, line2: {}", line1, line2);
         }
     }
 }
