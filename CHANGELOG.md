@@ -6,6 +6,7 @@
 - All mutexes removed
 - User must now provide whole population but can now use shared configuration / data instead of using lazy_static
 - calculate_fitness now needs (&mut self)
+- add option share_fittest to share the fittest individual between all population after each iteration
 
 ## 0.2 - 2016-08-17
 - Split up code into several files

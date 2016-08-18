@@ -52,7 +52,8 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
                     original_fitness: std::f64::MAX,
                     fittest: Vec::new(),
                     iteration_counter: 0
-                }
+                },
+                share_fittest: false
             },
         }
     }
@@ -87,6 +88,13 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     /// Add a population to the simulation.
     pub fn add_population(mut self, population: Population<T>) -> SimulationBuilder<T> {
         self.simulation.habitat.push(population);
+        self
+    }
+
+    /// If this option is enabled (default: off), then the fittest individual of all populations
+    /// is shared between all populations.
+    pub fn share_fittest(mut self) -> SimulationBuilder<T> {
+        self.simulation.share_fittest = true;
         self
     }
 

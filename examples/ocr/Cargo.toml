@@ -10,7 +10,6 @@ log = "0.3"
 image = "0.10"
 imageproc = "0.6"
 rusttype = "0.2"
-lazy_static = "0.1.*"
 simplelog = "0.2"
 
 darwin-rs = {path = "../../../darwin-rs"}

@@ -15,7 +15,7 @@
 
 use std::time::Instant;
 
-use jobsteal::{make_pool, BorrowSpliteratorMut, Spliterator};
+use jobsteal::{make_pool, IntoSplitIterator, SplitIterator};
 
 use individual::{Individual, IndividualWrapper};
 use population::Population;
@@ -50,7 +50,10 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub total_time_in_ms: f64,
     /// The result of the simulation: `improvement_factor`, `original_fitness` and a vector of
     /// fittest individuals
-    pub simulation_result: SimulationResult<T>
+    pub simulation_result: SimulationResult<T>,
+    /// If this feature is enabled, then the most fittest individual of all populations is
+    /// shared between all the populations
+    pub share_fittest: bool
 }
 
 /// The `SimulationResult` Type. Holds the simulation results:
@@ -104,7 +107,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         match self.type_of_simulation {
             SimulationType::EndIteration(end_iteration) => {
                 for _ in 0..end_iteration {
-                    self.habitat.split_iter_mut().for_each(
+                    (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| { population.run_body(); });
 
                     self.update_results();
@@ -115,7 +118,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             SimulationType::EndFactor(end_factor) => {
                 loop {
                     iteration_counter += 1;
-                    self.habitat.split_iter_mut().for_each(
+                    (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| { population.run_body(); });
 
                     self.update_results();
@@ -130,7 +133,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             SimulationType::EndFitness(end_fitness) => {
                 loop {
                     iteration_counter += 1;
-                    self.habitat.split_iter_mut().for_each(
+                    (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| { population.run_body(); });
 
                     self.update_results();
@@ -160,6 +163,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
 
 
     fn update_results(&mut self) {
+        // Determine the fittest individual of all populations
         for population in self.habitat.iter() {
             if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
                 self.simulation_result.fittest.insert(0, population.population[0].clone());
@@ -167,6 +171,14 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 self.simulation_result.fittest.truncate(10);
                 info!("new fittest: fitness: {}, population id: {}", population.population[0].fitness,
                     population.id);
+            }
+        }
+
+        // Now copy the most fittest individual back to each population
+        // if the user has specified it
+        if self.share_fittest {
+            for population in self.habitat.iter_mut() {
+                population.population[0] = self.simulation_result.fittest[0].clone();
             }
         }
 

@@ -174,61 +174,60 @@ fn main() {
 
     let ocr_config = OCRConfig { font: font, original_img: original_img };
 
-    let initial_population = make_population(100, &ocr_config);
+    let initial_population = make_population(20, &ocr_config);
 
     let population1 = PopulationBuilder::<OCRItem>::new()
         .set_id(1)
         .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.02)
-        .reset_limit_increment(100)
-        .reset_limit_start(100)
-        .reset_limit_end(1000)
+        .increasing_exp_mutation_rate(1.01)
+        .reset_limit_end(0)
         .finalize().unwrap();
 
     let population2 = PopulationBuilder::<OCRItem>::new()
         .set_id(2)
         .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.04)
-        .reset_limit_increment(200)
-        .reset_limit_start(200)
-        .reset_limit_end(2000)
+        .increasing_exp_mutation_rate(1.02)
+        .reset_limit_end(0)
         .finalize().unwrap();
 
     let population3 = PopulationBuilder::<OCRItem>::new()
         .set_id(3)
         .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.06)
-        .reset_limit_increment(300)
-        .reset_limit_start(300)
-        .reset_limit_end(3000)
+        .increasing_exp_mutation_rate(1.03)
+        .reset_limit_end(0)
         .finalize().unwrap();
 
     let population4 = PopulationBuilder::<OCRItem>::new()
         .set_id(4)
         .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.08)
-        .reset_limit_increment(400)
-        .reset_limit_start(400)
-        .reset_limit_end(4000)
+        .increasing_exp_mutation_rate(1.04)
+        .reset_limit_end(0)
         .finalize().unwrap();
 
     let population5 = PopulationBuilder::<OCRItem>::new()
         .set_id(5)
         .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.10)
-        .reset_limit_increment(500)
-        .reset_limit_start(500)
-        .reset_limit_end(5000)
+        .increasing_exp_mutation_rate(1.05)
+        .reset_limit_end(0)
+        .finalize().unwrap();
+
+    let population6 = PopulationBuilder::<OCRItem>::new()
+        .set_id(6)
+        .initial_population(&initial_population)
+        .increasing_exp_mutation_rate(1.06)
+        .reset_limit_end(0)
         .finalize().unwrap();
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
-        .threads(2)
+        .threads(5)
         .add_population(population1)
         .add_population(population2)
         .add_population(population3)
         .add_population(population4)
         .add_population(population5)
+        .add_population(population6)
+        .share_fittest()
         .finalize();
 
     match ocr_builder {

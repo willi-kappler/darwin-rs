@@ -11,7 +11,7 @@ keywords = ["evolutionary", "algorithm", "EA", "darwin"]
 documentation = "https://willi-kappler.github.io/darwin-rs"
 
 [dependencies]
-jobsteal = "0.5"
+jobsteal = "0.4"
 quick-error = "1.1.0"
 log = "0.3"
 # clippy = "*"
