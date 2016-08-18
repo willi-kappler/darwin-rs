@@ -38,8 +38,8 @@ fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
         result.push( OCRItem {
             content: vec![
                 // Start with letter 'A' in each line
-                TextBox{ x: 10, y: 10, text: vec![65] },
-                TextBox{ x: 10, y: 40, text: vec![65] }],
+                TextBox{ x: 10, y: 10, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] },
+                TextBox{ x: 10, y: 40, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] }],
             config: shared.clone()
         });
     }
@@ -72,34 +72,34 @@ impl<'a> Individual for OCRItem<'a> {
 
         let content_line = rng.gen_range(0, 2);
 
-        let operation = rng.gen_range(0, 4);
+        let operation = rng.gen_range(0, 2);
 
         let index1 = rng.gen_range(0, self.content[content_line].text.len());
 
         match operation {
             0 => {
-                // Add character
-                let new_char = rng.gen_range(32, 127); // All printable ASCII characters
-                self.content[content_line].text.insert(index1, new_char);
-            },
-            1 => {
-                // Remove character
-                if self.content[content_line].text.len() > 1 {
-                    // Leave at least one character
-                    self.content[content_line].text.remove(index1);
-                }
-            },
-            2 => {
                 // Change character
                 let new_char = rng.gen_range(32, 127); // All printable ASCII characters
                 self.content[content_line].text[index1] = new_char;
             },
-            3 => {
+            1 => {
                 // Swap characters
                 let index2 = rng.gen_range(0, self.content[content_line].text.len());
                 let temp = self.content[content_line].text[index1];
                 self.content[content_line].text[index1] = self.content[content_line].text[index2];
                 self.content[content_line].text[index2] = temp;
+            },
+            2 => {
+                // Add character
+                let new_char = rng.gen_range(32, 127); // All printable ASCII characters
+                self.content[content_line].text.insert(index1, new_char);
+            },
+            3 => {
+                // Remove character
+                if self.content[content_line].text.len() > 1 {
+                    // Leave at least one character
+                    self.content[content_line].text.remove(index1);
+                }
             },
             4 => {
                 // You can think of more operations: shift / rotate, mirror, ...
@@ -124,8 +124,8 @@ impl<'a> Individual for OCRItem<'a> {
 
     fn reset(&mut self) {
         self.content = vec![
-        TextBox{ x: 10, y: 10, text: vec![65] },
-        TextBox{ x: 10, y: 40, text: vec![65] }];
+        TextBox{ x: 10, y: 10, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] },
+        TextBox{ x: 10, y: 40, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] }];
     }
 }
 
@@ -167,14 +167,14 @@ fn main() {
 
     let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(120, 70);
     draw_text_line(&mut original_img, &font, 10, 10, "Darwin-rs");
-    draw_text_line(&mut original_img, &font, 10, 40, "OCR test!");
+    draw_text_line(&mut original_img, &font, 10, 40, "OCR Test!");
 
     let img_file = Path::new("rendered_text.png");
     let _ = original_img.save(&img_file);
 
     let ocr_config = OCRConfig { font: font, original_img: original_img };
 
-    let initial_population = make_population(50, &ocr_config);
+    let initial_population = make_population(100, &ocr_config);
 
     let population1 = PopulationBuilder::<OCRItem>::new()
         .set_id(1)
@@ -182,7 +182,7 @@ fn main() {
         .increasing_exp_mutation_rate(1.02)
         .reset_limit_increment(100)
         .reset_limit_start(100)
-        .reset_limit_end(5000)
+        .reset_limit_end(1000)
         .finalize().unwrap();
 
     let population2 = PopulationBuilder::<OCRItem>::new()
@@ -190,8 +190,8 @@ fn main() {
         .initial_population(&initial_population)
         .increasing_exp_mutation_rate(1.04)
         .reset_limit_increment(200)
-        .reset_limit_start(100)
-        .reset_limit_end(5000)
+        .reset_limit_start(200)
+        .reset_limit_end(2000)
         .finalize().unwrap();
 
     let population3 = PopulationBuilder::<OCRItem>::new()
@@ -199,7 +199,25 @@ fn main() {
         .initial_population(&initial_population)
         .increasing_exp_mutation_rate(1.06)
         .reset_limit_increment(300)
-        .reset_limit_start(100)
+        .reset_limit_start(300)
+        .reset_limit_end(3000)
+        .finalize().unwrap();
+
+    let population4 = PopulationBuilder::<OCRItem>::new()
+        .set_id(4)
+        .initial_population(&initial_population)
+        .increasing_exp_mutation_rate(1.08)
+        .reset_limit_increment(400)
+        .reset_limit_start(400)
+        .reset_limit_end(4000)
+        .finalize().unwrap();
+
+    let population5 = PopulationBuilder::<OCRItem>::new()
+        .set_id(5)
+        .initial_population(&initial_population)
+        .increasing_exp_mutation_rate(1.10)
+        .reset_limit_increment(500)
+        .reset_limit_start(500)
         .reset_limit_end(5000)
         .finalize().unwrap();
 
@@ -209,6 +227,8 @@ fn main() {
         .add_population(population1)
         .add_population(population2)
         .add_population(population3)
+        .add_population(population4)
+        .add_population(population5)
         .finalize();
 
     match ocr_builder {
