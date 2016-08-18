@@ -3,31 +3,17 @@
 // using an evolutionary algorithm.
 
 extern crate rand;
-#[macro_use] extern crate lazy_static;
 extern crate simplelog;
 
 // internal crates
 extern crate darwin_rs;
 
+use std::sync::Arc;
 use rand::Rng;
 use simplelog::{SimpleLogger, LogLevelFilter};
 
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
-
-lazy_static! {
-    // Taken from Wikipedia: https://en.wikipedia.org/wiki/Sudoku
-    static ref UNSOLVED_SUDOKU : Vec<u8> =
-        vec![5, 3, 4, 6, 7, 8, 9, 1, 2,
-             6, 7, 2, 1, 9, 5, 3, 4, 8,
-             1, 9, 8, 3, 4, 2, 5, 6, 7,
-             8, 5, 9, 7, 6, 1, 4, 2, 3,
-             4, 2, 6, 8, 5, 3, 7, 9, 1,
-             7, 1, 3, 9, 2, 4, 8, 5, 6,
-             0, 6, 0, 0, 0, 0, 2, 8, 0,
-             0, 0, 0, 4, 1, 9, 0, 0, 5,
-             0, 0, 0, 0, 8, 0, 0, 7, 9];
-}
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
 fn fitness_of_one_cell(sudoku: &[u8], row: usize, col: usize) -> f64 {
@@ -101,29 +87,38 @@ fn fitness_of_one_col(sudoku: &[u8], col: usize) -> f64 {
     error
 }
 
+fn make_population(count: u32, unsolved: Vec<u8>) -> Vec<Sudoku> {
+    let mut result = Vec::new();
+
+    let shared = Arc::new(unsolved.clone());
+
+    for _ in 0..count {
+        result.push( Sudoku {
+                solved: unsolved.clone(),
+                unsolved: shared.clone()
+            }
+        );
+    }
+
+    result
+}
+
 #[derive(Debug, Clone)]
 struct Sudoku {
-    solved: Vec<u8>
+    solved: Vec<u8>,
+    unsolved: Arc<Vec<u8>>
 }
 
 // implement trait functions mutate and calculate_fitness:
 impl Individual for Sudoku {
-    fn new() -> Sudoku {
-        let sudoku = Sudoku {
-            solved: UNSOLVED_SUDOKU.clone()
-        };
-
-        sudoku
-    }
-
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
-        let mut index: usize = rng.gen_range(0, UNSOLVED_SUDOKU.len());
+        let mut index: usize = rng.gen_range(0, self.solved.len());
 
         // pick free (= not pre set) position
-        while UNSOLVED_SUDOKU[index] != 0 {
-            index = rng.gen_range(0, UNSOLVED_SUDOKU.len());
+        while self.unsolved[index] != 0 {
+            index = rng.gen_range(0, self.solved.len());
         }
 
         // and set it to a random value
@@ -158,6 +153,10 @@ impl Individual for Sudoku {
 
         result
     }
+
+    fn reset(&mut self) {
+        self.solved = (*self.unsolved).clone();
+    }
 }
 
 fn main() {
@@ -165,15 +164,27 @@ fn main() {
 
     let _ = SimpleLogger::init(LogLevelFilter::Info);
 
+    let unsolved = vec![5, 3, 4, 6, 7, 8, 9, 1, 2,
+                        6, 7, 2, 1, 9, 5, 3, 4, 8,
+                        1, 9, 8, 3, 4, 2, 5, 6, 7,
+                        8, 5, 9, 7, 6, 1, 4, 2, 3,
+                        4, 2, 6, 8, 5, 3, 7, 9, 1,
+                        7, 1, 3, 9, 2, 4, 8, 5, 6,
+                        0, 6, 0, 0, 0, 0, 2, 8, 0,
+                        0, 0, 0, 4, 1, 9, 0, 0, 5,
+                        0, 0, 0, 0, 8, 0, 0, 7, 9];
+
+    let initial_population = make_population(100, unsolved);
+
     let population1 = PopulationBuilder::<Sudoku>::new()
         .set_id(1)
-        .individuals(100)
+        .initial_population(&initial_population)
         .increasing_exp_mutation_rate(1.01)
         .finalize().unwrap();
 
     let population2 = PopulationBuilder::<Sudoku>::new()
         .set_id(2)
-        .individuals(100)
+        .initial_population(&initial_population)
         .increasing_exp_mutation_rate(1.02)
         .finalize().unwrap();
 

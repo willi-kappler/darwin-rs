@@ -13,9 +13,6 @@
 //!
 //!
 
-use std::sync::Mutex;
-
-use simulation::SimulationResult;
 use individual::{Individual, IndividualWrapper};
 
 /// The `Population` type. Contains the actual individuals (through a wrapper) and informations
@@ -79,8 +76,7 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
     /// fittest individual is replaced.
     ///
     /// 8. Calculate the new improvement factor and prepare for the next iteration.
-    pub fn run_body(&mut self, simulation_result: &Mutex<SimulationResult<T>>,
-            iteration_counter: u32) {
+    pub fn run_body(&mut self) {
         // First check if reset limit is reached
         if self.reset_limit_end > 0 {
             self.reset_counter += 1;
@@ -98,7 +94,7 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
                 // Why is it so ? Because the simulation is still running!
                 // Keep number of mutations.
                 for wrapper in &mut self.population {
-                    wrapper.individual = Individual::new();
+                    wrapper.individual.reset();
                     wrapper.fitness = wrapper.individual.calculate_fitness();
                 }
             }
@@ -130,23 +126,5 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
             .zip(orig_population.iter()) {
             individual.num_of_mutations = orig_individual.num_of_mutations;
         }
-
-        match simulation_result.lock() {
-            Ok(mut simulation_result) => {
-                // Check if we have new fittest individual and store it globally
-                if self.population[0].fitness < simulation_result.fittest[0].fitness {
-                    // Insert it to the first position (at index 0) so that the order of fitness
-                    // is preserved (fittest at index 0, then decreasing fitness).
-                    simulation_result.fittest.insert(0, self.population[0].clone());
-                    info!("{}: new fittest: {}, id: {}",
-                             iteration_counter, simulation_result.fittest[0].fitness, self.id);
-                }
-
-                simulation_result.improvement_factor = simulation_result.fittest[0].fitness / simulation_result.original_fitness;
-            },
-            Err(e) => info!("Mutex (poison) error (simulation_result): {}, id: {}", e, self.id)
-        }
-        // No need to unlock simulation_result, since it goes out of scope and then
-        // drop() (= destructor) is called automatically.
     }
 }

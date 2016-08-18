@@ -10,14 +10,13 @@ extern crate rand;
 extern crate image;
 extern crate imageproc;
 extern crate rusttype;
-#[macro_use] extern crate lazy_static;
 extern crate simplelog;
 
 // internal crates
 extern crate darwin_rs;
 
+use std::sync::Arc;
 use rand::Rng;
-use rand::distributions::{Weighted, WeightedChoice, IndependentSample};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -29,145 +28,65 @@ use std::str;
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
 
-lazy_static!{
-    static ref FONT: rusttype::Font<'static>  = {
-        // TODO: use fontconfig-rs in the future: https://github.com/abonander/fontconfig-rs
-        let mut file = File::open("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf").unwrap();
-        let mut font_data: Vec<u8> = Vec::new();
-        let bytes_read = file.read_to_end(&mut font_data).unwrap();
-        println!("bytes read: {}", bytes_read);
+fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<FindPos1<'a>> {
+    let mut result = Vec::new();
 
-        let collection = rusttype::FontCollection::from_bytes(font_data);
-        collection.into_font().unwrap()
-    };
-}
+    let shared = Arc::new(config.clone());
 
-lazy_static! {
-    static ref ORIGINAL_IMG: ImageBuffer<Luma<u8>, Vec<u8>> = {
-        let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
-        draw_text_line(&mut original_img, &FONT, 10, 10, "This is a test text!");
-        draw_text_line(&mut original_img, &FONT, 10, 40, "Just to see how good OCR works...");
-        original_img
-    };
-}
-
-#[derive(Debug, Clone)]
-enum MOperation {
-    AddEmptyTextBox,
-    RemoveTextBox,
-    MoveTextAround,
-    AddRandomCharacter,
-    RemoveCharacter,
-    SwapTwoCharacters
-}
-
-#[derive(Debug, Clone)]
-struct TextBox {
-    x: u32,
-    y: u32,
-    text: Vec<u8>,
-}
-
-#[derive(Debug, Clone)]
-struct OCRItem {
-    content: Vec<TextBox>,
-}
-
-impl Individual for OCRItem {
-    fn new() -> OCRItem {
-        OCRItem { content: Vec::new() }
+    for _ in 0..count {
+        result.push( FindPos1 {
+            x: 0,
+            y: 0,
+            config: shared.clone()
+        });
     }
 
+    result
+}
+
+#[derive(Clone)]
+struct OCRConfig<'a> {
+    font: rusttype::Font<'a>,
+    original_img: ImageBuffer<Luma<u8>, Vec<u8>>
+}
+
+#[derive(Clone)]
+struct FindPos1<'a> {
+    x: u32,
+    y: u32,
+    config: Arc<OCRConfig<'a>>
+}
+
+impl<'a> Individual for FindPos1<'a> {
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
-        let mut items = vec!(
-            Weighted { weight: 1, item: MOperation::AddEmptyTextBox },
-            Weighted { weight: 1, item: MOperation::RemoveTextBox },
-            Weighted { weight: 2, item: MOperation::MoveTextAround },
-            Weighted { weight: 10, item: MOperation::AddRandomCharacter },
-            Weighted { weight: 10, item: MOperation::RemoveCharacter },
-            Weighted { weight: 10, item: MOperation::SwapTwoCharacters }
-        );
-        let weighted_choice = WeightedChoice::new(&mut items);
-
-        match weighted_choice.ind_sample(&mut rng) {
-            MOperation::AddEmptyTextBox => { // Add a new empty text box
-                self.content.push( TextBox{ x: 0, y: 0, text: Vec::new() } );
-            },
-            MOperation::RemoveTextBox => { // Remove a text box
-                if self.content.len() > 1 { // Leave at least one text box.
-                    let remove_index = rng.gen_range(0, self.content.len());
-                    let _ = self.content.remove(remove_index as usize);
-                }
-            },
-            MOperation::MoveTextAround => { // Move the text box around
-                if self.content.len() > 0 {
-                    let move_index = rng.gen_range(0, self.content.len());
-                    let new_x = rng.gen_range(0, ORIGINAL_IMG.width());
-                    let new_y = rng.gen_range(0, ORIGINAL_IMG.height());
-
-                    self.content[move_index].x = new_x;
-                    self.content[move_index].y = new_y;
-                }
-            },
-            MOperation::AddRandomCharacter => { // Add a random character to the text box
-                if self.content.len() > 0 {
-                    let content_index = rng.gen_range(0, self.content.len());
-                    let add_char_index = if self.content[content_index].text.is_empty() { 0 }
-                        else { rng.gen_range(0, self.content[content_index].text.len()) };
-                    let random_ascii_value: u8 = rng.gen_range(33, 127);
-
-                    self.content[content_index].text.insert(add_char_index, random_ascii_value);
-                }
-            },
-            MOperation::RemoveCharacter => { // Remove a character from the text box
-                if self.content.len() > 0 {
-                    let content_index = rng.gen_range(0, self.content.len());
-                    if self.content[content_index].text.len() > 1 { // Leave at least one char
-                        let remove_char_index = rng.gen_range(0, self.content[content_index].text.len());
-                        self.content[content_index].text.remove(remove_char_index);
-
-                    }
-                }
-            },
-            MOperation::SwapTwoCharacters => { // Swap two characters inside a text box
-                if self.content.len() > 0 {
-                    let content_index = rng.gen_range(0, self.content.len());
-                    if self.content[content_index].text.len() > 1 { // Need at least two chars to swap
-                        let index1: usize = rng.gen_range(0, self.content[content_index].text.len());
-                        let index2: usize = rng.gen_range(0, self.content[content_index].text.len());
-                        let tmp_char = self.content[content_index].text[index1];
-                        self.content[content_index].text[index1] = self.content[content_index].text[index2];
-                        self.content[content_index].text[index2] = tmp_char;
-                    }
-                }
-            },
-        }
+        self.x = rng.gen_range(0, self.config.original_img.width());
+        self.y = rng.gen_range(0, self.config.original_img.height());
     }
 
     fn calculate_fitness(&self) -> f64 {
         let mut constructed_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
 
-        for text_box in self.content.iter() {
-            match str::from_utf8(&text_box.text) {
-                Ok(text) => draw_text_line(&mut constructed_img, &FONT, text_box.x as i32,
-                    text_box.y as i32, text),
-                _ => {} // Do nothing for now
-            }
-        }
+        draw_text_line(&mut constructed_img, &self.config.font, self.x as i32, self.y as i32, "T");
 
-        root_mean_squared_error(&*ORIGINAL_IMG, &constructed_img)
+        root_mean_squared_error(&self.config.original_img, &constructed_img)
     }
+
+    fn reset(&mut self) {
+        self.x = 0;
+        self.y = 0;
+    }
+
 }
+
+
 
 fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
                   font: &rusttype::Font,
                   pos_x: i32,
                   pos_y: i32,
                   text: &str) {
-
-    // println!("text: {}", text);
 
     let height: f32 = 18.0;
 
@@ -195,52 +114,40 @@ fn main() {
 
     let _ = SimpleLogger::init(LogLevelFilter::Info);
 
-    let img_file = Path::new("rendered_text.png");
-    let _ = ORIGINAL_IMG.save(&img_file);
 
-    let population1 = PopulationBuilder::<OCRItem>::new()
+    // TODO: use fontconfig-rs in the future: https://github.com/abonander/fontconfig-rs
+    let mut file = File::open("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf").unwrap();
+    let mut font_data: Vec<u8> = Vec::new();
+    let bytes_read = file.read_to_end(&mut font_data).unwrap();
+    // println!("bytes read: {}", bytes_read);
+
+    let collection = rusttype::FontCollection::from_bytes(font_data);
+    let font = collection.into_font().unwrap();
+
+    let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(640, 70);
+    draw_text_line(&mut original_img, &font, 10, 10, "This is a test text!");
+    draw_text_line(&mut original_img, &font, 10, 40, "Just to see how good OCR works...");
+
+    let img_file = Path::new("rendered_text.png");
+    let _ = original_img.save(&img_file);
+
+    let ocr_config = OCRConfig { font: font, original_img: original_img };
+
+    let initial_population = make_population(50, &ocr_config);
+
+    let population1 = PopulationBuilder::<FindPos1>::new()
         .set_id(1)
-        .individuals(40)
-        .increasing_exp_mutation_rate(1.10)
+        .initial_population(&initial_population)
+        .increasing_exp_mutation_rate(1.02)
         .reset_limit_increment(100)
         .reset_limit_start(100)
-        .reset_limit_end(1000)
+        .reset_limit_end(5000)
         .finalize().unwrap();
 
-    let population2 = PopulationBuilder::<OCRItem>::new()
-        .set_id(2)
-        .individuals(40)
-        .increasing_exp_mutation_rate(1.13)
-        .reset_limit_increment(200)
-        .reset_limit_start(100)
-        .reset_limit_end(2000)
-        .finalize().unwrap();
-
-    let population3 = PopulationBuilder::<OCRItem>::new()
-        .set_id(3)
-        .individuals(40)
-        .increasing_exp_mutation_rate(1.16)
-        .reset_limit_increment(300)
-        .reset_limit_start(100)
-        .reset_limit_end(3000)
-        .finalize().unwrap();
-
-    let population4 = PopulationBuilder::<OCRItem>::new()
-        .set_id(4)
-        .individuals(40)
-        .increasing_exp_mutation_rate(1.19)
-        .reset_limit_increment(300)
-        .reset_limit_start(100)
-        .reset_limit_end(3000)
-        .finalize().unwrap();
-
-    let ocr_builder = SimulationBuilder::<OCRItem>::new()
-        .fitness(10.0)
-        .threads(3)
+    let ocr_builder = SimulationBuilder::<FindPos1>::new()
+        .fitness(34.14)
+        .threads(1)
         .add_population(population1)
-        .add_population(population2)
-        .add_population(population3)
-        .add_population(population4)
         .finalize();
 
     match ocr_builder {
@@ -252,11 +159,9 @@ fn main() {
             println!("improvement factor: {}", ocr_simulation.simulation_result.improvement_factor);
             println!("number of iterations: {}", ocr_simulation.simulation_result.iteration_counter);
 
-            ocr_simulation.print_fitness();
+            let ref pos = ocr_simulation.simulation_result.fittest[0].individual;
+            println!("x: {}, y: {}", pos.x, pos.y);
 
-            for content in ocr_simulation.simulation_result.fittest[0].individual.content.iter() {
-                println!("x: {}, y: {}, text: {}", content.x, content.y, str::from_utf8(&content.text).unwrap())
-            }
         }
     }
 }

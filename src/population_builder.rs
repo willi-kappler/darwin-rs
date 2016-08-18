@@ -38,7 +38,7 @@ quick_error! {
 pub type Result<T> = std::result::Result<Population<T>, PopError>;
 
 /// This implementation contains all the helper method to build (configure) a valid population
-impl<T: Individual> PopulationBuilder<T> {
+impl<T: Individual + Clone> PopulationBuilder<T> {
     /// Start with this method, it must always be called as the first one.
     /// It creates a default population with some dummy (but invalid) values.
     pub fn new() -> PopulationBuilder<T> {
@@ -56,13 +56,13 @@ impl<T: Individual> PopulationBuilder<T> {
         }
     }
 
-    /// Sets the number of individuals and creates the population, must be >= 3
-    pub fn individuals(mut self, individuals: u32) -> PopulationBuilder<T> {
-        self.population.num_of_individuals = individuals;
+    /// Sets the initial population, length must be >= 3
+    pub fn initial_population(mut self, individuals: &Vec<T>) -> PopulationBuilder<T> {
+        self.population.num_of_individuals = individuals.len() as u32;
 
-        for _ in 0..individuals {
+        for individual in individuals {
             self.population.population.push(IndividualWrapper {
-                individual: Individual::new(),
+                individual: (*individual).clone(),
                 fitness: std::f64::MAX,
                 num_of_mutations: 1,
                 id: self.population.id,
@@ -106,7 +106,7 @@ impl<T: Individual> PopulationBuilder<T> {
     /// population: This allows to specify an arbitrary mutation scheme for each individual.
     /// The number of rates must be equal to the number of individuals.
     pub fn mutation_rate(mut self, mutation_rate: Vec<u32>) -> PopulationBuilder<T> {
-        // TODO: better PopError handling
+        // TODO: better error handling
         assert!(self.population.population.len() == mutation_rate.len());
 
         for (individual, mutation_rate) in self.population

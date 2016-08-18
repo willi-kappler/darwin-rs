@@ -60,8 +60,6 @@ impl<T: Individual> PartialOrd for IndividualWrapper<T> {
 /// data structure between individuals (see TSP example).
 
 pub trait Individual {
-    /// This method creates a new individual.
-    fn new() -> Self;
     /// This method mutates the individual. Usually this is a cheap and easy to implement
     /// function. In order to improve the simulation, the user can make this function a bit
     /// "smarter". This is nicely shown in the tsp and tsp2 example. The tsp2 example contains
@@ -84,6 +82,10 @@ pub trait Individual {
     /// the individual is to the perfect solution. This can also correspont to the number of
     /// errors like for example in the sudoku or queens problem case.
     fn calculate_fitness(&self) -> f64;
+    /// This method resets each individual to an initial state.
+    /// For example in the "queens" case it would reset the queens position randomly
+    /// (or all in the first row)
+    fn reset(&mut self);
 }
 
 #[cfg(test)]
@@ -93,38 +95,38 @@ mod test {
     struct IndividualTest1;
 
     impl Individual for IndividualTest1 {
-        fn new() -> IndividualTest1 {
-            IndividualTest1
-        }
-
         fn mutate(&mut self) {
         }
 
         fn calculate_fitness(&self) -> f64 {
             0.0
         }
+
+        fn reset(&mut self) {
+
+        }
     }
 
     #[test]
     fn compare1() {
-        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 1.2, num_of_mutations: 21, id: 1};
-        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 5.93, num_of_mutations: 7, id: 1};
+        let individual1 = IndividualWrapper{individual: IndividualTest1, fitness: 1.2, num_of_mutations: 21, id: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1, fitness: 5.93, num_of_mutations: 7, id: 1};
 
         assert!(individual2 > individual1);
     }
 
     #[test]
     fn compare2() {
-        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 3.78, num_of_mutations: 21, id: 1};
-        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 7.12, num_of_mutations: 7, id: 1};
+        let individual1 = IndividualWrapper{individual: IndividualTest1, fitness: 3.78, num_of_mutations: 21, id: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1, fitness: 7.12, num_of_mutations: 7, id: 1};
 
         assert!(individual1 < individual2);
     }
 
     #[test]
     fn compare3() {
-        let individual1 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 21.996, num_of_mutations: 11, id: 1};
-        let individual2 = IndividualWrapper{individual: IndividualTest1::new(), fitness: 21.996, num_of_mutations: 34, id: 1};
+        let individual1 = IndividualWrapper{individual: IndividualTest1, fitness: 21.996, num_of_mutations: 11, id: 1};
+        let individual2 = IndividualWrapper{individual: IndividualTest1, fitness: 21.996, num_of_mutations: 34, id: 1};
 
         assert!(individual1 == individual2);
     }

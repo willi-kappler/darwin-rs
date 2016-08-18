@@ -75,24 +75,32 @@ fn find_collisions(board: &[u8], row: usize, col: usize) -> u8 {
     num_of_collisions
 }
 
-// implement trait functions mutate and calculate_fitness:
-impl Individual for Queens {
-    fn new() -> Queens {
-        Queens {
-            // Start with all queens in one row
-            board: vec![
-                1,1,1,1,1,1,1,1,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-            ],
-        }
+fn make_population(count: u32) -> Vec<Queens> {
+    let mut result = Vec::new();
+
+    for _ in 0..count {
+        result.push(
+            Queens {
+                // Start with all queens in one row
+                board: vec![
+                    1,1,1,1,1,1,1,1,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                ]
+            }
+        );
     }
 
+    result
+}
+
+// implement trait functions mutate and calculate_fitness:
+impl Individual for Queens {
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
@@ -129,6 +137,19 @@ impl Individual for Queens {
 
         num_of_collisions as f64
     }
+
+    fn reset(&mut self) {
+        self.board = vec![
+            1,1,1,1,1,1,1,1,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+        ];
+    }
 }
 
 fn main() {
@@ -136,30 +157,32 @@ fn main() {
 
     let _ = SimpleLogger::init(LogLevelFilter::Info);
 
+    let initial_population = make_population(100);
+
     let population1 = PopulationBuilder::<Queens>::new()
         .set_id(1)
-        .individuals(100)
+        .initial_population(&initial_population)
         .increasing_exp_mutation_rate(1.03)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
     let population2 = PopulationBuilder::<Queens>::new()
         .set_id(2)
-        .individuals(100)
+        .initial_population(&initial_population)
         .increasing_exp_mutation_rate(1.04)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
     let population3 = PopulationBuilder::<Queens>::new()
         .set_id(3)
-        .individuals(100)
+        .initial_population(&initial_population)
         .increasing_exp_mutation_rate(1.05)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();
 
     let population4 = PopulationBuilder::<Queens>::new()
         .set_id(4)
-        .individuals(100)
+        .initial_population(&initial_population)
         .increasing_exp_mutation_rate(1.06)
         .reset_limit_end(0) // disable the resetting of all individuals
         .finalize().unwrap();

@@ -6,7 +6,6 @@ authors = ["Willi Kappler, grandor@gmx.de"]
 [dependencies]
 time = "0.1"
 rand = "0.3"
-lazy_static = "0.1.*"
 simplelog = "0.2"
 
 darwin-rs = {path = "../../../darwin-rs"}

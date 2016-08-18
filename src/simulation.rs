@@ -14,7 +14,6 @@
 //!
 
 use std::time::Instant;
-use std::sync::Mutex;
 
 use jobsteal::{make_pool, IntoSpliterator, Spliterator};
 
@@ -92,90 +91,67 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         // - The fittest individual.
         // - The fitness at the beginning of the simulation. This is uesed to calculate the
         //   overall improvement later on.
-        let simulation_result = SimulationResult {
+        self.simulation_result = SimulationResult {
             improvement_factor: 0.0,
             original_fitness: self.habitat[0].population[0].fitness,
             fittest: vec![self.habitat[0].population[0].clone()],
             iteration_counter: 0
         };
 
-        info!("original_fitness: {}", simulation_result.original_fitness);
-
-        let simulation_result_mutex = Mutex::new(simulation_result);
+        info!("original_fitness: {}", self.simulation_result.original_fitness);
 
         // Check which type of simulation to run.
         match self.type_of_simulation {
             SimulationType::EndIteration(end_iteration) => {
-                for iteration_counter in 0..end_iteration {
+                for _ in 0..end_iteration {
                     (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| {
-                            population.run_body(&simulation_result_mutex, iteration_counter);
+                            population.run_body();
                         });
+
+                    self.update_results();
                 };
-                match simulation_result_mutex.lock() {
-                    Ok(simulation_result) => {
-                        self.simulation_result = (*simulation_result).clone();
-                        self.simulation_result.iteration_counter = end_iteration;
-                    },
-                    Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
-                }
+                self.simulation_result.iteration_counter = end_iteration;
             }
+
             SimulationType::EndFactor(end_factor) => {
                 loop {
-                    match simulation_result_mutex.lock() {
-                        Ok(simulation_result) => {
-                            if simulation_result.improvement_factor <= end_factor {
-                                break;
-                            }
-                        },
-                        Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
-                    }
-
                     iteration_counter += 1;
                     (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| {
-                            population.run_body(&simulation_result_mutex, iteration_counter);
+                            population.run_body();
                         });
+
+                    self.update_results();
+
+                    if self.simulation_result.improvement_factor <= end_factor {
+                        break;
+                    }
                 };
-                match simulation_result_mutex.lock() {
-                    Ok(simulation_result) => {
-                        self.simulation_result = (*simulation_result).clone();
-                        self.simulation_result.iteration_counter = iteration_counter;
-                    },
-                    Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
-                }
+                self.simulation_result.iteration_counter = iteration_counter;
             }
+
             SimulationType::EndFitness(end_fitness) => {
                 loop {
-                    match simulation_result_mutex.lock() {
-                        Ok(simulation_result) => {
-                            if simulation_result.fittest[0].fitness <= end_fitness {
-                                break;
-                            }
-                        },
-                        Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
-                    }
-
                     iteration_counter += 1;
                     (&mut self.habitat).into_split_iter().for_each(
                         &pool.spawner(), |population| {
-                            population.run_body(&simulation_result_mutex, iteration_counter);
+                            population.run_body();
                         });
+
+                    self.update_results();
+
+                    if self.simulation_result.fittest[0].fitness <= end_fitness {
+                        break;
+                    }
                 };
-                match simulation_result_mutex.lock() {
-                    Ok(simulation_result) => {
-                        self.simulation_result = (*simulation_result).clone();
-                        self.simulation_result.iteration_counter = iteration_counter;
-                    },
-                    Err(e) => error!("Mutex (poison) error (simulation_result): {}", e)
-                }
+                self.simulation_result.iteration_counter = iteration_counter;
             }
-        }
+        } // End of match
 
         let elapsed = start_time.elapsed();
 
         self.total_time_in_ms = elapsed.as_secs() as f64 * 1000.0 + elapsed.subsec_nanos() as f64 / 1000_000.0;
-
     }
 
     /// This is a helper function that the user can call after the simulation stops in order to
@@ -186,5 +162,21 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             info!("fitness: {}, num_of_mutations: {}, population: {}",
                      wrapper.fitness, wrapper.num_of_mutations, wrapper.id);
         }
+    }
+
+
+    fn update_results(&mut self) {
+        for population in self.habitat.iter() {
+            if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
+                self.simulation_result.fittest.insert(0, population.population[0].clone());
+                info!("new fittest: fitness: {}, population id: {}", population.population[0].fitness,
+                    population.id);
+            }
+        }
+
+        self.simulation_result.improvement_factor =
+            self.simulation_result.fittest[0].fitness /
+            self.simulation_result.original_fitness;
+
     }
 }
