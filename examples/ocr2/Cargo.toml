@@ -1,0 +1,15 @@
+[package]
+name = "ocr"
+version = "0.1.0"
+authors = ["Willi Kappler, grandor@gmx.de"]
+
+[dependencies]
+time = "0.1"
+rand = "0.3"
+log = "0.3"
+image = "0.10"
+imageproc = "0.6"
+rusttype = "0.2"
+simplelog = "0.2"
+
+darwin-rs = {path = "../../../darwin-rs"}

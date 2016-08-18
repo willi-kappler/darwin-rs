@@ -38,8 +38,8 @@ fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
         result.push( OCRItem {
             content: vec![
                 // Start with letter 'A' in each line
-                TextBox{ x: 10, y: 10, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] },
-                TextBox{ x: 10, y: 40, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] }],
+                TextBox{ x: 10, y: 10, text: vec![65] },
+                TextBox{ x: 10, y: 40, text: vec![65] }],
             config: shared.clone()
         });
     }
@@ -72,7 +72,7 @@ impl<'a> Individual for OCRItem<'a> {
 
         let content_line = rng.gen_range(0, self.content.len());
 
-        let operation = rng.gen_range(0, 2);
+        let operation = rng.gen_range(0, 5);
 
         let index1 = rng.gen_range(0, self.content[content_line].text.len());
 
@@ -102,6 +102,15 @@ impl<'a> Individual for OCRItem<'a> {
                 }
             },
             4 => {
+                // Add blank " " character and a hyphen "-" at the end. This is a special case since
+                // it does change the fitness only minimal, but prevents getting stuck when a
+                // blank is needed. The hyphen is needed to prevent lines with lots of blank
+                // characters at the end.
+                self.content[content_line].text.push(32);
+                // Try to comment / disable the next line to see what happens without hyphen:
+                self.content[content_line].text.push(45);
+            },
+            5 => {
                 // You can think of more operations: shift / rotate, mirror, ...
             }
             n => info!("mutate(): unknown operation: {}", n)
@@ -111,32 +120,34 @@ impl<'a> Individual for OCRItem<'a> {
     fn calculate_fitness(&mut self) -> f64 {
         let mut constructed_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(120, 70);
 
-        draw_text_line(&mut constructed_img, &self.config.font,
+        if !draw_text_line(&mut constructed_img, &self.config.font,
             self.content[0].x as i32, self.content[0].y as i32,
-            str::from_utf8(&self.content[0].text).unwrap());
+            str::from_utf8(&self.content[0].text).unwrap()) { return std::f64::MAX; }
 
-        draw_text_line(&mut constructed_img, &self.config.font,
+        if !draw_text_line(&mut constructed_img, &self.config.font,
             self.content[1].x as i32, self.content[1].y as i32,
-            str::from_utf8(&self.content[1].text).unwrap());
+            str::from_utf8(&self.content[1].text).unwrap()) { return std::f64::MAX; }
 
         root_mean_squared_error(&self.config.original_img, &constructed_img)
     }
 
     fn reset(&mut self) {
         self.content = vec![
-        TextBox{ x: 10, y: 10, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] },
-        TextBox{ x: 10, y: 40, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] }];
+        TextBox{ x: 10, y: 10, text: vec![65] },
+        TextBox{ x: 10, y: 40, text: vec![65] }];
     }
 }
 
 fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
-    font: &rusttype::Font, pos_x: i32, pos_y: i32, text: &str) {
+    font: &rusttype::Font, pos_x: i32, pos_y: i32, text: &str) -> bool{
 
     let height: f32 = 18.0;
     let scale = rusttype::Scale { x: height * 1.0, y: height };
     let v_metrics = font.v_metrics(scale);
     let offset = rusttype::point(0.0, v_metrics.ascent);
     let glyphs: Vec<rusttype::PositionedGlyph> = font.layout(text, scale, offset).collect();
+
+    let mut result = true;
 
     for g in glyphs {
         if let Some(bb) = g.pixel_bounding_box() {
@@ -145,11 +156,12 @@ fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
                 let y = (y as i32) + bb.min.y + pos_y;
                 if x >=0 && y >= 0 && x < canvas.width() as i32 && y < canvas.height() as i32 {
                     canvas.put_pixel(x as u32, y as u32, Luma::<u8>{ data: [(v * 255.0) as u8] } );
-                }
+                } else { result = false; }
             })
         }
     }
 
+    result
 }
 
 fn main() {
@@ -169,8 +181,8 @@ fn main() {
     draw_text_line(&mut original_img, &font, 10, 10, "Darwin-rs");
     draw_text_line(&mut original_img, &font, 10, 40, "OCR Test!");
 
-    // let img_file = Path::new("rendered_text.png");
-    // let _ = original_img.save(&img_file);
+//    let img_file = Path::new("rendered_text.png");
+//    let _ = original_img.save(&img_file);
 
     let ocr_config = OCRConfig { font: font, original_img: original_img };
 
@@ -242,7 +254,7 @@ fn main() {
             let ref item = ocr_simulation.simulation_result.fittest[0].individual;
             let line1 = str::from_utf8(&item.content[0].text).unwrap();
             let line2 = str::from_utf8(&item.content[1].text).unwrap();
-            println!("line1: {}, line2: {}", line1, line2);
+            println!("line1: '{}', line2: '{}'", line1, line2);
         }
     }
 }
