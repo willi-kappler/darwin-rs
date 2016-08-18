@@ -163,9 +163,12 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
 
 
     fn update_results(&mut self) {
-        // Determine the fittest individual of all populations
+        // Determine the fittest individual of all populations.
+        let mut new_fittest_found = false;
+
         for population in self.habitat.iter() {
             if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
+                new_fittest_found = true;
                 self.simulation_result.fittest.insert(0, population.population[0].clone());
                 // Keep at most 10 individuals, TODO: make this number user configurable.
                 self.simulation_result.fittest.truncate(10);
@@ -175,8 +178,8 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         }
 
         // Now copy the most fittest individual back to each population
-        // if the user has specified it
-        if self.share_fittest {
+        // if the user has specified it.
+        if self.share_fittest && new_fittest_found {
             for population in self.habitat.iter_mut() {
                 population.population[0] = self.simulation_result.fittest[0].clone();
             }

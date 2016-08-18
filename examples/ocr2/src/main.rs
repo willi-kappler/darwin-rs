@@ -38,8 +38,8 @@ fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
         result.push( OCRItem {
             content: vec![
                 // Start with letter 'A' in each line
-                TextBox{ x: 10, y: 10, text: vec![65] },
-                TextBox{ x: 10, y: 40, text: vec![65] }],
+                TextBox{ x: 0, y: 0, text: vec![65] },
+                TextBox{ x: 0, y: 0, text: vec![65] }],
             config: shared.clone()
         });
     }
@@ -72,7 +72,7 @@ impl<'a> Individual for OCRItem<'a> {
 
         let content_line = rng.gen_range(0, self.content.len());
 
-        let operation = rng.gen_range(0, 5);
+        let operation = rng.gen_range(0, 6);
 
         let index1 = rng.gen_range(0, self.content[content_line].text.len());
 
@@ -111,6 +111,11 @@ impl<'a> Individual for OCRItem<'a> {
                 self.content[content_line].text.push(45);
             },
             5 => {
+                // New position
+                self.content[content_line].x = rng.gen_range(0, self.config.original_img.width());
+                self.content[content_line].y = rng.gen_range(0, self.config.original_img.height());
+            },
+            6 => {
                 // You can think of more operations: shift / rotate, mirror, ...
             }
             n => info!("mutate(): unknown operation: {}", n)
@@ -133,8 +138,8 @@ impl<'a> Individual for OCRItem<'a> {
 
     fn reset(&mut self) {
         self.content = vec![
-        TextBox{ x: 10, y: 10, text: vec![65] },
-        TextBox{ x: 10, y: 40, text: vec![65] }];
+        TextBox{ x: 0, y: 0, text: vec![65] },
+        TextBox{ x: 0, y: 0, text: vec![65] }];
     }
 }
 
@@ -230,15 +235,23 @@ fn main() {
         .reset_limit_end(0)
         .finalize().unwrap();
 
+    let population7 = PopulationBuilder::<OCRItem>::new()
+        .set_id(7)
+        .initial_population(&initial_population)
+        .increasing_exp_mutation_rate(1.07)
+        .reset_limit_end(0)
+        .finalize().unwrap();
+
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
-        .threads(5)
+        .threads(6)
         .add_population(population1)
         .add_population(population2)
         .add_population(population3)
         .add_population(population4)
         .add_population(population5)
         .add_population(population6)
+        .add_population(population7)
         .share_fittest()
         .finalize();
 

@@ -125,6 +125,7 @@ impl<T: Individual + Clone> PopulationBuilder<T> {
     /// counter is set back to zero. Default value for reset_limit_start is 1000.
     pub fn reset_limit_start(mut self, reset_limit_start: u32) -> PopulationBuilder<T> {
         self.population.reset_limit_start = reset_limit_start;
+        self.population.reset_limit = reset_limit_start;
         self
     }
 
