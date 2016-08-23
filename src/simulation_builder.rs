@@ -91,6 +91,14 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
         self
     }
 
+    /// Add multiple populations to the simulation.
+    pub fn add_multiple_populations(mut self, multiple_populations: Vec<Population<T>>) -> SimulationBuilder<T> {
+        for population in multiple_populations {
+            self.simulation.habitat.push(population);
+        }
+        self
+    }
+
     /// If this option is enabled (default: off), then the fittest individual of all populations
     /// is shared between all populations.
     pub fn share_fittest(mut self) -> SimulationBuilder<T> {

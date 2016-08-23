@@ -27,7 +27,10 @@ use simplelog::{SimpleLogger, LogLevelFilter};
 use std::str;
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+
+const MIN_ASCII: u8 = 32;
+const MAX_ASCII: u8 = 126;
 
 fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
     let mut result = Vec::new();
@@ -42,6 +45,24 @@ fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
                 TextBox{ x: 0, y: 0, text: vec![65] }],
             config: shared.clone()
         });
+    }
+
+    result
+}
+
+fn make_all_populations<'a>(individuals: u32, config: &OCRConfig<'a>, populations: u32) -> Vec<Population<OCRItem<'a>>> {
+    let mut result = Vec::new();
+
+    let initial_population = make_population(individuals, &config);
+
+    for i in 1..(populations + 1) {
+        let pop = PopulationBuilder::<OCRItem>::new()
+            .set_id(i)
+            .initial_population(&initial_population)
+            .increasing_exp_mutation_rate(((50 + i) as f64) / 50.0)
+            .reset_limit_end( if i == populations { 10000 } else { 0 } ) // We want a special case for the last population
+            .finalize().unwrap();
+        result.push(pop);
     }
 
     result
@@ -72,35 +93,37 @@ impl<'a> Individual for OCRItem<'a> {
 
         let content_line = rng.gen_range(0, self.content.len());
 
-        let operation = rng.gen_range(0, 6);
+        let operation = rng.gen_range(0, 11);
 
         let index1 = rng.gen_range(0, self.content[content_line].text.len());
+
+        let char_width = 5;
 
         match operation {
             0 => {
                 // Change character
-                let new_char = rng.gen_range(32, 127); // All printable ASCII characters
+                // All printable ASCII characters
+                let new_char = rng.gen_range(MIN_ASCII, MAX_ASCII + 1);
                 self.content[content_line].text[index1] = new_char;
-            },
+            }
             1 => {
                 // Swap characters
                 let index2 = rng.gen_range(0, self.content[content_line].text.len());
-                let temp = self.content[content_line].text[index1];
-                self.content[content_line].text[index1] = self.content[content_line].text[index2];
-                self.content[content_line].text[index2] = temp;
-            },
+                self.content[content_line].text.swap(index1, index2);
+            }
             2 => {
                 // Add character
-                let new_char = rng.gen_range(32, 127); // All printable ASCII characters
+                // All printable ASCII characters
+                let new_char = rng.gen_range(MIN_ASCII, MAX_ASCII + 1);
                 self.content[content_line].text.insert(index1, new_char);
-            },
+            }
             3 => {
                 // Remove character
                 if self.content[content_line].text.len() > 1 {
                     // Leave at least one character
                     self.content[content_line].text.remove(index1);
                 }
-            },
+            }
             4 => {
                 // Add blank " " character and a hyphen "-" at the end. This is a special case since
                 // it does change the fitness only minimal, but prevents getting stuck when a
@@ -109,14 +132,86 @@ impl<'a> Individual for OCRItem<'a> {
                 self.content[content_line].text.push(32);
                 // Try to comment / disable the next line to see what happens without hyphen:
                 self.content[content_line].text.push(45);
-            },
+            }
             5 => {
                 // New position
                 self.content[content_line].x = rng.gen_range(0, self.config.original_img.width());
                 self.content[content_line].y = rng.gen_range(0, self.config.original_img.height());
-            },
+            }
             6 => {
-                // You can think of more operations: shift / rotate, mirror, ...
+                // Move by a small amount
+                let direction = rng.gen_range(0, 4);
+
+                match direction {
+                    0 => {
+                        // up
+                        if self.content[content_line].y > 0 {
+                            self.content[content_line].y -= 1;
+                        }
+                    }
+                    1 => {
+                        // down
+                        if self.content[content_line].y <  self.config.original_img.height() {
+                            self.content[content_line].y += 1;
+                        }
+                    }
+                    2 => {
+                        // left
+                        if self.content[content_line].x > 0 {
+                            self.content[content_line].x -= 1;
+                        }
+                    }
+                    3 => {
+                        // right
+                        if self.content[content_line].x < self.config.original_img.width() {
+                            self.content[content_line].x += 1;
+                        }
+                    }
+                    n => info!("mutate(): unknown direction: {}", n)
+                }
+            }
+            7 => {
+                // Rotate / shift
+                let index2 = rng.gen_range(0, self.content[content_line].text.len());
+
+                let tmp = self.content[content_line].text.remove(index1);
+                self.content[content_line].text.insert(index2, tmp);
+            }
+            8 => {
+                // Change shape of character slightly
+                let current_char = self.content[content_line].text[index1] as char;
+
+                self.content[content_line].text[index1] = match current_char {
+                    '0' => 'O',
+                    'O' => '0',
+                    'm' => 'n',
+                    'n' => 'm',
+                    '.' => ',',
+                    ',' => '.',
+                    'N' => 'M',
+                    'M' => 'N',
+                    'q' => 'g',
+                    'g' => 'q',
+                    _ => current_char
+                } as u8;
+            }
+            9 => {
+                // Add character at the beginning and move left
+                if self.content[content_line].x > char_width {
+                    // All printable ASCII characters
+                    let new_char = rng.gen_range(MIN_ASCII, MAX_ASCII + 1);
+                    self.content[content_line].text.insert(0, new_char);
+                    self.content[content_line].x -= char_width;
+                }
+            }
+            10 => {
+                // Remove character at the beginning and move right
+                if self.content[content_line].x < self.config.original_img.width() - char_width {
+                    if self.content[content_line].text.len() > 1 {
+                        self.content[content_line].text.remove(0);
+                        self.content[content_line].x += char_width;
+                    }
+                }
             }
             n => info!("mutate(): unknown operation: {}", n)
         }
@@ -140,6 +235,15 @@ impl<'a> Individual for OCRItem<'a> {
         self.content = vec![
         TextBox{ x: 0, y: 0, text: vec![65] },
         TextBox{ x: 0, y: 0, text: vec![65] }];
+    }
+
+    fn new_fittest_found(&mut self) {
+        info!("new fittest: line1: '{}', line2: '{}', x0: {}, y0: {}, x1: {}, y1: {}",
+            str::from_utf8(&self.content[0].text).unwrap(),
+            str::from_utf8(&self.content[1].text).unwrap(),
+            self.content[0].x, self.content[0].y,
+            self.content[1].x, self.content[1].y
+        )
     }
 }
 
@@ -191,67 +295,12 @@ fn main() {
 
     let ocr_config = OCRConfig { font: font, original_img: original_img };
 
-    let initial_population = make_population(20, &ocr_config);
-
-    let population1 = PopulationBuilder::<OCRItem>::new()
-        .set_id(1)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.01)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population2 = PopulationBuilder::<OCRItem>::new()
-        .set_id(2)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.02)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population3 = PopulationBuilder::<OCRItem>::new()
-        .set_id(3)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.03)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population4 = PopulationBuilder::<OCRItem>::new()
-        .set_id(4)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.04)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population5 = PopulationBuilder::<OCRItem>::new()
-        .set_id(5)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.05)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population6 = PopulationBuilder::<OCRItem>::new()
-        .set_id(6)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.06)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population7 = PopulationBuilder::<OCRItem>::new()
-        .set_id(7)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.07)
-        .reset_limit_end(0)
-        .finalize().unwrap();
+    let num_populations = 16;
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
-        .threads(6)
-        .add_population(population1)
-        .add_population(population2)
-        .add_population(population3)
-        .add_population(population4)
-        .add_population(population5)
-        .add_population(population6)
-        .add_population(population7)
+        .threads(num_populations - 1)
+        .add_multiple_populations(make_all_populations(20, &ocr_config, num_populations as u32))
         .share_fittest()
         .finalize();
 

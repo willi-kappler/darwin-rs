@@ -27,7 +27,7 @@ use simplelog::{SimpleLogger, LogLevelFilter};
 use std::str;
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
 
 fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
     let mut result = Vec::new();
@@ -42,6 +42,24 @@ fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
                 TextBox{ x: 10, y: 40, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] }],
             config: shared.clone()
         });
+    }
+
+    result
+}
+
+fn make_all_populations<'a>(individuals: u32, config: &OCRConfig<'a>, populations: u32) -> Vec<Population<OCRItem<'a>>> {
+    let mut result = Vec::new();
+
+    let initial_population = make_population(individuals, &config);
+
+    for i in 1..(populations + 1) {
+        let pop = PopulationBuilder::<OCRItem>::new()
+            .set_id(i)
+            .initial_population(&initial_population)
+            .increasing_exp_mutation_rate(((50 + i) as f64) / 50.0)
+            .reset_limit_end(0)
+            .finalize().unwrap();
+        result.push(pop);
     }
 
     result
@@ -85,25 +103,8 @@ impl<'a> Individual for OCRItem<'a> {
             1 => {
                 // Swap characters
                 let index2 = rng.gen_range(0, self.content[content_line].text.len());
-                let temp = self.content[content_line].text[index1];
-                self.content[content_line].text[index1] = self.content[content_line].text[index2];
-                self.content[content_line].text[index2] = temp;
+                self.content[content_line].text.swap(index1, index2);
             },
-            2 => {
-                // Add character
-                let new_char = rng.gen_range(32, 127); // All printable ASCII characters
-                self.content[content_line].text.insert(index1, new_char);
-            },
-            3 => {
-                // Remove character
-                if self.content[content_line].text.len() > 1 {
-                    // Leave at least one character
-                    self.content[content_line].text.remove(index1);
-                }
-            },
-            4 => {
-                // You can think of more operations: shift / rotate, mirror, ...
-            }
             n => info!("mutate(): unknown operation: {}", n)
         }
     }
@@ -149,7 +150,6 @@ fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
             })
         }
     }
-
 }
 
 fn main() {
@@ -174,59 +174,12 @@ fn main() {
 
     let ocr_config = OCRConfig { font: font, original_img: original_img };
 
-    let initial_population = make_population(20, &ocr_config);
-
-    let population1 = PopulationBuilder::<OCRItem>::new()
-        .set_id(1)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.01)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population2 = PopulationBuilder::<OCRItem>::new()
-        .set_id(2)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.02)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population3 = PopulationBuilder::<OCRItem>::new()
-        .set_id(3)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.03)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population4 = PopulationBuilder::<OCRItem>::new()
-        .set_id(4)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.04)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population5 = PopulationBuilder::<OCRItem>::new()
-        .set_id(5)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.05)
-        .reset_limit_end(0)
-        .finalize().unwrap();
-
-    let population6 = PopulationBuilder::<OCRItem>::new()
-        .set_id(6)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.06)
-        .reset_limit_end(0)
-        .finalize().unwrap();
+    let num_populations = 16;
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
-        .threads(5)
-        .add_population(population1)
-        .add_population(population2)
-        .add_population(population3)
-        .add_population(population4)
-        .add_population(population5)
-        .add_population(population6)
+        .threads(7)
+        .add_multiple_populations(make_all_populations(10, &ocr_config, num_populations as u32))
         .share_fittest()
         .finalize();
 

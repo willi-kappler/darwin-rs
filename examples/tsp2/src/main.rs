@@ -16,7 +16,7 @@ use rand::Rng;
 use simplelog::{SimpleLogger, LogLevelFilter};
 
 // Internal modules
-use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
 
 fn city_distance(city: &[(f64, f64)], index1: usize, index2: usize) -> f64 {
     let (x1, y1) = city[index1];
@@ -41,6 +41,27 @@ fn make_population(count: u32, cities: &Vec<(f64, f64)>) -> Vec<CityItem> {
                 cities: shared.clone()
             }
         );
+    }
+
+    result
+}
+
+fn make_all_populations(individuals: u32, populations: u32, cities: &Vec<(f64, f64)>) -> Vec<Population<CityItem>> {
+    let mut result = Vec::new();
+
+    let initial_population = make_population(individuals, &cities);
+
+    for i in 1..(populations + 1) {
+        let pop = PopulationBuilder::<CityItem>::new()
+            .set_id(i)
+            .initial_population(&initial_population)
+            .increasing_exp_mutation_rate(((100 + i) as f64) / 100.0)
+            .reset_limit_increment(100 * i)
+            .reset_limit_start(100 * i)
+            .reset_limit_end(1000 * i)
+            .finalize().unwrap();
+
+        result.push(pop)
     }
 
     result
@@ -144,26 +165,13 @@ fn main() {
                       (86.29060211377086, 83.14129496517567),
                       (55.760857794890796, 26.95947234362994)];
 
-    let initial_population = make_population(100, &cities);
-
-    let population1 = PopulationBuilder::<CityItem>::new()
-        .set_id(1)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.03)
-        .finalize().unwrap();
-
-    let population2 = PopulationBuilder::<CityItem>::new()
-        .set_id(2)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.04)
-        .finalize().unwrap();
-
     let tsp = SimulationBuilder::<CityItem>::new()
-        .fitness(459.0) // optimal solution
-        .threads(2)
-        .add_population(population1)
-        .add_population(population2)
-        .finalize();
+          // .factor(0.34)
+          .fitness(459.0)
+          .threads(4)
+          .add_multiple_populations(make_all_populations(100, 8, &cities))
+          .finalize();
+
 
     match tsp {
         Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),

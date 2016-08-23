@@ -86,6 +86,12 @@ pub trait Individual {
     /// For example in the "queens" case it would reset the queens position randomly
     /// (or all in the first row)
     fn reset(&mut self);
+    /// This method is called whenever a new fittest individual is found. It is usefull when you
+    /// want to provide some additional information or do some statistics.
+    /// The default implementation does nothing.
+    fn new_fittest_found(&mut self) {
+
+    }
 }
 
 #[cfg(test)]

@@ -12,7 +12,7 @@ use rand::Rng;
 use simplelog::{SimpleLogger, LogLevelFilter};
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
 
 #[derive(Debug, Clone)]
 struct Queens {
@@ -99,6 +99,25 @@ fn make_population(count: u32) -> Vec<Queens> {
     result
 }
 
+fn make_all_populations(individuals: u32, populations: u32) -> Vec<Population<Queens>> {
+    let mut result = Vec::new();
+
+    let initial_population = make_population(individuals);
+
+    for i in 1..(populations + 1) {
+        let pop = PopulationBuilder::<Queens>::new()
+            .set_id(i)
+            .initial_population(&initial_population)
+            .increasing_exp_mutation_rate(((100 + i) as f64) / 100.0)
+            .reset_limit_end(0) // disable the resetting of all individuals
+            .finalize().unwrap();
+
+        result.push(pop);
+    }
+
+    result
+}
+
 // implement trait functions mutate and calculate_fitness:
 impl Individual for Queens {
     fn mutate(&mut self) {
@@ -157,43 +176,10 @@ fn main() {
 
     let _ = SimpleLogger::init(LogLevelFilter::Info);
 
-    let initial_population = make_population(100);
-
-    let population1 = PopulationBuilder::<Queens>::new()
-        .set_id(1)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.03)
-        .reset_limit_end(0) // disable the resetting of all individuals
-        .finalize().unwrap();
-
-    let population2 = PopulationBuilder::<Queens>::new()
-        .set_id(2)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.04)
-        .reset_limit_end(0) // disable the resetting of all individuals
-        .finalize().unwrap();
-
-    let population3 = PopulationBuilder::<Queens>::new()
-        .set_id(3)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.05)
-        .reset_limit_end(0) // disable the resetting of all individuals
-        .finalize().unwrap();
-
-    let population4 = PopulationBuilder::<Queens>::new()
-        .set_id(4)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.06)
-        .reset_limit_end(0) // disable the resetting of all individuals
-        .finalize().unwrap();
-
     let queens = SimulationBuilder::<Queens>::new()
         .fitness(0.0)
         .threads(2)
-        .add_population(population1)
-        .add_population(population2)
-        .add_population(population3)
-        .add_population(population4)
+        .add_multiple_populations(make_all_populations(100, 8))
         .finalize();
 
     match queens {

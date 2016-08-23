@@ -166,7 +166,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         // Determine the fittest individual of all populations.
         let mut new_fittest_found = false;
 
-        for population in self.habitat.iter() {
+        for population in self.habitat.iter_mut() {
             if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
                 new_fittest_found = true;
                 self.simulation_result.fittest.insert(0, population.population[0].clone());
@@ -174,6 +174,9 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 self.simulation_result.fittest.truncate(10);
                 info!("new fittest: fitness: {}, population id: {}", population.population[0].fitness,
                     population.id);
+                // Call methond new_fittest_found of the newly found fittest individual.
+                // The default implementation for this method does nothing.
+                population.population[0].individual.new_fittest_found();
             }
         }
 

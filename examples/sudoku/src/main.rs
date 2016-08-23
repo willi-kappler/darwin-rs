@@ -13,7 +13,7 @@ use rand::Rng;
 use simplelog::{SimpleLogger, LogLevelFilter};
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
 fn fitness_of_one_cell(sudoku: &[u8], row: usize, col: usize) -> f64 {
@@ -103,6 +103,34 @@ fn make_population(count: u32, unsolved: Vec<u8>) -> Vec<Sudoku> {
     result
 }
 
+fn make_all_populations(individuals: u32, populations: u32) -> Vec<Population<Sudoku>> {
+    let mut result = Vec::new();
+
+    let unsolved = vec![5, 3, 4, 6, 7, 8, 9, 1, 2,
+                        6, 7, 2, 1, 9, 5, 3, 4, 8,
+                        1, 9, 8, 3, 4, 2, 5, 6, 7,
+                        8, 5, 9, 7, 6, 1, 4, 2, 3,
+                        4, 2, 6, 8, 5, 3, 7, 9, 1,
+                        7, 1, 3, 9, 2, 4, 8, 5, 6,
+                        0, 6, 0, 0, 0, 0, 2, 8, 0,
+                        0, 0, 0, 4, 1, 9, 0, 0, 5,
+                        0, 0, 0, 0, 8, 0, 0, 7, 9];
+
+    let initial_population = make_population(individuals, unsolved);
+
+    for i in 1..(populations + 1) {
+        let pop = PopulationBuilder::<Sudoku>::new()
+            .set_id(i)
+            .initial_population(&initial_population)
+            .increasing_exp_mutation_rate(((300 + i) as f64) / 300.0)
+            .finalize().unwrap();
+
+        result.push(pop);
+    }
+
+    result
+}
+
 #[derive(Debug, Clone)]
 struct Sudoku {
     solved: Vec<u8>,
@@ -164,35 +192,10 @@ fn main() {
 
     let _ = SimpleLogger::init(LogLevelFilter::Info);
 
-    let unsolved = vec![5, 3, 4, 6, 7, 8, 9, 1, 2,
-                        6, 7, 2, 1, 9, 5, 3, 4, 8,
-                        1, 9, 8, 3, 4, 2, 5, 6, 7,
-                        8, 5, 9, 7, 6, 1, 4, 2, 3,
-                        4, 2, 6, 8, 5, 3, 7, 9, 1,
-                        7, 1, 3, 9, 2, 4, 8, 5, 6,
-                        0, 6, 0, 0, 0, 0, 2, 8, 0,
-                        0, 0, 0, 4, 1, 9, 0, 0, 5,
-                        0, 0, 0, 0, 8, 0, 0, 7, 9];
-
-    let initial_population = make_population(100, unsolved);
-
-    let population1 = PopulationBuilder::<Sudoku>::new()
-        .set_id(1)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.01)
-        .finalize().unwrap();
-
-    let population2 = PopulationBuilder::<Sudoku>::new()
-        .set_id(2)
-        .initial_population(&initial_population)
-        .increasing_exp_mutation_rate(1.02)
-        .finalize().unwrap();
-
     let sudoku = SimulationBuilder::<Sudoku>::new()
         .fitness(0.0)
-        .threads(2)
-        .add_population(population1)
-        .add_population(population2)
+        .threads(4)
+        .add_multiple_populations(make_all_populations(100, 16))
         .finalize();
 
     match sudoku {
