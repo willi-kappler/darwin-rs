@@ -72,13 +72,20 @@ fn make_all_populations<'a>(individuals: u32, config: &OCRConfig<'a>, population
 struct TextBox {
     x: u32,
     y: u32,
-    text: Vec<u8>
+    text: Vec<u8>,
+}
+
+#[derive(Clone)]
+struct FontConfig<'a> {
+    font: rusttype::Font<'a>,
+    scale: rusttype::Scale,
+    offset: rusttype::Point<f32>
 }
 
 #[derive(Clone)]
 struct OCRConfig<'a> {
-    font: rusttype::Font<'a>,
-    original_img: ImageBuffer<Luma<u8>, Vec<u8>>
+    original_img: ImageBuffer<Luma<u8>, Vec<u8>>,
+    font_config: FontConfig<'a>
 }
 
 #[derive(Clone)]
@@ -97,7 +104,7 @@ impl<'a> Individual for OCRItem<'a> {
 
         let index1 = rng.gen_range(0, self.content[content_line].text.len());
 
-        let char_width = 5;
+        let max_move_step = 20;
 
         match operation {
             0 => {
@@ -142,29 +149,31 @@ impl<'a> Individual for OCRItem<'a> {
                 // Move by a small amount
                 let direction = rng.gen_range(0, 4);
 
+                let move_step = rng.gen_range(1, max_move_step);
+
                 match direction {
                     0 => {
                         // up
-                        if self.content[content_line].y > 0 {
-                            self.content[content_line].y -= 1;
+                        if self.content[content_line].y > move_step {
+                            self.content[content_line].y -= move_step;
                         }
                     }
                     1 => {
                         // down
-                        if self.content[content_line].y <  self.config.original_img.height() {
-                            self.content[content_line].y += 1;
+                        if self.content[content_line].y <  self.config.original_img.height() - move_step {
+                            self.content[content_line].y += move_step;
                         }
                     }
                     2 => {
                         // left
-                        if self.content[content_line].x > 0 {
-                            self.content[content_line].x -= 1;
+                        if self.content[content_line].x > move_step {
+                            self.content[content_line].x -= move_step;
                         }
                     }
                     3 => {
                         // right
-                        if self.content[content_line].x < self.config.original_img.width() {
-                            self.content[content_line].x += 1;
+                        if self.content[content_line].x < self.config.original_img.width() -move_step {
+                            self.content[content_line].x += move_step;
                         }
                     }
                     n => info!("mutate(): unknown direction: {}", n)
@@ -192,24 +201,29 @@ impl<'a> Individual for OCRItem<'a> {
                     'M' => 'N',
                     'q' => 'g',
                     'g' => 'q',
+                    // TODO: add more
                     _ => current_char
                 } as u8;
             }
             9 => {
                 // Add character at the beginning and move left
-                if self.content[content_line].x > char_width {
+                let move_step = rng.gen_range(1, max_move_step);
+
+                if self.content[content_line].x > move_step {
                     // All printable ASCII characters
                     let new_char = rng.gen_range(MIN_ASCII, MAX_ASCII + 1);
                     self.content[content_line].text.insert(0, new_char);
-                    self.content[content_line].x -= char_width;
+                    self.content[content_line].x -= move_step;
                 }
             }
             10 => {
                 // Remove character at the beginning and move right
-                if self.content[content_line].x < self.config.original_img.width() - char_width {
+                let move_step = rng.gen_range(1, max_move_step);
+
+                if self.content[content_line].x < self.config.original_img.width() - move_step {
                     if self.content[content_line].text.len() > 1 {
                         self.content[content_line].text.remove(0);
-                        self.content[content_line].x += char_width;
+                        self.content[content_line].x += move_step;
                     }
                 }
             }
@@ -220,11 +234,11 @@ impl<'a> Individual for OCRItem<'a> {
     fn calculate_fitness(&mut self) -> f64 {
         let mut constructed_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(120, 70);
 
-        if !draw_text_line(&mut constructed_img, &self.config.font,
+        if !draw_text_line(&mut constructed_img, &self.config.font_config,
             self.content[0].x as i32, self.content[0].y as i32,
             str::from_utf8(&self.content[0].text).unwrap()) { return std::f64::MAX; }
 
-        if !draw_text_line(&mut constructed_img, &self.config.font,
+        if !draw_text_line(&mut constructed_img, &self.config.font_config,
             self.content[1].x as i32, self.content[1].y as i32,
             str::from_utf8(&self.content[1].text).unwrap()) { return std::f64::MAX; }
 
@@ -248,13 +262,10 @@ impl<'a> Individual for OCRItem<'a> {
 }
 
 fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
-    font: &rusttype::Font, pos_x: i32, pos_y: i32, text: &str) -> bool{
+    config: &FontConfig, pos_x: i32, pos_y: i32, text: &str) -> bool{
 
-    let height: f32 = 18.0;
-    let scale = rusttype::Scale { x: height * 1.0, y: height };
-    let v_metrics = font.v_metrics(scale);
-    let offset = rusttype::point(0.0, v_metrics.ascent);
-    let glyphs: Vec<rusttype::PositionedGlyph> = font.layout(text, scale, offset).collect();
+    let glyphs: Vec<rusttype::PositionedGlyph> =
+        config.font.layout(text, config.scale, config.offset).collect();
 
     let mut result = true;
 
@@ -287,13 +298,28 @@ fn main() {
     let font = collection.into_font().unwrap();
 
     let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(120, 70);
-    draw_text_line(&mut original_img, &font, 10, 10, "Darwin-rs");
-    draw_text_line(&mut original_img, &font, 10, 40, "OCR Test!");
+
+    let height: f32 = 18.0;
+    let scale = rusttype::Scale { x: height * 1.0, y: height };
+    let v_metrics = font.v_metrics(scale);
+    let offset = rusttype::point(0.0, v_metrics.ascent);
+
+    let font_config = FontConfig {
+        font: font,
+        scale: scale,
+        offset: offset
+    };
+
+    draw_text_line(&mut original_img, &font_config, 10, 10, "Darwin-rs");
+    draw_text_line(&mut original_img, &font_config, 10, 40, "OCR Test!");
 
 //    let img_file = Path::new("rendered_text.png");
 //    let _ = original_img.save(&img_file);
 
-    let ocr_config = OCRConfig { font: font, original_img: original_img };
+    let ocr_config = OCRConfig {
+            font_config: font_config,
+            original_img: original_img,
+        };
 
     let num_populations = 16;
 

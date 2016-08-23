@@ -73,9 +73,16 @@ struct TextBox {
 }
 
 #[derive(Clone)]
-struct OCRConfig<'a> {
+struct FontConfig<'a> {
     font: rusttype::Font<'a>,
-    original_img: ImageBuffer<Luma<u8>, Vec<u8>>
+    scale: rusttype::Scale,
+    offset: rusttype::Point<f32>
+}
+
+#[derive(Clone)]
+struct OCRConfig<'a> {
+    original_img: ImageBuffer<Luma<u8>, Vec<u8>>,
+    font_config: FontConfig<'a>
 }
 
 #[derive(Clone)]
@@ -112,11 +119,11 @@ impl<'a> Individual for OCRItem<'a> {
     fn calculate_fitness(&mut self) -> f64 {
         let mut constructed_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(120, 70);
 
-        draw_text_line(&mut constructed_img, &self.config.font,
+        draw_text_line(&mut constructed_img, &self.config.font_config,
             self.content[0].x as i32, self.content[0].y as i32,
             str::from_utf8(&self.content[0].text).unwrap());
 
-        draw_text_line(&mut constructed_img, &self.config.font,
+        draw_text_line(&mut constructed_img, &self.config.font_config,
             self.content[1].x as i32, self.content[1].y as i32,
             str::from_utf8(&self.content[1].text).unwrap());
 
@@ -128,16 +135,20 @@ impl<'a> Individual for OCRItem<'a> {
         TextBox{ x: 10, y: 10, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] },
         TextBox{ x: 10, y: 40, text: vec![65, 65, 65, 65, 65, 65, 65, 65, 65] }];
     }
+
+    fn new_fittest_found(&mut self) {
+        info!("new fittest: line1: '{}', line2: '{}'",
+            str::from_utf8(&self.content[0].text).unwrap(),
+            str::from_utf8(&self.content[1].text).unwrap()
+        )
+    }
 }
 
 fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
-    font: &rusttype::Font, pos_x: i32, pos_y: i32, text: &str) {
+    config: &FontConfig, pos_x: i32, pos_y: i32, text: &str) {
 
-    let height: f32 = 18.0;
-    let scale = rusttype::Scale { x: height * 1.0, y: height };
-    let v_metrics = font.v_metrics(scale);
-    let offset = rusttype::point(0.0, v_metrics.ascent);
-    let glyphs: Vec<rusttype::PositionedGlyph> = font.layout(text, scale, offset).collect();
+    let glyphs: Vec<rusttype::PositionedGlyph> =
+        config.font.layout(text, config.scale, config.offset).collect();
 
     for g in glyphs {
         if let Some(bb) = g.pixel_bounding_box() {
@@ -166,15 +177,31 @@ fn main() {
     let font = collection.into_font().unwrap();
 
     let mut original_img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::new(120, 70);
-    draw_text_line(&mut original_img, &font, 10, 10, "Darwin-rs");
-    draw_text_line(&mut original_img, &font, 10, 40, "OCR Test!");
 
-    // let img_file = Path::new("rendered_text.png");
-    // let _ = original_img.save(&img_file);
+    let height: f32 = 18.0;
+    let scale = rusttype::Scale { x: height * 1.0, y: height };
+    let v_metrics = font.v_metrics(scale);
+    let offset = rusttype::point(0.0, v_metrics.ascent);
 
-    let ocr_config = OCRConfig { font: font, original_img: original_img };
+    let font_config = FontConfig {
+        font: font,
+        scale: scale,
+        offset: offset
+    };
+
+    draw_text_line(&mut original_img, &font_config, 10, 10, "Darwin-rs");
+    draw_text_line(&mut original_img, &font_config, 10, 40, "OCR Test!");
+
+//    let img_file = Path::new("rendered_text.png");
+//    let _ = original_img.save(&img_file);
+
+    let ocr_config = OCRConfig {
+            font_config: font_config,
+            original_img: original_img,
+        };
 
     let num_populations = 16;
+
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
