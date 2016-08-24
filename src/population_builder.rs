@@ -52,6 +52,7 @@ impl<T: Individual + Clone> PopulationBuilder<T> {
                 reset_limit_increment: 1000,
                 reset_counter: 0,
                 id: 1,
+                fitness_counter: 0
             }
         }
     }

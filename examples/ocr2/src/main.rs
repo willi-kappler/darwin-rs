@@ -50,8 +50,36 @@ fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
     result
 }
 
-fn make_all_populations<'a>(individuals: u32, config: &OCRConfig<'a>, populations: u32) -> Vec<Population<OCRItem<'a>>> {
+fn make_all_populations1<'a>(individuals: u32, config: &OCRConfig<'a>, populations: u32) -> Vec<Population<OCRItem<'a>>> {
     let mut result = Vec::new();
+
+    let initial_population = make_population(individuals, &config);
+
+    for i in 1..(populations + 1) {
+
+        let mut pop = PopulationBuilder::<OCRItem>::new()
+            .set_id(i)
+            .initial_population(&initial_population)
+            .increasing_exp_mutation_rate(((500 + i) as f64) / 500.0);
+
+        if i == populations {
+            // Special case for the last popilation
+            pop = pop.reset_limit_start(100);
+            pop = pop.reset_limit_end(1000);
+            pop = pop.reset_limit_increment(100);
+        } else {
+            pop = pop.reset_limit_end(0);
+        }
+
+        result.push(pop.finalize().unwrap());
+    }
+
+    result
+}
+
+fn make_all_populations2<'a>(individuals: u32, config: &OCRConfig<'a>, populations: u32) -> Vec<Population<OCRItem<'a>>> {
+    let mut result = Vec::new();
+    let mut rng = rand::thread_rng();
 
     let initial_population = make_population(individuals, &config);
 
@@ -59,9 +87,12 @@ fn make_all_populations<'a>(individuals: u32, config: &OCRConfig<'a>, population
         let pop = PopulationBuilder::<OCRItem>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((50 + i) as f64) / 50.0)
-            .reset_limit_end( if i == populations { 10000 } else { 0 } ) // We want a special case for the last population
+            .increasing_exp_mutation_rate(((200 + i) as f64) / 200.0)
+            .reset_limit_start(rng.gen_range(100, 501))
+            .reset_limit_end(10000)
+            .reset_limit_increment(rng.gen_range(100, 501))
             .finalize().unwrap();
+
         result.push(pop);
     }
 
@@ -310,6 +341,7 @@ fn main() {
         offset: offset
     };
 
+    // This is the original image that we want to match (find the text):
     draw_text_line(&mut original_img, &font_config, 10, 10, "Darwin-rs");
     draw_text_line(&mut original_img, &font_config, 10, 40, "OCR Test!");
 
@@ -326,7 +358,7 @@ fn main() {
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
         .threads(num_populations - 1)
-        .add_multiple_populations(make_all_populations(20, &ocr_config, num_populations as u32))
+        .add_multiple_populations(make_all_populations1(50, &ocr_config, num_populations as u32))
         .share_fittest()
         .finalize();
 
@@ -338,6 +370,11 @@ fn main() {
             println!("total run time: {} ms", ocr_simulation.total_time_in_ms);
             println!("improvement factor: {}", ocr_simulation.simulation_result.improvement_factor);
             println!("number of iterations: {}", ocr_simulation.simulation_result.iteration_counter);
+            println!("Population statistics:");
+
+            for pop in ocr_simulation.habitat {
+                println!("id: {}, counter: {}", pop.id, pop.fitness_counter);
+            }
 
             let ref item = ocr_simulation.simulation_result.fittest[0].individual;
             let line1 = str::from_utf8(&item.content[0].text).unwrap();

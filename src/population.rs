@@ -42,6 +42,9 @@ pub struct Population<T: Individual> {
     /// have the most fittest individuals ? This may help you to set the correct parameters for
     /// your simulations.
     pub id: u32,
+    /// Count how often this population has created (found) the fittest individual. This may help
+    /// you to fine tune the parameters for the population and the simulation in general.
+    pub fitness_counter: u64
 }
 
 impl<T: Individual + Send + Sync + Clone> Population<T> {
