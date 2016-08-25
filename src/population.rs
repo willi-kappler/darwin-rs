@@ -49,6 +49,8 @@ pub struct Population<T: Individual> {
 
 impl<T: Individual + Send + Sync + Clone> Population<T> {
     /// Just calculates the fitness for each individual.
+    /// Usually this is the most computational expensive operation, so optimize the
+    /// `calculate_fitness` method of your data structure ;-)
     pub fn calculate_fitness(&mut self) {
         for wrapper in &mut self.population {
             wrapper.fitness = wrapper.individual.calculate_fitness();
@@ -109,6 +111,8 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
         // Mutate population
         for wrapper in &mut self.population {
             for _ in 0..wrapper.num_of_mutations {
+                // Maybe add super optimization ?
+                // See https://github.com/willi-kappler/darwin-rs/issues/10
                 wrapper.individual.mutate();
             }
             wrapper.fitness = wrapper.individual.calculate_fitness();
@@ -118,6 +122,7 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
         self.population.extend(orig_population.iter().cloned());
 
         // Sort by fitness
+        // Use random choice, see https://github.com/willi-kappler/darwin-rs/issues/7
         self.population.sort();
 
         // Reduce population to original length

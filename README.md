@@ -79,9 +79,13 @@ If you want to share a large data structure between all the individuals you need
 Now you have to create one or more populations that can have different properties:
 
 ```rust
+
+// A helper function that creates a vector of individuals of your data structure:
+let my_pop = make_population(100);
+
 let population1 = PopulationBuilder::<MyStruct>::new()
     .set_id(1)
-    .individuals(100)
+    .initial_population(&my_pop)
     .increasing_exp_mutation_rate(1.03)
     .reset_limit_increment(100)
     .reset_limit_start(100)
@@ -91,7 +95,7 @@ let population1 = PopulationBuilder::<MyStruct>::new()
 
 let population2 = PopulationBuilder::<MyStruct>::new()
     .set_id(1)
-    .individuals(50)
+    .initial_population(&my_pop)
     .increasing_exp_mutation_rate(1.04)
     .reset_limit_increment(200)
     .reset_limit_start(100)
@@ -102,7 +106,7 @@ let population2 = PopulationBuilder::<MyStruct>::new()
 ```
 **set_id()**: Sets the population ID. This can be any positive u32 integer. Currently this is only used for internal statistics, for example: which population does have the most fittest individuals ? This may help you to set the correct parameters for your simulations.
 
-**individuals()**: How many individuals (= distinct copies of your data structure) should the population have ?
+**initial_population()**: This method takes a vector of individuals. The best practice is to use a helper function, see examples.
 
 **increasing_exp_mutation_rate()**: Sets the mutation rate for each individual: Use exponential mutation rate.
 

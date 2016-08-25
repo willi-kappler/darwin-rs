@@ -73,7 +73,8 @@ pub struct SimulationResult<T: Individual + Send + Sync> {
     pub iteration_counter: u32
 }
 
-/// This implements the two functions `run` and `print_fitness` for the struct `Simulation`.
+/// This implements the the functions `run`, `print_fitness` and `update_results`
+/// for the struct `Simulation`.
 impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// This actually runs the simulation.
     /// Depending on the type of simulation (`EndIteration`, `EndFactor` or `EndFitness`)
@@ -167,7 +168,6 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         }
     }
 
-
     fn update_results(&mut self) {
         // Determine the fittest individual of all populations.
         let mut new_fittest_found = false;
@@ -177,11 +177,12 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 new_fittest_found = true;
                 self.simulation_result.fittest.insert(0, population.population[0].clone());
                 // Keep at most 10 individuals, TODO: make this number user configurable.
+                // See https://github.com/willi-kappler/darwin-rs/issues/12
                 self.simulation_result.fittest.truncate(10);
                 population.fitness_counter += 1;
                 info!("new fittest: fitness: {}, population id: {}, counter: {}", population.population[0].fitness,
                     population.id, population.fitness_counter);
-                // Call methond new_fittest_found of the newly found fittest individual.
+                // Call methond `new_fittest_found` of the newly found fittest individual.
                 // The default implementation for this method does nothing.
                 population.population[0].individual.new_fittest_found();
             }

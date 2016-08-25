@@ -56,9 +56,8 @@ impl<T: Individual> PartialOrd for IndividualWrapper<T> {
 }
 
 /// This trait has to be implemented for the user defined struct.
-/// Tip: Use [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs) to share large
-/// data structure between individuals (see TSP example).
-
+/// In order to share common data between all individuals use Arc. See TSP and OCR exmaples.
+/// TODO: add serialization, see https://github.com/willi-kappler/darwin-rs/issues/11
 pub trait Individual {
     /// This method mutates the individual. Usually this is a cheap and easy to implement
     /// function. In order to improve the simulation, the user can make this function a bit

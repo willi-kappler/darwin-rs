@@ -8,7 +8,10 @@
 - calculate_fitness now needs (&mut self).
 - add option share_fittest to share the fittest individual between all population after each iteration.
 - add ocr2 example.
+- add optional method new_fittest_found() to write out some statistics. Default implementation does nothing.
 - add fitness counter statistic to population.
+- fix bug in parallelization using jobsteal.
+- fix bug in TSP2 example.
 
 ## 0.2 - 2016-08-17
 - Split up code into several files

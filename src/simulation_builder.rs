@@ -21,6 +21,7 @@ use population::Population;
 
 /// This is a helper struct in order to build (configure) a valid simulation.
 /// See builder pattern: https://en.wikipedia.org/wiki/Builder_pattern
+/// Maybe use phantom types, see https://github.com/willi-kappler/darwin-rs/issues/9
 pub struct SimulationBuilder<T: Individual + Send + Sync> {
     /// The actual simulation
     simulation: Simulation<T>,

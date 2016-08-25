@@ -20,6 +20,7 @@ use population::Population;
 
 /// This is a helper struct in order to build (configure) a valid population.
 /// See builder pattern: https://en.wikipedia.org/wiki/Builder_pattern
+/// Maybe use phantom types, see https://github.com/willi-kappler/darwin-rs/issues/9
 pub struct PopulationBuilder<T: Individual> {
     /// The actual simulation
     population: Population<T>,
@@ -44,7 +45,7 @@ impl<T: Individual + Clone> PopulationBuilder<T> {
     pub fn new() -> PopulationBuilder<T> {
         PopulationBuilder {
             population: Population {
-                num_of_individuals: 10,
+                num_of_individuals: 0,
                 population: Vec::new(),
                 reset_limit: 0,
                 reset_limit_start: 1000,
@@ -57,7 +58,7 @@ impl<T: Individual + Clone> PopulationBuilder<T> {
         }
     }
 
-    /// Sets the initial population, length must be >= 3
+    /// Sets the initial population provided inside a vector, length must be >= 3
     pub fn initial_population(mut self, individuals: &Vec<T>) -> PopulationBuilder<T> {
         self.population.num_of_individuals = individuals.len() as u32;
 
