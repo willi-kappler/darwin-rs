@@ -24,7 +24,7 @@ use population::Population;
 ///
 /// Maybe use phantom types, see https://github.com/willi-kappler/darwin-rs/issues/9
 pub struct SimulationBuilder<T: Individual + Send + Sync> {
-    /// The actual simulation
+    /// The actual simulation.
     simulation: Simulation<T>,
 }
 
@@ -38,7 +38,7 @@ quick_error! {
 
 pub type Result<T> = std::result::Result<Simulation<T>, SimError>;
 
-/// This implementation contains all the helper method to build (configure) a valid simulation
+/// This implementation contains all the helper method to build (configure) a valid simulation.
 impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     /// Start with this method, it must always be called as the first one.
     /// It creates a default simulation with some dummy (but invalid) values.

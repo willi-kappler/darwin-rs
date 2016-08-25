@@ -27,7 +27,7 @@ pub struct IndividualWrapper<T: Individual> {
     pub fitness: f64,
     /// The number of mutation this individual is doing in one iteration.
     pub num_of_mutations: u32,
-    /// The id of the population that this individual belongs to. Just for statistics
+    /// The id of the population that this individual belongs to. Just for statistics.
     pub id: u32,
 }
 

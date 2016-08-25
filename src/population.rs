@@ -26,7 +26,7 @@ pub struct Population<T: Individual> {
     /// The amount of iteration to wait until all individuals will be resetted.
     /// This calls the `reset` method for each individual.
     pub reset_limit: u32,
-    /// The start value of the reset limit
+    /// The start value of the reset limit.
     pub reset_limit_start: u32,
     /// The end value of the reset limit, if `reset_limit` >= `reset_limit_end`, then the `reset_limit`
     /// will be resettet to the start value `reset_limit_start`.
@@ -106,7 +106,7 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
             }
         }
 
-        // Keep original population
+        // Keep original population.
         let orig_population = self.population.clone();
 
         // Mutate population
@@ -119,17 +119,17 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
             wrapper.fitness = wrapper.individual.calculate_fitness();
         }
 
-        // Append original (unmutated) population to new (mutated) population
+        // Append original (unmutated) population to new (mutated) population.
         self.population.extend(orig_population.iter().cloned());
 
         // Sort by fitness
         // Use random choice, see https://github.com/willi-kappler/darwin-rs/issues/7
         self.population.sort();
 
-        // Reduce population to original length
+        // Reduce population to original length.
         self.population.truncate(self.num_of_individuals as usize);
 
-        // Restore original number of mutation rate, since these will be lost because of sorting
+        // Restore original number of mutation rate, since these will be lost because of sorting.
         for (individual, orig_individual) in self.population
             .iter_mut()
             .zip(orig_population.iter()) {

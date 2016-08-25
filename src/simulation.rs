@@ -28,11 +28,11 @@ pub enum SimulationType {
     /// Finish the simulation when a specific fitness is rached.
     /// That means if at least one of the individuals has this fitness.
     /// The fitness is calculated using the implemented `calculate_fitness` functions
-    /// of the `Individual` trait
+    /// of the `Individual` trait.
     EndFitness(f64),
     /// Finish the simulation when a specific improvement factor is reached.
     /// That means the relation between the very first fitness and the current fitness of the
-    /// fittest individual
+    /// fittest individual.
     EndFactor(f64),
 }
 
@@ -49,10 +49,10 @@ pub struct Simulation<T: Individual + Send + Sync> {
     /// finished.
     pub total_time_in_ms: f64,
     /// The result of the simulation: `improvement_factor`, `original_fitness` and a vector of
-    /// fittest individuals
+    /// fittest individuals.
     pub simulation_result: SimulationResult<T>,
     /// If this feature is enabled, then the most fittest individual of all populations is
-    /// shared between all the populations
+    /// shared between all the populations.
     pub share_fittest: bool
 }
 
@@ -69,7 +69,7 @@ pub struct SimulationResult<T: Individual + Send + Sync> {
     /// Vector of fittest individuals. This will change during the simulation as soon as a new
     /// more fittest individual is found and pushed into the first position (index 0).
     pub fittest: Vec<IndividualWrapper<T>>,
-    /// How many iteration did the simulation run
+    /// How many iteration did the simulation run.
     pub iteration_counter: u32
 }
 

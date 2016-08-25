@@ -39,7 +39,7 @@ quick_error! {
 
 pub type Result<T> = std::result::Result<Population<T>, PopError>;
 
-/// This implementation contains all the helper method to build (configure) a valid population
+/// This implementation contains all the helper method to build (configure) a valid population.
 impl<T: Individual + Clone> PopulationBuilder<T> {
     /// Start with this method, it must always be called as the first one.
     /// It creates a default population with some dummy (but invalid) values.
@@ -142,13 +142,13 @@ impl<T: Individual + Clone> PopulationBuilder<T> {
     }
 
     /// Configure the increment for the reset_limit. If the reset_limit is reached, its value
-    /// is incrementet by the amount of reset_limit_increment
+    /// is incrementet by the amount of reset_limit_increment.
     pub fn reset_limit_increment(mut self, reset_limit_increment: u32) -> PopulationBuilder<T> {
         self.population.reset_limit_increment = reset_limit_increment;
         self
     }
 
-    /// Set the population id. Currently this is only used for statistics
+    /// Set the population id. Currently this is only used for statistics.
     pub fn set_id(mut self, id: u32) -> PopulationBuilder<T> {
         for individual in &mut self.population.population {
             individual.id = id;
