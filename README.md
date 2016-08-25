@@ -4,7 +4,7 @@
 # darwin-rs
 This library allows you to write evolutionary algorithms (EA) using the [Rust](https://www.rust-lang.org/) programming language.
 
-Written by Willi Kappler, License: MIT - Version 0.2 (2016.08.17)
+Written by Willi Kappler, License: MIT - Version 0.3 (2016.08.)
 
 **Documentation:** [darwin-rs](https://willi-kappler.github.io/darwin-rs)
 
@@ -12,11 +12,12 @@ Written by Willi Kappler, License: MIT - Version 0.2 (2016.08.17)
 
 ![tsp end](tsp_end.png)
 
-The example folder contains three examples:
+The example folder contains these examples:
 
-- TSP (traveling salesman problem): the classic type of problem for EA (see two pictures above)
-- Sudoku: a sudoku solver using EA
+- TSP (traveling salesman problem): the classic type of problem for EA (see two pictures above).
+- Sudoku: a sudoku solver using EA.
 - Queens: solving the queens problem with EA. Although not as fast as [this one](https://github.com/reem/rust-n-queens) ;-)
+- OCR: a simple optical character recognition example. Two strings are drawn (rendered) using a truetype font on a image buffer and then a perfect match representing the drawn text is found.
 
 darwin-rs uses [semantic versioning](http://semver.org/)
 
@@ -25,7 +26,7 @@ Add the following to the Cargo.toml in your project:
 
 ```toml
 [dependencies]
-darwin-rs = "0.2"
+darwin-rs = "0.3"
 ```
 
 And this in the rust source code of your application:
@@ -33,7 +34,7 @@ And this in the rust source code of your application:
 ```rust
 extern crate darwin_rs;
 
-use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
 ```
 
 Basically you have to implement the trait ```Individual``` for your data structure:
@@ -45,30 +46,35 @@ struct MyStruct {
 }
 
 impl Individual for MyStruct {
-    fn new() -> MyStruct {
-        MyStruct{ text: "Some fancy data values...".to_string() }
-    }
-
     fn mutate(&mut self) {
         // Mutate the struct here.
+        ...
     }
 
-    fn calculate_fitness(&self) -> f64 {
+    fn calculate_fitness(&mut self) -> f64 {
         // Calculate how good the data values are compared to the perfect solution
-        0.0
+        ...
+    }
+
+    fn reset(&mut self) {
+      // Resets all the data for this individual instance.
+      // This is done to avoid getting stuck in a local minimum.
+      ...
     }
 }
 ```
 
 These three methods are needed:
 
-**new()**: creates new instance of your struct.
+**mutate(&mut self)**: Mutates the content of the struct.
 
-**mutate(&mut self)**: mutates the content of the struct.
+**calculate_fitness(&mut self) -> f64**: This calculates the fitness value, that is how close is this individual struct instance to the perfect solution ? Lower values means better fit (== less error == smaller distance from the optimum).
 
-**calculate_fitness(&self) -> f64**: this calculates the fitness value, that is how close is this individual struct instance to the perfect solution ? Lower values means better fit (or less error).
+**reset(&mut self)**: Resets all the data after a specific number of iteration (see ```reset_limit```), to avoid local minima.
 
-Tip: Use [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs) to share large data structure between individuals (see TSP example).
+There is one more method (```new_fittest_found```) but is it optional and the default implementation does nothing.
+
+If you want to share a large data structure between all the individuals you need ```Arc```, see TSP and OCR examples.
 
 Now you have to create one or more populations that can have different properties:
 
@@ -106,6 +112,7 @@ let population2 = PopulationBuilder::<MyStruct>::new()
 
 **reset_limit_end()**: The end value of the reset limit. If this end value is reached the reset limit is reset to the start value above.
 
+Alternatively you can also put all the populations inside a vector.
 
 After that you have to create a new instance of the simulation and provide the settings:
 
@@ -141,6 +148,8 @@ let my_builder = SimulationBuilder::<MyStruct>::new()
 
 **finalize()**: Finish setup and do sanity check. Returns ```Ok(Simulation)``` if there are no errors in the configuration.
 
+**add_muliple_populations()**: Allows you to add all the populations inside a vector in one method call.
+
 Then just do a match on the result of ```finalize()``` and call ```simulation.run()``` to start the simulation. After the finishing it, you can access some statistics (```total_time_in_ms```, ```improvement_factor```, ```iteration_counter```) and the populations of course:
 
 ```rust
@@ -148,6 +157,7 @@ Then just do a match on the result of ```finalize()``` and call ```simulation.ru
       for wrapper in population.population {...}
     }
 ```
+
 Each individual is wrapped inside a ```Wrapper``` struct that contains additional information needed for the simulation: **fitness** and the **number of mutations**.
 See also the example folder for full working programs.
 
@@ -172,7 +182,7 @@ See also the example folder for full working programs.
 TODO:
 - [ ] Add more documentation comments for library
 - [ ] Add test cases
-- [ ] Add more examples (ocr, ...)
+- [ ] Add more examples
 - [x] Use log file instead of println!()
 - [ ] Maybe use phantom type for builder pattern to detect configuration error at compile type ? (https://www.reddit.com/r/rust/comments/2pgrz7/required_parameters_utilizing_the_builder_pattern/)
 - [ ] Add super optimization (only allow changes that have an improvement) ?

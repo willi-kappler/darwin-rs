@@ -1,13 +1,13 @@
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.2 (2016.08.17)
+//! Written by Willi Kappler, Version 0.3 (2016.08.)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
 //! License: MIT
 //!
 //! This library allows you to write evolutionary algorithms (EA) in Rust.
-//! Examples provided: TSP, Sudoku, Queens Problem
+//! Examples provided: TSP, Sudoku, Queens Problem, OCR
 //!
 //!
 
