@@ -73,7 +73,7 @@ pub struct SimulationResult<T: Individual + Send + Sync> {
     pub iteration_counter: u32
 }
 
-/// This implements the the functions `run`, `print_fitness` and `update_results`
+/// This implements the the functions `run`, `print_fitness` and `update_results` (private)
 /// for the struct `Simulation`.
 impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// This actually runs the simulation.
@@ -168,6 +168,9 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         }
     }
 
+    /// Update the internal state of the simulation: Has a new fittest individual been found ?
+    /// Do we want to share it across all the other populations ?
+    /// Also calculates the improvement factor.
     fn update_results(&mut self) {
         // Determine the fittest individual of all populations.
         let mut new_fittest_found = false;

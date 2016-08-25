@@ -20,6 +20,7 @@ use population::Population;
 
 /// This is a helper struct in order to build (configure) a valid population.
 /// See builder pattern: https://en.wikipedia.org/wiki/Builder_pattern
+///
 /// Maybe use phantom types, see https://github.com/willi-kappler/darwin-rs/issues/9
 pub struct PopulationBuilder<T: Individual> {
     /// The actual simulation

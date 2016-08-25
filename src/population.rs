@@ -24,6 +24,7 @@ pub struct Population<T: Individual> {
     /// The actual population (vector of individuals).
     pub population: Vec<IndividualWrapper<T>>,
     /// The amount of iteration to wait until all individuals will be resetted.
+    /// This calls the `reset` method for each individual.
     pub reset_limit: u32,
     /// The start value of the reset limit
     pub reset_limit_start: u32,

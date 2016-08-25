@@ -57,6 +57,7 @@ impl<T: Individual> PartialOrd for IndividualWrapper<T> {
 
 /// This trait has to be implemented for the user defined struct.
 /// In order to share common data between all individuals use Arc. See TSP and OCR exmaples.
+///
 /// TODO: add serialization, see https://github.com/willi-kappler/darwin-rs/issues/11
 pub trait Individual {
     /// This method mutates the individual. Usually this is a cheap and easy to implement
@@ -83,7 +84,7 @@ pub trait Individual {
     fn calculate_fitness(&mut self) -> f64;
     /// This method resets each individual to an initial state.
     /// For example in the "queens" case it would reset the queens position randomly
-    /// (or all in the first row)
+    /// (or all in the first row).
     fn reset(&mut self);
     /// This method is called whenever a new fittest individual is found. It is usefull when you
     /// want to provide some additional information or do some statistics.
