@@ -72,7 +72,7 @@ These three methods are needed:
 
 **reset(&mut self)**: Resets all the data after a specific number of iteration (see ```reset_limit```), to avoid local minima.
 
-There is one more method (```new_fittest_found```) but is it optional and the default implementation does nothing.
+There is one more method (```new_fittest_found```) but it is optional and the default implementation does nothing.
 
 If you want to share a large data structure between all the individuals you need ```Arc```, see TSP and OCR examples.
 
@@ -181,11 +181,8 @@ See also the example folder for full working programs.
 
 TODO:
 - [ ] Add more documentation comments for library
-- [ ] Add test cases
 - [ ] Add more examples
 - [x] Use log file instead of println!()
-- [ ] Maybe use phantom type for builder pattern to detect configuration error at compile type ? (https://www.reddit.com/r/rust/comments/2pgrz7/required_parameters_utilizing_the_builder_pattern/)
-- [ ] Add super optimization (only allow changes that have an improvement) ?
 - [ ] Add possibility to load and save population / individuals in order to cancel / resume simulation (serde)
 
 Any feedback is welcome!
