@@ -183,10 +183,4 @@ See also the example folder for full working programs.
 - [random-wheel-rs](https://github.com/Kerosene2000/random-wheel-rs)
 - [roulette-wheel-rs](https://github.com/Kerosene2000/roulette-wheel-rs)
 
-TODO:
-- [ ] Add more documentation comments for library
-- [ ] Add more examples
-- [x] Use log file instead of println!()
-- [ ] Add possibility to load and save population / individuals in order to cancel / resume simulation (serde)
-
 Any feedback is welcome!
