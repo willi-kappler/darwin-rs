@@ -1,17 +1,17 @@
 # Change Log
 
-## 0.3 - 2016-xx
+## 0.3 - 2016-08-29
 - Write output into a log file instead of using print!().
 - Remove new() from trait Individual, provide reset() instead.
 - All mutexes removed.
 - User must now provide whole population but can now use shared configuration / data instead of using lazy_static.
-- calculate_fitness now needs (&mut self).
-- add option share_fittest to share the fittest individual between all population after each iteration.
-- add ocr2 example.
-- add optional method new_fittest_found() to write out some statistics. Default implementation does nothing.
-- add fitness counter statistic to population.
-- fix bug in parallelization using jobsteal.
-- fix bug in TSP2 example.
+- Calculate_fitness now needs (&mut self).
+- Add option share_fittest to share the fittest individual between all population after each iteration.
+- Add ocr2 example.
+- Add optional method new_fittest_found() to write out some statistics. Default implementation does nothing.
+- Add fitness counter statistic to population.
+- Fix bug in parallelization using jobsteal.
+- Cix bug in TSP2 example.
 
 ## 0.2 - 2016-08-17
 - Split up code into several files

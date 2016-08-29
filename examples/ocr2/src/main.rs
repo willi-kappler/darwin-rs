@@ -357,7 +357,7 @@ fn main() {
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
-        .threads(num_populations - 1)
+        .threads(7)
         .add_multiple_populations(make_all_populations1(50, &ocr_config, num_populations as u32))
         .share_fittest()
         .finalize();

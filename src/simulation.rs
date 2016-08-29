@@ -2,7 +2,7 @@
 //!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.3 (2016.08.)
+//! Written by Willi Kappler, Version 0.3 (2016.08.29)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -109,7 +109,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             SimulationType::EndIteration(end_iteration) => {
                 for _ in 0..end_iteration {
                     pool.scope(|scope|
-                        for population in self.habitat.iter_mut() {
+                        for population in &mut self.habitat {
                             scope.submit(move || { population.run_body() });
                         });
 
@@ -122,7 +122,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 loop {
                     iteration_counter += 1;
                     pool.scope(|scope|
-                        for population in self.habitat.iter_mut() {
+                        for population in &mut self.habitat {
                             scope.submit(move || { population.run_body() });
                         });
 
@@ -139,7 +139,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 loop {
                     iteration_counter += 1;
                     pool.scope(|scope|
-                        for population in self.habitat.iter_mut() {
+                        for population in &mut self.habitat {
                             scope.submit(move || { population.run_body() });
                         });
 
@@ -175,7 +175,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         // Determine the fittest individual of all populations.
         let mut new_fittest_found = false;
 
-        for population in self.habitat.iter_mut() {
+        for population in &mut self.habitat {
             if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
                 new_fittest_found = true;
                 self.simulation_result.fittest.insert(0, population.population[0].clone());
@@ -194,7 +194,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         // Now copy the most fittest individual back to each population
         // if the user has specified it.
         if self.share_fittest && new_fittest_found {
-            for population in self.habitat.iter_mut() {
+            for population in &mut self.habitat {
                 population.population[0] = self.simulation_result.fittest[0].clone();
             }
         }

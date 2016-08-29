@@ -2,7 +2,7 @@
 //!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.3 (2016.08.)
+//! Written by Willi Kappler, Version 0.3 (2016.08.29)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -60,7 +60,7 @@ impl<T: Individual + Clone> PopulationBuilder<T> {
     }
 
     /// Sets the initial population provided inside a vector, length must be >= 3
-    pub fn initial_population(mut self, individuals: &Vec<T>) -> PopulationBuilder<T> {
+    pub fn initial_population(mut self, individuals: &[T]) -> PopulationBuilder<T> {
         self.population.num_of_individuals = individuals.len() as u32;
 
         for individual in individuals {
