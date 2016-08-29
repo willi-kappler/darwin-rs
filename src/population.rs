@@ -2,20 +2,17 @@
 //!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.2 (2016.08.17)
+//! Written by Willi Kappler, Version 0.3 (2016.08.29)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
 //! License: MIT
 //!
 //! This library allows you to write evolutionary algorithms (EA) in Rust.
-//! Examples provided: TSP, Sudoku, Queens Problem
+//! Examples provided: TSP, Sudoku, Queens Problem, OCR
 //!
 //!
 
-use std::sync::Mutex;
-
-use simulation::SimulationResult;
 use individual::{Individual, IndividualWrapper};
 
 /// The `Population` type. Contains the actual individuals (through a wrapper) and informations
@@ -27,8 +24,9 @@ pub struct Population<T: Individual> {
     /// The actual population (vector of individuals).
     pub population: Vec<IndividualWrapper<T>>,
     /// The amount of iteration to wait until all individuals will be resetted.
+    /// This calls the `reset` method for each individual.
     pub reset_limit: u32,
-    /// The start value of the reset limit
+    /// The start value of the reset limit.
     pub reset_limit_start: u32,
     /// The end value of the reset limit, if `reset_limit` >= `reset_limit_end`, then the `reset_limit`
     /// will be resettet to the start value `reset_limit_start`.
@@ -45,10 +43,15 @@ pub struct Population<T: Individual> {
     /// have the most fittest individuals ? This may help you to set the correct parameters for
     /// your simulations.
     pub id: u32,
+    /// Count how often this population has created (found) the fittest individual. This may help
+    /// you to fine tune the parameters for the population and the simulation in general.
+    pub fitness_counter: u64
 }
 
 impl<T: Individual + Send + Sync + Clone> Population<T> {
     /// Just calculates the fitness for each individual.
+    /// Usually this is the most computational expensive operation, so optimize the
+    /// `calculate_fitness` method of your data structure ;-)
     pub fn calculate_fitness(&mut self) {
         for wrapper in &mut self.population {
             wrapper.fitness = wrapper.individual.calculate_fitness();
@@ -79,8 +82,7 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
     /// fittest individual is replaced.
     ///
     /// 8. Calculate the new improvement factor and prepare for the next iteration.
-    pub fn run_body(&mut self, simulation_result: &Mutex<SimulationResult<T>>,
-            iteration_counter: u32) {
+    pub fn run_body(&mut self) {
         // First check if reset limit is reached
         if self.reset_limit_end > 0 {
             self.reset_counter += 1;
@@ -89,64 +91,49 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
                 self.reset_limit += self.reset_limit_increment;
                 if self.reset_limit >= self.reset_limit_end {
                     self.reset_limit = self.reset_limit_start;
-                    println!("reset_limit reset to reset_limit_start: {}, id: {}", self.reset_limit_start, self.id);
+                    info!("reset_limit reset to reset_limit_start: {}, id: {}", self.reset_limit_start, self.id);
                 }
                 self.reset_counter = 0;
-                println!("new reset_limit: {}, id: {}", self.reset_limit, self.id);
+                info!("new reset_limit: {}, id: {}", self.reset_limit, self.id);
 
                 // Kill all individuals since we are most likely stuck in a local minimum.
                 // Why is it so ? Because the simulation is still running!
                 // Keep number of mutations.
                 for wrapper in &mut self.population {
-                    wrapper.individual = Individual::new();
+                    wrapper.individual.reset();
                     wrapper.fitness = wrapper.individual.calculate_fitness();
                 }
             }
         }
 
-        // Keep original population
+        // Keep original population.
         let orig_population = self.population.clone();
 
         // Mutate population
         for wrapper in &mut self.population {
             for _ in 0..wrapper.num_of_mutations {
+                // Maybe add super optimization ?
+                // See https://github.com/willi-kappler/darwin-rs/issues/10
                 wrapper.individual.mutate();
             }
             wrapper.fitness = wrapper.individual.calculate_fitness();
         }
 
-        // Append original (unmutated) population to new (mutated) population
+        // Append original (unmutated) population to new (mutated) population.
         self.population.extend(orig_population.iter().cloned());
 
         // Sort by fitness
+        // Use random choice, see https://github.com/willi-kappler/darwin-rs/issues/7
         self.population.sort();
 
-        // Reduce population to original length
+        // Reduce population to original length.
         self.population.truncate(self.num_of_individuals as usize);
 
-        // Restore original number of mutation rate, since these will be lost because of sorting
+        // Restore original number of mutation rate, since these will be lost because of sorting.
         for (individual, orig_individual) in self.population
             .iter_mut()
             .zip(orig_population.iter()) {
             individual.num_of_mutations = orig_individual.num_of_mutations;
         }
-
-        match simulation_result.lock() {
-            Ok(mut simulation_result) => {
-                // Check if we have new fittest individual and store it globally
-                if self.population[0].fitness < simulation_result.fittest[0].fitness {
-                    // Insert it to the first position (at index 0) so that the order of fitness
-                    // is preserved (fittest at index 0, then decreasing fitness).
-                    simulation_result.fittest.insert(0, self.population[0].clone());
-                    println!("{}: new fittest: {}, id: {}",
-                             iteration_counter, simulation_result.fittest[0].fitness, self.id);
-                }
-
-                simulation_result.improvement_factor = simulation_result.fittest[0].fitness / simulation_result.original_fitness;
-            },
-            Err(e) => println!("Mutex (poison) error (simulation_result): {}, id: {}", e, self.id)
-        }
-        // No need to unlock simulation_result, since it goes out of scope and then
-        // drop() (= destructor) is called automatically.
     }
 }

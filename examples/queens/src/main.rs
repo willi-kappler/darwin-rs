@@ -3,14 +3,16 @@
 // using an evolutionary algorithm.
 
 extern crate rand;
+extern crate simplelog;
 
 // internal crates
 extern crate darwin_rs;
 
 use rand::Rng;
+use simplelog::{SimpleLogger, LogLevelFilter};
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
 
 #[derive(Debug, Clone)]
 struct Queens {
@@ -73,24 +75,51 @@ fn find_collisions(board: &[u8], row: usize, col: usize) -> u8 {
     num_of_collisions
 }
 
-// implement trait functions mutate and calculate_fitness:
-impl Individual for Queens {
-    fn new() -> Queens {
-        Queens {
-            // Start with all queens in one row
-            board: vec![
-                1,1,1,1,1,1,1,1,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-            ],
-        }
+fn make_population(count: u32) -> Vec<Queens> {
+    let mut result = Vec::new();
+
+    for _ in 0..count {
+        result.push(
+            Queens {
+                // Start with all queens in one row
+                board: vec![
+                    1,1,1,1,1,1,1,1,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                ]
+            }
+        );
     }
 
+    result
+}
+
+fn make_all_populations(individuals: u32, populations: u32) -> Vec<Population<Queens>> {
+    let mut result = Vec::new();
+
+    let initial_population = make_population(individuals);
+
+    for i in 1..(populations + 1) {
+        let pop = PopulationBuilder::<Queens>::new()
+            .set_id(i)
+            .initial_population(&initial_population)
+            .increasing_exp_mutation_rate(((100 + i) as f64) / 100.0)
+            .reset_limit_end(0) // disable the resetting of all individuals
+            .finalize().unwrap();
+
+        result.push(pop);
+    }
+
+    result
+}
+
+// implement trait functions mutate and calculate_fitness:
+impl Individual for Queens {
     fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
 
@@ -113,7 +142,7 @@ impl Individual for Queens {
     }
 
     // fitness means here: how many queens are colliding
-    fn calculate_fitness(&self) -> f64 {
+    fn calculate_fitness(&mut self) -> f64 {
         let mut num_of_collisions = 0;
 
         for row in 0..8 {
@@ -127,46 +156,30 @@ impl Individual for Queens {
 
         num_of_collisions as f64
     }
+
+    fn reset(&mut self) {
+        self.board = vec![
+            1,1,1,1,1,1,1,1,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+        ];
+    }
 }
 
 fn main() {
     println!("Darwin test: queens problem");
 
-    let population1 = PopulationBuilder::<Queens>::new()
-        .set_id(1)
-        .individuals(100)
-        .increasing_exp_mutation_rate(1.03)
-        .reset_limit_end(0) // disable the resetting of all individuals
-        .finalize().unwrap();
-
-    let population2 = PopulationBuilder::<Queens>::new()
-        .set_id(2)
-        .individuals(100)
-        .increasing_exp_mutation_rate(1.04)
-        .reset_limit_end(0) // disable the resetting of all individuals
-        .finalize().unwrap();
-
-    let population3 = PopulationBuilder::<Queens>::new()
-        .set_id(3)
-        .individuals(100)
-        .increasing_exp_mutation_rate(1.05)
-        .reset_limit_end(0) // disable the resetting of all individuals
-        .finalize().unwrap();
-
-    let population4 = PopulationBuilder::<Queens>::new()
-        .set_id(4)
-        .individuals(100)
-        .increasing_exp_mutation_rate(1.06)
-        .reset_limit_end(0) // disable the resetting of all individuals
-        .finalize().unwrap();
+    let _ = SimpleLogger::init(LogLevelFilter::Info);
 
     let queens = SimulationBuilder::<Queens>::new()
         .fitness(0.0)
         .threads(2)
-        .add_population(population1)
-        .add_population(population2)
-        .add_population(population3)
-        .add_population(population4)
+        .add_multiple_populations(make_all_populations(100, 8))
         .finalize();
 
     match queens {

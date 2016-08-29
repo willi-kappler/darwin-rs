@@ -2,21 +2,20 @@
 //!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.2 (2016.08.17)
+//! Written by Willi Kappler, Version 0.3 (2016.08.29)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
 //! License: MIT
 //!
 //! This library allows you to write evolutionary algorithms (EA) in Rust.
-//! Examples provided: TSP, Sudoku, Queens Problem
+//! Examples provided: TSP, Sudoku, Queens Problem, OCR
 //!
 //!
 
 use std::time::Instant;
-use std::sync::Mutex;
 
-use jobsteal::{make_pool, IntoSpliterator, Spliterator};
+use jobsteal::make_pool;
 
 use individual::{Individual, IndividualWrapper};
 use population::Population;
@@ -29,11 +28,11 @@ pub enum SimulationType {
     /// Finish the simulation when a specific fitness is rached.
     /// That means if at least one of the individuals has this fitness.
     /// The fitness is calculated using the implemented `calculate_fitness` functions
-    /// of the `Individual` trait
+    /// of the `Individual` trait.
     EndFitness(f64),
     /// Finish the simulation when a specific improvement factor is reached.
     /// That means the relation between the very first fitness and the current fitness of the
-    /// fittest individual
+    /// fittest individual.
     EndFactor(f64),
 }
 
@@ -50,8 +49,11 @@ pub struct Simulation<T: Individual + Send + Sync> {
     /// finished.
     pub total_time_in_ms: f64,
     /// The result of the simulation: `improvement_factor`, `original_fitness` and a vector of
-    /// fittest individuals
-    pub simulation_result: SimulationResult<T>
+    /// fittest individuals.
+    pub simulation_result: SimulationResult<T>,
+    /// If this feature is enabled, then the most fittest individual of all populations is
+    /// shared between all the populations.
+    pub share_fittest: bool
 }
 
 /// The `SimulationResult` Type. Holds the simulation results:
@@ -67,11 +69,12 @@ pub struct SimulationResult<T: Individual + Send + Sync> {
     /// Vector of fittest individuals. This will change during the simulation as soon as a new
     /// more fittest individual is found and pushed into the first position (index 0).
     pub fittest: Vec<IndividualWrapper<T>>,
-    /// How many iteration did the simulation run
+    /// How many iteration did the simulation run.
     pub iteration_counter: u32
 }
 
-/// This implements the two functions `run` and `print_fitness` for the struct `Simulation`.
+/// This implements the the functions `run`, `print_fitness` and `update_results` (private)
+/// for the struct `Simulation`.
 impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// This actually runs the simulation.
     /// Depending on the type of simulation (`EndIteration`, `EndFactor` or `EndFitness`)
@@ -92,90 +95,67 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         // - The fittest individual.
         // - The fitness at the beginning of the simulation. This is uesed to calculate the
         //   overall improvement later on.
-        let simulation_result = SimulationResult {
+        self.simulation_result = SimulationResult {
             improvement_factor: 0.0,
             original_fitness: self.habitat[0].population[0].fitness,
             fittest: vec![self.habitat[0].population[0].clone()],
             iteration_counter: 0
         };
 
-        println!("original_fitness: {}", simulation_result.original_fitness);
-
-        let simulation_result_mutex = Mutex::new(simulation_result);
+        info!("original_fitness: {}", self.simulation_result.original_fitness);
 
         // Check which type of simulation to run.
         match self.type_of_simulation {
             SimulationType::EndIteration(end_iteration) => {
-                for iteration_counter in 0..end_iteration {
-                    (&mut self.habitat).into_split_iter().for_each(
-                        &pool.spawner(), |population| {
-                            population.run_body(&simulation_result_mutex, iteration_counter);
+                for _ in 0..end_iteration {
+                    pool.scope(|scope|
+                        for population in &mut self.habitat {
+                            scope.submit(move || { population.run_body() });
                         });
+
+                    self.update_results();
                 };
-                match simulation_result_mutex.lock() {
-                    Ok(simulation_result) => {
-                        self.simulation_result = (*simulation_result).clone();
-                        self.simulation_result.iteration_counter = end_iteration;
-                    },
-                    Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
-                }
+                self.simulation_result.iteration_counter = end_iteration;
             }
+
             SimulationType::EndFactor(end_factor) => {
                 loop {
-                    match simulation_result_mutex.lock() {
-                        Ok(simulation_result) => {
-                            if simulation_result.improvement_factor <= end_factor {
-                                break;
-                            }
-                        },
-                        Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
-                    }
-
                     iteration_counter += 1;
-                    (&mut self.habitat).into_split_iter().for_each(
-                        &pool.spawner(), |population| {
-                            population.run_body(&simulation_result_mutex, iteration_counter);
+                    pool.scope(|scope|
+                        for population in &mut self.habitat {
+                            scope.submit(move || { population.run_body() });
                         });
+
+                    self.update_results();
+
+                    if self.simulation_result.improvement_factor <= end_factor {
+                        break;
+                    }
                 };
-                match simulation_result_mutex.lock() {
-                    Ok(simulation_result) => {
-                        self.simulation_result = (*simulation_result).clone();
-                        self.simulation_result.iteration_counter = iteration_counter;
-                    },
-                    Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
-                }
+                self.simulation_result.iteration_counter = iteration_counter;
             }
+
             SimulationType::EndFitness(end_fitness) => {
                 loop {
-                    match simulation_result_mutex.lock() {
-                        Ok(simulation_result) => {
-                            if simulation_result.fittest[0].fitness <= end_fitness {
-                                break;
-                            }
-                        },
-                        Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
-                    }
-
                     iteration_counter += 1;
-                    (&mut self.habitat).into_split_iter().for_each(
-                        &pool.spawner(), |population| {
-                            population.run_body(&simulation_result_mutex, iteration_counter);
+                    pool.scope(|scope|
+                        for population in &mut self.habitat {
+                            scope.submit(move || { population.run_body() });
                         });
+
+                    self.update_results();
+
+                    if self.simulation_result.fittest[0].fitness <= end_fitness {
+                        break;
+                    }
                 };
-                match simulation_result_mutex.lock() {
-                    Ok(simulation_result) => {
-                        self.simulation_result = (*simulation_result).clone();
-                        self.simulation_result.iteration_counter = iteration_counter;
-                    },
-                    Err(e) => println!("Mutex (poison) error (simulation_result): {}", e)
-                }
+                self.simulation_result.iteration_counter = iteration_counter;
             }
-        }
+        } // End of match
 
         let elapsed = start_time.elapsed();
 
         self.total_time_in_ms = elapsed.as_secs() as f64 * 1000.0 + elapsed.subsec_nanos() as f64 / 1000_000.0;
-
     }
 
     /// This is a helper function that the user can call after the simulation stops in order to
@@ -183,8 +163,45 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
     /// improvement.
     pub fn print_fitness(&self) {
         for wrapper in &self.simulation_result.fittest {
-            println!("fitness: {}, num_of_mutations: {}, population: {}",
+            info!("fitness: {}, num_of_mutations: {}, population: {}",
                      wrapper.fitness, wrapper.num_of_mutations, wrapper.id);
         }
+    }
+
+    /// Update the internal state of the simulation: Has a new fittest individual been found ?
+    /// Do we want to share it across all the other populations ?
+    /// Also calculates the improvement factor.
+    fn update_results(&mut self) {
+        // Determine the fittest individual of all populations.
+        let mut new_fittest_found = false;
+
+        for population in &mut self.habitat {
+            if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
+                new_fittest_found = true;
+                self.simulation_result.fittest.insert(0, population.population[0].clone());
+                // Keep at most 10 individuals, TODO: make this number user configurable.
+                // See https://github.com/willi-kappler/darwin-rs/issues/12
+                self.simulation_result.fittest.truncate(10);
+                population.fitness_counter += 1;
+                info!("new fittest: fitness: {}, population id: {}, counter: {}", population.population[0].fitness,
+                    population.id, population.fitness_counter);
+                // Call methond `new_fittest_found` of the newly found fittest individual.
+                // The default implementation for this method does nothing.
+                population.population[0].individual.new_fittest_found();
+            }
+        }
+
+        // Now copy the most fittest individual back to each population
+        // if the user has specified it.
+        if self.share_fittest && new_fittest_found {
+            for population in &mut self.habitat {
+                population.population[0] = self.simulation_result.fittest[0].clone();
+            }
+        }
+
+        self.simulation_result.improvement_factor =
+            self.simulation_result.fittest[0].fitness /
+            self.simulation_result.original_fitness;
+
     }
 }

@@ -2,14 +2,14 @@
 //!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.2 (2016.08.17)
+//! Written by Willi Kappler, Version 0.3 (2016.08.29)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
 //! License: MIT
 //!
 //! This library allows you to write evolutionary algorithms (EA) in Rust.
-//! Examples provided: TSP, Sudoku, Queens Problem
+//! Examples provided: TSP, Sudoku, Queens Problem, OCR
 //!
 //!
 
@@ -20,6 +20,8 @@ use population::Population;
 
 /// This is a helper struct in order to build (configure) a valid population.
 /// See builder pattern: https://en.wikipedia.org/wiki/Builder_pattern
+///
+/// Maybe use phantom types, see https://github.com/willi-kappler/darwin-rs/issues/9
 pub struct PopulationBuilder<T: Individual> {
     /// The actual simulation
     population: Population<T>,
@@ -37,14 +39,14 @@ quick_error! {
 
 pub type Result<T> = std::result::Result<Population<T>, PopError>;
 
-/// This implementation contains all the helper method to build (configure) a valid population
-impl<T: Individual> PopulationBuilder<T> {
+/// This implementation contains all the helper method to build (configure) a valid population.
+impl<T: Individual + Clone> PopulationBuilder<T> {
     /// Start with this method, it must always be called as the first one.
     /// It creates a default population with some dummy (but invalid) values.
     pub fn new() -> PopulationBuilder<T> {
         PopulationBuilder {
             population: Population {
-                num_of_individuals: 10,
+                num_of_individuals: 0,
                 population: Vec::new(),
                 reset_limit: 0,
                 reset_limit_start: 1000,
@@ -52,17 +54,18 @@ impl<T: Individual> PopulationBuilder<T> {
                 reset_limit_increment: 1000,
                 reset_counter: 0,
                 id: 1,
+                fitness_counter: 0
             }
         }
     }
 
-    /// Sets the number of individuals and creates the population, must be >= 3
-    pub fn individuals(mut self, individuals: u32) -> PopulationBuilder<T> {
-        self.population.num_of_individuals = individuals;
+    /// Sets the initial population provided inside a vector, length must be >= 3
+    pub fn initial_population(mut self, individuals: &[T]) -> PopulationBuilder<T> {
+        self.population.num_of_individuals = individuals.len() as u32;
 
-        for _ in 0..individuals {
+        for individual in individuals {
             self.population.population.push(IndividualWrapper {
-                individual: Individual::new(),
+                individual: (*individual).clone(),
                 fitness: std::f64::MAX,
                 num_of_mutations: 1,
                 id: self.population.id,
@@ -106,7 +109,7 @@ impl<T: Individual> PopulationBuilder<T> {
     /// population: This allows to specify an arbitrary mutation scheme for each individual.
     /// The number of rates must be equal to the number of individuals.
     pub fn mutation_rate(mut self, mutation_rate: Vec<u32>) -> PopulationBuilder<T> {
-        // TODO: better PopError handling
+        // TODO: better error handling
         assert!(self.population.population.len() == mutation_rate.len());
 
         for (individual, mutation_rate) in self.population
@@ -125,6 +128,7 @@ impl<T: Individual> PopulationBuilder<T> {
     /// counter is set back to zero. Default value for reset_limit_start is 1000.
     pub fn reset_limit_start(mut self, reset_limit_start: u32) -> PopulationBuilder<T> {
         self.population.reset_limit_start = reset_limit_start;
+        self.population.reset_limit = reset_limit_start;
         self
     }
 
@@ -138,13 +142,13 @@ impl<T: Individual> PopulationBuilder<T> {
     }
 
     /// Configure the increment for the reset_limit. If the reset_limit is reached, its value
-    /// is incrementet by the amount of reset_limit_increment
+    /// is incrementet by the amount of reset_limit_increment.
     pub fn reset_limit_increment(mut self, reset_limit_increment: u32) -> PopulationBuilder<T> {
         self.population.reset_limit_increment = reset_limit_increment;
         self
     }
 
-    /// Set the population id. Currently this is only used for statistics
+    /// Set the population id. Currently this is only used for statistics.
     pub fn set_id(mut self, id: u32) -> PopulationBuilder<T> {
         for individual in &mut self.population.population {
             individual.id = id;
