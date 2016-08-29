@@ -94,7 +94,7 @@ let population1 = PopulationBuilder::<MyStruct>::new()
 
 
 let population2 = PopulationBuilder::<MyStruct>::new()
-    .set_id(1)
+    .set_id(2)
     .initial_population(&my_pop)
     .increasing_exp_mutation_rate(1.04)
     .reset_limit_increment(200)
