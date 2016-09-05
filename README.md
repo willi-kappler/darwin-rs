@@ -172,6 +172,7 @@ See also the example folder for full working programs.
 # Used crates:
 - [jobsteal](https://github.com/rphmeier/jobsteal): parallelization
 - [quick-error](https://github.com/tailhook/quick-error): easy error type creation
+- [log](https://github.com/rust-lang-nursery/log): use loggin mechanism instead of ```println!()```
 
 # Similar crates:
 - [genetic-files](https://github.com/vadixidav/genetic-files)
