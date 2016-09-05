@@ -182,5 +182,6 @@ See also the example folder for full working programs.
 - [parasailors](https://github.com/dikaiosune/parasailors)
 - [random-wheel-rs](https://github.com/Kerosene2000/random-wheel-rs)
 - [roulette-wheel-rs](https://github.com/Kerosene2000/roulette-wheel-rs)
+- [differential-evolution-rs](https://github.com/martinus/differential-evolution-rs)
 
 Any feedback is welcome!
