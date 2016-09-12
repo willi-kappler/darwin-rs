@@ -13,3 +13,6 @@ rusttype = "0.2"
 simplelog = "0.2"
 
 darwin-rs = {path = "../../../darwin-rs"}
+
+[profile.release]
+lto = true
