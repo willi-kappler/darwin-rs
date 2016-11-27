@@ -56,7 +56,7 @@ fn make_all_populations<'a>(individuals: u32, config: &OCRConfig<'a>, population
         let pop = PopulationBuilder::<OCRItem>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((50 + i) as f64) / 50.0)
+            .mutation_rate((1..10).cycle().take(individuals as usize).collect())
             .reset_limit_end(0)
             .finalize().unwrap();
         result.push(pop);
@@ -205,8 +205,8 @@ fn main() {
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
-        .threads(7)
-        .add_multiple_populations(make_all_populations(10, &ocr_config, num_populations as u32))
+        .threads(16)
+        .add_multiple_populations(make_all_populations(16, &ocr_config, num_populations as u32))
         .share_fittest()
         .finalize();
 

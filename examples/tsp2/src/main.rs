@@ -55,7 +55,7 @@ fn make_all_populations(individuals: u32, populations: u32, cities: &Vec<(f64, f
         let pop = PopulationBuilder::<CityItem>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((100 + i) as f64) / 100.0)
+            .mutation_rate((1..10).cycle().take(individuals as usize).collect())
             .reset_limit_increment(100 * i)
             .reset_limit_start(100 * i)
             .reset_limit_end(1000 * i)

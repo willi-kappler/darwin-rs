@@ -17,7 +17,7 @@ extern crate simplelog;
 extern crate darwin_rs;
 
 use std::sync::Arc;
-use rand::Rng;
+use rand::{Rng, sample};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -55,12 +55,15 @@ fn make_all_populations1<'a>(individuals: u32, config: &OCRConfig<'a>, populatio
 
     let initial_population = make_population(individuals, &config);
 
+    let mut rng = rand::thread_rng();
+
     for i in 1..(populations + 1) {
 
         let mut pop = PopulationBuilder::<OCRItem>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((500 + i) as f64) / 500.0);
+            .mutation_rate(sample(&mut rng, 1..100000, individuals as usize));
+//            .mutation_rate((1000..7000).cycle().take(individuals as usize).collect());
 
         if i == populations {
             // Special case for the last popilation
@@ -357,8 +360,8 @@ fn main() {
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
-        .threads(7)
-        .add_multiple_populations(make_all_populations1(50, &ocr_config, num_populations as u32))
+        .threads(16)
+        .add_multiple_populations(make_all_populations1(16, &ocr_config, num_populations as u32))
         .share_fittest()
         .finalize();
 

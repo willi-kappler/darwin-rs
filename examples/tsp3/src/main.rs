@@ -7,6 +7,7 @@
 
 extern crate rand;
 extern crate simplelog;
+#[macro_use] extern crate clap;
 
 // Internal crates
 extern crate darwin_rs;
@@ -14,6 +15,7 @@ extern crate darwin_rs;
 use std::sync::Arc;
 use rand::Rng;
 use simplelog::{SimpleLogger, LogLevelFilter};
+use clap::{Arg, App};
 
 // Internal modules
 use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
@@ -86,10 +88,32 @@ impl Individual for CityItem {
             index2 = rng.gen_range(1, self.cities.len());
         }
 
-        // Here we just swap the two indices. Compare this to example/tsp2 where we have
-        // a second mutation operation and the results are much better.
+        // Compared to examples/tsp/ here we add a second operation:
+        // Additionaly to swaping indices we also rotate (shift) items around.
+        // And just by adding this second mutation operation, the resulst converge
+        // much faster to the optimum.
+        // You can add a third operation her if you want (for ex. mirrorig), or
+        // try to leave the swap opersion out, just to see if it runs better.
 
-        self.path.swap(index1, index2);
+        // Choose mutate operation
+        let operation: u8 = rng.gen_range(0, 2);
+
+        match operation {
+            0 => {
+                // Just swap two positions
+                self.path.swap(index1, index2);
+            },
+            1 => {
+                // Rotate (shift) items
+                let tmp = self.path.remove(index1);
+                self.path.insert(index2, tmp);
+            },
+            2 => {
+                // Add your new operation here, for ex. mirror between index1 and index2:
+
+            },
+            _ => println!("unknown operation: {}", operation),
+        }
     }
 
     // fitness means here: the length of the route, the shorter the better
@@ -117,38 +141,79 @@ impl Individual for CityItem {
     }
 }
 
+fn load_cities(file_name: Option<&str>) -> Vec<(f64, f64)> {
+    if let Some(file_name) = file_name {
+        vec![]
+    } else {
+        vec![(2.852197810188428, 90.31966506130796),
+              (33.62874999956513, 44.9790462485413),
+              (22.064901432163996, 83.9172876840628),
+              (20.595912954825923, 12.798762916676043),
+              (42.2234133639806, 88.41646877787616),
+              (94.18533963242542, 21.151217108254627),
+              (25.84671166792939, 63.707153428189514),
+              (13.051898250315553, 89.61945656056766),
+              (76.41370000896038, 97.20491253636689),
+              (18.832993288649792, 6.006559110093601),
+              (96.98045791932294, 72.23019966333018),
+              (71.93203564171793, 93.03998204972012),
+              (33.39161715459793, 5.13372283892819),
+              (25.23072873231501, 67.1123015383591),
+              (84.38812085016241, 90.80055533944926),
+              (29.20345964254656, 21.17642854392676),
+              (58.11390834674495, 66.93322778502613),
+              (22.070195932187254, 59.73489434853766),
+              (86.29060211377086, 83.14129496517567),
+              (55.760857794890796, 26.95947234362994)]
+    }
+}
+
 fn main() {
     println!("Darwin test: traveling salesman problem");
 
     let _ = SimpleLogger::init(LogLevelFilter::Info);
 
-    let cities = vec![(2.852197810188428, 90.31966506130796),
-                      (33.62874999956513, 44.9790462485413),
-                      (22.064901432163996, 83.9172876840628),
-                      (20.595912954825923, 12.798762916676043),
-                      (42.2234133639806, 88.41646877787616),
-                      (94.18533963242542, 21.151217108254627),
-                      (25.84671166792939, 63.707153428189514),
-                      (13.051898250315553, 89.61945656056766),
-                      (76.41370000896038, 97.20491253636689),
-                      (18.832993288649792, 6.006559110093601),
-                      (96.98045791932294, 72.23019966333018),
-                      (71.93203564171793, 93.03998204972012),
-                      (33.39161715459793, 5.13372283892819),
-                      (25.23072873231501, 67.1123015383591),
-                      (84.38812085016241, 90.80055533944926),
-                      (29.20345964254656, 21.17642854392676),
-                      (58.11390834674495, 66.93322778502613),
-                      (22.070195932187254, 59.73489434853766),
-                      (86.29060211377086, 83.14129496517567),
-                      (55.760857794890796, 26.95947234362994)];
+    let matches = App::new("My Super Program")
+        .version("0.1")
+        .author("Willi Kappler")
+        .about("Solves TSP (traveling salesman problem)")
+        .arg(Arg::with_name("input_file")
+            .short("f")
+            .help("Sets the input file")
+            .takes_value(true))
+        .arg(Arg::with_name("end_fitness")
+            .short("e")
+            .help("Sets the end fitness criteria")
+            .takes_value(true))
+        .arg(Arg::with_name("num_of_threads")
+            .short("t")
+            .help("Sets the number of threads to use")
+            .takes_value(true))
+        .arg(Arg::with_name("num_of_populations")
+            .short("p")
+            .help("Sets the number of populations to use")
+            .takes_value(true))
+        .arg(Arg::with_name("num_of_individuals")
+            .short("i")
+            .help("Sets the number of individuals to use")
+            .takes_value(true))
+        .get_matches();
+
+    let cities = load_cities(matches.value_of("input_file"));
+
+    let end_fitness = value_t!(matches.value_of("end_fitness"), f64).unwrap_or(500.0);
+    let num_of_threads = value_t!(matches.value_of("num_of_threads"), usize).unwrap_or(4);
+    let num_of_populations = value_t!(matches.value_of("num_of_populations"), u32).unwrap_or(4);
+    let num_of_individuals = value_t!(matches.value_of("num_of_individuals"), u32).unwrap_or(100);
+
 
     let tsp = SimulationBuilder::<CityItem>::new()
-        // .factor(0.34)
-        .fitness(459.0)
-        .threads(4)
-        .add_multiple_populations(make_all_populations(100, 8, &cities))
-        .finalize();
+          // .factor(0.34)
+          .fitness(end_fitness)
+          .threads(num_of_threads)
+          .add_multiple_populations(make_all_populations(num_of_individuals, num_of_populations, &cities))
+          .finalize();
+
 
     match tsp {
         Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
@@ -169,7 +234,6 @@ fn main() {
                 tsp_simulation.simulation_result.improvement_factor);
             println!("number of iterations: {}",
                 tsp_simulation.simulation_result.iteration_counter);
-
         }
     }
 }

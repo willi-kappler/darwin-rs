@@ -108,7 +108,7 @@ fn make_all_populations(individuals: u32, populations: u32) -> Vec<Population<Qu
         let pop = PopulationBuilder::<Queens>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((100 + i) as f64) / 100.0)
+            .mutation_rate((1..10).cycle().take(individuals as usize).collect())
             .reset_limit_end(0) // disable the resetting of all individuals
             .finalize().unwrap();
 

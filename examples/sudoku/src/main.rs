@@ -122,7 +122,7 @@ fn make_all_populations(individuals: u32, populations: u32) -> Vec<Population<Su
         let pop = PopulationBuilder::<Sudoku>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((300 + i) as f64) / 300.0)
+            .mutation_rate((1..10).cycle().take(individuals as usize).collect())
             .finalize().unwrap();
 
         result.push(pop);
