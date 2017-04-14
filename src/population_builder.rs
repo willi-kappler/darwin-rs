@@ -27,17 +27,12 @@ pub struct PopulationBuilder<T: Individual> {
     population: Population<T>,
 }
 
-quick_error! {
-    #[derive(Debug)]
-    pub enum PopError {
-        /// The number of individuals is too low, should be >= 3
-        IndividualsTooLow {}
-        /// `reset_limit_start` must be greater than `reset_limit_end`
-        LimitEndTooLow {}
+error_chain! {
+    errors {
+        IndividualsTooLow
+        LimitEndTooLow
     }
 }
-
-pub type Result<T> = std::result::Result<Population<T>, PopError>;
 
 /// This implementation contains all the helper method to build (configure) a valid population.
 impl<T: Individual + Clone> PopulationBuilder<T> {
@@ -160,14 +155,14 @@ impl<T: Individual + Clone> PopulationBuilder<T> {
 
     /// This checks the configuration of the simulation and returns an PopError or Ok if no PopErrors
     /// where found.
-    pub fn finalize(self) -> Result<T> {
+    pub fn finalize(self) -> Result<Population<T>> {
         match self.population {
             Population { num_of_individuals: 0...2, ..} => {
-                Err(PopError::IndividualsTooLow)
+                Err(ErrorKind::IndividualsTooLow.into())
             }
             Population { reset_limit_start: start,
                          reset_limit_end: end, ..} if (end > 0) && (start >= end) => {
-                Err(PopError::LimitEndTooLow)
+                Err(ErrorKind::LimitEndTooLow.into())
             }
             _ => Ok(self.population)
         }

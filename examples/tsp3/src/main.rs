@@ -18,7 +18,7 @@ use simplelog::{SimpleLogger, LogLevelFilter};
 use clap::{Arg, App};
 
 // Internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 fn city_distance(city: &[(f64, f64)], index1: usize, index2: usize) -> f64 {
     let (x1, y1) = city[index1];
@@ -216,7 +216,8 @@ fn main() {
 
 
     match tsp {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 

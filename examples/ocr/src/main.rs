@@ -27,7 +27,7 @@ use simplelog::{SimpleLogger, LogLevelFilter};
 use std::str;
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
     let mut result = Vec::new();
@@ -211,7 +211,8 @@ fn main() {
         .finalize();
 
     match ocr_builder {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut ocr_simulation) => {
             ocr_simulation.run();
 

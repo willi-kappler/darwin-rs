@@ -53,7 +53,14 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub simulation_result: SimulationResult<T>,
     /// If this feature is enabled, then the most fittest individual of all populations is
     /// shared between all the populations.
-    pub share_fittest: bool
+    pub share_fittest: bool,
+    /// The total number of global fittest individual to keep, default: 10
+    /// After each interation the most fittest individual of all populations is determinded.
+    /// And this individual is copied into a global "high score list" of the whole simulation,
+    /// if it is better then the highest entry.
+    /// This number specifies how many of these global individuals should be kept.
+    /// (i.e. the size of the "high score list")
+    pub num_of_global_fittest: usize
 }
 
 /// The `SimulationResult` Type. Holds the simulation results:
@@ -179,9 +186,8 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
             if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
                 new_fittest_found = true;
                 self.simulation_result.fittest.insert(0, population.population[0].clone());
-                // Keep at most 10 individuals, TODO: make this number user configurable.
                 // See https://github.com/willi-kappler/darwin-rs/issues/12
-                self.simulation_result.fittest.truncate(10);
+                self.simulation_result.fittest.truncate(self.num_of_global_fittest);
                 population.fitness_counter += 1;
                 info!("new fittest: fitness: {}, population id: {}, counter: {}", population.population[0].fitness,
                     population.id, population.fitness_counter);

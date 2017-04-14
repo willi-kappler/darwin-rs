@@ -13,7 +13,7 @@ use rand::Rng;
 use simplelog::{SimpleLogger, LogLevelFilter};
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
 fn fitness_of_one_cell(sudoku: &[u8], row: usize, col: usize) -> f64 {
@@ -199,7 +199,8 @@ fn main() {
         .finalize();
 
     match sudoku {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut sudoku_simulation) => {
             sudoku_simulation.run();
 

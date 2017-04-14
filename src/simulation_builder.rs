@@ -28,15 +28,11 @@ pub struct SimulationBuilder<T: Individual + Send + Sync> {
     simulation: Simulation<T>,
 }
 
-quick_error! {
-    #[derive(Debug)]
-    pub enum SimError {
-        /// The number of iteration is too low, should be >= 10
-        EndIterationTooLow {}
+error_chain! {
+    errors {
+        EndIterationTooLow
     }
 }
-
-pub type Result<T> = std::result::Result<Simulation<T>, SimError>;
 
 /// This implementation contains all the helper method to build (configure) a valid simulation.
 impl<T: Individual + Send + Sync> SimulationBuilder<T> {
@@ -55,7 +51,8 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
                     fittest: Vec::new(),
                     iteration_counter: 0
                 },
-                share_fittest: false
+                share_fittest: false,
+                num_of_global_fittest: 10
             },
         }
     }
@@ -108,12 +105,18 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
         self
     }
 
+    /// How many global fittest should be kept ? (The size of the "high score list")
+    pub fn num_of_global_fittest(mut self, num_of_global_fittest: usize) -> SimulationBuilder<T> {
+        self.simulation.num_of_global_fittest = num_of_global_fittest;
+        self
+    }
+
     /// This checks the configuration of the simulation and returns an error or Ok if no errors
     /// where found.
-    pub fn finalize(self) -> Result<T> {
+    pub fn finalize(self) -> Result<Simulation<T>> {
         match self.simulation {
             Simulation { type_of_simulation: SimulationType::EndIteration(0...9), .. } => {
-                Err(SimError::EndIterationTooLow)
+                Err(ErrorKind::EndIterationTooLow.into())
             }
             _ => Ok(self.simulation),
         }
