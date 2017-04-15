@@ -2,7 +2,7 @@
 //!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.3 (2016.08.29)
+//! Written by Willi Kappler, Version 0.4 (2017.??)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -60,7 +60,13 @@ pub struct Simulation<T: Individual + Send + Sync> {
     /// if it is better then the highest entry.
     /// This number specifies how many of these global individuals should be kept.
     /// (i.e. the size of the "high score list")
-    pub num_of_global_fittest: usize
+    pub num_of_global_fittest: usize,
+    /// Do not output every time a new fittest individual is found, only every nth times.
+    /// n == output_every
+    pub output_every: u32,
+    /// Counter that will be incremented every iteration. If output_every_counter > output_every then
+    /// the new fittest individual will be written to the log.
+    pub output_every_counter: u32
 }
 
 /// The `SimulationResult` Type. Holds the simulation results:
@@ -182,6 +188,10 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         // Determine the fittest individual of all populations.
         let mut new_fittest_found = false;
 
+        // Increment the output counter
+        // If the max value output_every is reached, only then write an output
+        self.output_every_counter += 1;
+
         for population in &mut self.habitat {
             if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
                 new_fittest_found = true;
@@ -189,8 +199,11 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
                 // See https://github.com/willi-kappler/darwin-rs/issues/12
                 self.simulation_result.fittest.truncate(self.num_of_global_fittest);
                 population.fitness_counter += 1;
-                info!("new fittest: fitness: {}, population id: {}, counter: {}", population.population[0].fitness,
-                    population.id, population.fitness_counter);
+                if self.output_every_counter >= self.output_every {
+                    info!("new fittest: fitness: {}, population id: {}, counter: {}", population.population[0].fitness,population.id,
+                        population.fitness_counter);
+                    self.output_every_counter = 0
+                }
                 // Call methond `new_fittest_found` of the newly found fittest individual.
                 // The default implementation for this method does nothing.
                 population.population[0].individual.new_fittest_found();

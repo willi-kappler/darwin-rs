@@ -2,7 +2,7 @@
 //!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.3 (2016.08.29)
+//! Written by Willi Kappler, Version 0.4 (2017.??)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -52,7 +52,9 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
                     iteration_counter: 0
                 },
                 share_fittest: false,
-                num_of_global_fittest: 10
+                num_of_global_fittest: 10,
+                output_every: 10,
+                output_every_counter: 0
             },
         }
     }
@@ -108,6 +110,13 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     /// How many global fittest should be kept ? (The size of the "high score list")
     pub fn num_of_global_fittest(mut self, num_of_global_fittest: usize) -> SimulationBuilder<T> {
         self.simulation.num_of_global_fittest = num_of_global_fittest;
+        self
+    }
+
+    /// Do not output every time a new individual is found, only every nth time.
+    /// n == output_every
+    pub fn output_every(mut self, output_every: u32) -> SimulationBuilder<T> {
+        self.simulation.output_every = output_every;
         self
     }
 
