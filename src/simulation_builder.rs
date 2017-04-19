@@ -54,7 +54,9 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
                 share_fittest: false,
                 num_of_global_fittest: 10,
                 output_every: 10,
-                output_every_counter: 0
+                output_every_counter: 0,
+                share_every: 10,
+                share_counter: 0
             },
         }
     }
@@ -117,6 +119,13 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     /// n == output_every
     pub fn output_every(mut self, output_every: u32) -> SimulationBuilder<T> {
         self.simulation.output_every = output_every;
+        self
+    }
+
+    /// If share fittest is enabled and the number share_every of iteration has passed then
+    /// the fittest individual is shared between all populations
+    pub fn share_every(mut self, share_every: u32) -> SimulationBuilder<T> {
+        self.simulation.share_every = share_every;
         self
     }
 

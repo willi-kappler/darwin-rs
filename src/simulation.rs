@@ -66,7 +66,13 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub output_every: u32,
     /// Counter that will be incremented every iteration. If output_every_counter > output_every then
     /// the new fittest individual will be written to the log.
-    pub output_every_counter: u32
+    pub output_every_counter: u32,
+    /// Only share the most fittest individual between the populations if the counter reaches
+    /// this value: share_counter >= share_every.
+    pub share_every: u32,
+    /// Counter that will be incremented every iteration. If share_counter >= share_every then the
+    /// most fittest individual is shared between all the populations.
+    pub share_counter: u32
 }
 
 /// The `SimulationResult` Type. Holds the simulation results:
@@ -189,7 +195,7 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         let mut new_fittest_found = false;
 
         // Increment the output counter
-        // If the max value output_every is reached, only then write an output
+        // Only write an output if the max value output_every is reached
         self.output_every_counter += 1;
 
         for population in &mut self.habitat {
@@ -211,11 +217,13 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         }
 
         // Now copy the most fittest individual back to each population
-        // if the user has specified it.
-        if self.share_fittest && new_fittest_found {
+        // if the user has specified it and the share_every count is reached
+        self.share_counter += 1;
+        if self.share_fittest && new_fittest_found && (self.share_counter >= self.share_every) {
             for population in &mut self.habitat {
                 population.population[0] = self.simulation_result.fittest[0].clone();
             }
+            self.share_counter = 0;
         }
 
         self.simulation_result.improvement_factor =
