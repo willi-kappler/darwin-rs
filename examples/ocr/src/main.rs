@@ -20,14 +20,14 @@ use std::sync::Arc;
 use rand::Rng;
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
+//use std::path::Path;
 use image::{ImageBuffer, Luma};
 use imageproc::stats::root_mean_squared_error;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 use std::str;
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 fn make_population<'a>(count: u32, config: &OCRConfig<'a>) -> Vec<OCRItem<'a>> {
     let mut result = Vec::new();
@@ -56,7 +56,7 @@ fn make_all_populations<'a>(individuals: u32, config: &OCRConfig<'a>, population
         let pop = PopulationBuilder::<OCRItem>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((50 + i) as f64) / 50.0)
+            .mutation_rate((1..10).cycle().take(individuals as usize).collect())
             .reset_limit_end(0)
             .finalize().unwrap();
         result.push(pop);
@@ -166,7 +166,7 @@ fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
 fn main() {
     println!("Darwin test: optical character recognition");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     // TODO: use fontconfig-rs in the future: https://github.com/abonander/fontconfig-rs
     let mut file = File::open("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf").unwrap();
@@ -205,13 +205,14 @@ fn main() {
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
-        .threads(7)
-        .add_multiple_populations(make_all_populations(10, &ocr_config, num_populations as u32))
+        .threads(16)
+        .add_multiple_populations(make_all_populations(16, &ocr_config, num_populations as u32))
         .share_fittest()
         .finalize();
 
     match ocr_builder {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut ocr_simulation) => {
             ocr_simulation.run();
 

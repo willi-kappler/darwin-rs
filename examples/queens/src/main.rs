@@ -9,10 +9,10 @@ extern crate simplelog;
 extern crate darwin_rs;
 
 use rand::Rng;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 #[derive(Debug, Clone)]
 struct Queens {
@@ -108,7 +108,7 @@ fn make_all_populations(individuals: u32, populations: u32) -> Vec<Population<Qu
         let pop = PopulationBuilder::<Queens>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((100 + i) as f64) / 100.0)
+            .mutation_rate((1..10).cycle().take(individuals as usize).collect())
             .reset_limit_end(0) // disable the resetting of all individuals
             .finalize().unwrap();
 
@@ -174,7 +174,7 @@ impl Individual for Queens {
 fn main() {
     println!("Darwin test: queens problem");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     let queens = SimulationBuilder::<Queens>::new()
         .fitness(0.0)
@@ -183,7 +183,8 @@ fn main() {
         .finalize();
 
     match queens {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut queens_simulation) => {
             queens_simulation.run();
 

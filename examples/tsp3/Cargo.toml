@@ -1,5 +1,5 @@
 [package]
-name = "tsp"
+name = "tsp3"
 version = "0.1.0"
 authors = ["Willi Kappler, grandor@gmx.de"]
 
@@ -7,6 +7,7 @@ authors = ["Willi Kappler, grandor@gmx.de"]
 time = "0.1"
 rand = "0.3"
 simplelog = "0.4"
+clap = "2.19"
 
 darwin-rs = {path = "../../../darwin-rs"}
 

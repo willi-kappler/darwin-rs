@@ -6,6 +6,9 @@ authors = ["Willi Kappler, grandor@gmx.de"]
 [dependencies]
 time = "0.1"
 rand = "0.3"
-simplelog = "0.2"
+simplelog = "0.4"
 
 darwin-rs = {path = "../../../darwin-rs"}
+
+[profile.release]
+lto = true

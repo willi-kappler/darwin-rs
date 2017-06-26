@@ -13,10 +13,10 @@ extern crate darwin_rs;
 
 use std::sync::Arc;
 use rand::Rng;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 
 // Internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 fn city_distance(city: &[(f64, f64)], index1: usize, index2: usize) -> f64 {
     let (x1, y1) = city[index1];
@@ -55,7 +55,7 @@ fn make_all_populations(individuals: u32, populations: u32, cities: &Vec<(f64, f
         let pop = PopulationBuilder::<CityItem>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((100 + i) as f64) / 100.0)
+            .mutation_rate((1..10).cycle().take(individuals as usize).collect())
             .reset_limit_increment(100 * i)
             .reset_limit_start(100 * i)
             .reset_limit_end(1000 * i)
@@ -120,7 +120,7 @@ impl Individual for CityItem {
 fn main() {
     println!("Darwin test: traveling salesman problem");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     let cities = vec![(2.852197810188428, 90.31966506130796),
                       (33.62874999956513, 44.9790462485413),
@@ -151,7 +151,8 @@ fn main() {
         .finalize();
 
     match tsp {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 

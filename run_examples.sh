@@ -1,5 +1,9 @@
 #!/bin/bash
 
+cargo clean
+cargo update
+cargo test
+
 cd examples
 
 cd ocr

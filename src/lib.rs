@@ -1,6 +1,6 @@
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.3 (2016.08.29)
+//! Written by Willi Kappler, Version 0.4 (2017.06.26)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -16,7 +16,10 @@
 //
 // #![plugin(clippy)]
 
-#[macro_use] extern crate quick_error;
+// For error-chain
+#![recursion_limit = "1024"]
+
+#[macro_use] extern crate error_chain;
 #[macro_use] extern crate log;
 extern crate jobsteal;
 
@@ -28,6 +31,6 @@ pub mod population_builder;
 
 pub use individual::Individual;
 pub use simulation::Simulation;
-pub use simulation_builder::{SimulationBuilder, SimError};
+pub use simulation_builder::{SimulationBuilder};
 pub use population::Population;
-pub use population_builder::{PopulationBuilder, PopError};
+pub use population_builder::{PopulationBuilder};

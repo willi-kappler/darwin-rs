@@ -4,7 +4,7 @@
 # darwin-rs
 This library allows you to write evolutionary algorithms (EA) using the [Rust](https://www.rust-lang.org/) programming language.
 
-Written by Willi Kappler, License: MIT - Version 0.3 (2016.08.29)
+Written by Willi Kappler, License: MIT - Version 0.4 (2017.06.26)
 
 **Documentation:** [darwin-rs](https://docs.rs/darwin-rs/0.3.0/darwin_rs/)
 
@@ -26,7 +26,7 @@ Add the following to the Cargo.toml in your project:
 
 ```toml
 [dependencies]
-darwin-rs = "0.3"
+darwin-rs = "0.4"
 ```
 
 And this in the rust source code of your application:
@@ -171,7 +171,8 @@ See also the example folder for full working programs.
 
 # Used crates:
 - [jobsteal](https://github.com/rphmeier/jobsteal): parallelization
-- [quick-error](https://github.com/tailhook/quick-error): easy error type creation
+- [error-chain](https://github.com/brson/error-chain): easy error handling
+- [log](https://github.com/rust-lang-nursery/log): use logging mechanism instead of ```println!()```
 
 # Similar crates:
 - [genetic-files](https://github.com/vadixidav/genetic-files)

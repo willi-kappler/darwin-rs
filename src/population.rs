@@ -2,7 +2,7 @@
 //!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.3 (2016.08.29)
+//! Written by Willi Kappler, Version 0.4 (2017.06.26)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -83,10 +83,11 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
     ///
     /// 8. Calculate the new improvement factor and prepare for the next iteration.
     pub fn run_body(&mut self) {
-        // First check if reset limit is reached
+        // Is reset limit enabled ?
         if self.reset_limit_end > 0 {
             self.reset_counter += 1;
 
+            // Check if reset limit is reached
             if self.reset_counter > self.reset_limit {
                 self.reset_limit += self.reset_limit_increment;
                 if self.reset_limit >= self.reset_limit_end {
@@ -94,10 +95,11 @@ impl<T: Individual + Send + Sync + Clone> Population<T> {
                     info!("reset_limit reset to reset_limit_start: {}, id: {}", self.reset_limit_start, self.id);
                 }
                 self.reset_counter = 0;
-                info!("new reset_limit: {}, id: {}", self.reset_limit, self.id);
+                info!("new reset_limit: {}, id: {}, counter: {}", self.reset_limit, self.id, self.fitness_counter);
 
                 // Kill all individuals since we are most likely stuck in a local minimum.
-                // Why is it so ? Because the simulation is still running!
+                // Why is it so ? Because the simulation is still running and the exit criteria
+                // hasn't been reached yet!
                 // Keep number of mutations.
                 for wrapper in &mut self.population {
                     wrapper.individual.reset();

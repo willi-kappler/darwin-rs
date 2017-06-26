@@ -23,11 +23,11 @@ use std::io::Read;
 use std::path::Path;
 use image::{ImageBuffer, Luma};
 use imageproc::stats::root_mean_squared_error;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 use std::str;
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 const MIN_ASCII: u8 = 32;
 const MAX_ASCII: u8 = 126;
@@ -60,12 +60,12 @@ fn make_all_populations1<'a>(individuals: u32, config: &OCRConfig<'a>, populatio
         let mut pop = PopulationBuilder::<OCRItem>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((500 + i) as f64) / 500.0);
+            .increasing_exp_mutation_rate(1.01);
 
         if i == populations {
             // Special case for the last popilation
             pop = pop.reset_limit_start(100);
-            pop = pop.reset_limit_end(1000);
+            pop = pop.reset_limit_end(10000);
             pop = pop.reset_limit_increment(100);
         } else {
             pop = pop.reset_limit_end(0);
@@ -307,18 +307,23 @@ fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
                 let y = (y as i32) + bb.min.y + pos_y;
                 if x >=0 && y >= 0 && x < canvas.width() as i32 && y < canvas.height() as i32 {
                     canvas.put_pixel(x as u32, y as u32, Luma::<u8>{ data: [(v * 255.0) as u8] } );
-                } else { result = false; }
+                } else {
+                    result = false;
+                    return;
+                }
             })
         }
+
+        if !result { break }
     }
 
     result
 }
 
 fn main() {
-    println!("Darwin test: optical character recognition");
+    println!("Darwin test: optical character recognition 2");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     // TODO: use fontconfig-rs in the future: https://github.com/abonander/fontconfig-rs
     let mut file = File::open("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf").unwrap();
@@ -345,8 +350,8 @@ fn main() {
     draw_text_line(&mut original_img, &font_config, 10, 10, "Darwin-rs");
     draw_text_line(&mut original_img, &font_config, 10, 40, "OCR Test!");
 
-//    let img_file = Path::new("rendered_text.png");
-//    let _ = original_img.save(&img_file);
+    let img_file = Path::new("rendered_text.png");
+    let _ = original_img.save(&img_file);
 
     let ocr_config = OCRConfig {
             font_config: font_config,
@@ -354,16 +359,18 @@ fn main() {
         };
 
     let num_populations = 16;
+    let num_of_individuals = 100;
 
     let ocr_builder = SimulationBuilder::<OCRItem>::new()
         .fitness(0.0)
-        .threads(7)
-        .add_multiple_populations(make_all_populations1(50, &ocr_config, num_populations as u32))
+        .threads(16)
+        .add_multiple_populations(make_all_populations1(num_of_individuals, &ocr_config, num_populations as u32))
         .share_fittest()
         .finalize();
 
     match ocr_builder {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut ocr_simulation) => {
             ocr_simulation.run();
 

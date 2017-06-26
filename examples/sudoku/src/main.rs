@@ -10,10 +10,10 @@ extern crate darwin_rs;
 
 use std::sync::Arc;
 use rand::Rng;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 // A cell is a 3x3 sub field inside the 9x9 sudoku field
 fn fitness_of_one_cell(sudoku: &[u8], row: usize, col: usize) -> f64 {
@@ -122,7 +122,7 @@ fn make_all_populations(individuals: u32, populations: u32) -> Vec<Population<Su
         let pop = PopulationBuilder::<Sudoku>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .increasing_exp_mutation_rate(((300 + i) as f64) / 300.0)
+            .mutation_rate((1..10).cycle().take(individuals as usize).collect())
             .finalize().unwrap();
 
         result.push(pop);
@@ -190,7 +190,7 @@ impl Individual for Sudoku {
 fn main() {
     println!("Darwin test: sudoku solver");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     let sudoku = SimulationBuilder::<Sudoku>::new()
         .fitness(0.0)
@@ -199,7 +199,8 @@ fn main() {
         .finalize();
 
     match sudoku {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut sudoku_simulation) => {
             sudoku_simulation.run();
 

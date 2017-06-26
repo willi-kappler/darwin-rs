@@ -2,7 +2,7 @@
 //!
 //! darwin-rs: evolutionary algorithms with Rust
 //!
-//! Written by Willi Kappler, Version 0.3 (2016.08.29)
+//! Written by Willi Kappler, Version 0.4 (2017.06.26)
 //!
 //! Repository: https://github.com/willi-kappler/darwin-rs
 //!
@@ -53,7 +53,26 @@ pub struct Simulation<T: Individual + Send + Sync> {
     pub simulation_result: SimulationResult<T>,
     /// If this feature is enabled, then the most fittest individual of all populations is
     /// shared between all the populations.
-    pub share_fittest: bool
+    pub share_fittest: bool,
+    /// The total number of global fittest individual to keep, default: 10
+    /// After each interation the most fittest individual of all populations is determinded.
+    /// And this individual is copied into a global "high score list" of the whole simulation,
+    /// if it is better then the highest entry.
+    /// This number specifies how many of these global individuals should be kept.
+    /// (i.e. the size of the "high score list")
+    pub num_of_global_fittest: usize,
+    /// Do not output every time a new fittest individual is found, only every nth times.
+    /// n == output_every
+    pub output_every: u32,
+    /// Counter that will be incremented every iteration. If output_every_counter > output_every then
+    /// the new fittest individual will be written to the log.
+    pub output_every_counter: u32,
+    /// Only share the most fittest individual between the populations if the counter reaches
+    /// this value: share_counter >= share_every.
+    pub share_every: u32,
+    /// Counter that will be incremented every iteration. If share_counter >= share_every then the
+    /// most fittest individual is shared between all the populations.
+    pub share_counter: u32
 }
 
 /// The `SimulationResult` Type. Holds the simulation results:
@@ -175,16 +194,22 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         // Determine the fittest individual of all populations.
         let mut new_fittest_found = false;
 
+        // Increment the output counter
+        // Only write an output if the max value output_every is reached
+        self.output_every_counter += 1;
+
         for population in &mut self.habitat {
             if population.population[0].fitness < self.simulation_result.fittest[0].fitness {
                 new_fittest_found = true;
                 self.simulation_result.fittest.insert(0, population.population[0].clone());
-                // Keep at most 10 individuals, TODO: make this number user configurable.
                 // See https://github.com/willi-kappler/darwin-rs/issues/12
-                self.simulation_result.fittest.truncate(10);
+                self.simulation_result.fittest.truncate(self.num_of_global_fittest);
                 population.fitness_counter += 1;
-                info!("new fittest: fitness: {}, population id: {}, counter: {}", population.population[0].fitness,
-                    population.id, population.fitness_counter);
+                if self.output_every_counter >= self.output_every {
+                    info!("new fittest: fitness: {}, population id: {}, counter: {}", population.population[0].fitness,population.id,
+                        population.fitness_counter);
+                    self.output_every_counter = 0
+                }
                 // Call methond `new_fittest_found` of the newly found fittest individual.
                 // The default implementation for this method does nothing.
                 population.population[0].individual.new_fittest_found();
@@ -192,11 +217,13 @@ impl<T: Individual + Send + Sync + Clone> Simulation<T> {
         }
 
         // Now copy the most fittest individual back to each population
-        // if the user has specified it.
-        if self.share_fittest && new_fittest_found {
+        // if the user has specified it and the share_every count is reached
+        self.share_counter += 1;
+        if self.share_fittest && new_fittest_found && (self.share_counter >= self.share_every) {
             for population in &mut self.habitat {
                 population.population[0] = self.simulation_result.fittest[0].clone();
             }
+            self.share_counter = 0;
         }
 
         self.simulation_result.improvement_factor =
