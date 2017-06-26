@@ -5,7 +5,7 @@
 - Remove new() from trait Individual, provide reset() instead.
 - All mutexes removed.
 - User must now provide whole population but can now use shared configuration / data instead of using lazy_static.
-- Calculate_fitness now needs (&mut self).
+- calculate_fitness now needs (&mut self).
 - Add option share_fittest to share the fittest individual between all population after each iteration.
 - Add ocr2 example.
 - Add optional method new_fittest_found() to write out some statistics. Default implementation does nothing.
