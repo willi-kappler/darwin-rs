@@ -12,6 +12,7 @@ extern crate image;
 extern crate imageproc;
 extern crate rusttype;
 extern crate simplelog;
+extern crate font_loader;
 
 // internal crates
 extern crate darwin_rs;
@@ -21,10 +22,11 @@ use rand::Rng;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
+use std::str;
 use image::{ImageBuffer, Luma};
 use imageproc::stats::root_mean_squared_error;
 use simplelog::{SimpleLogger, LogLevelFilter, Config};
-use std::str;
+use font_loader::system_fonts;
 
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
@@ -325,10 +327,10 @@ fn main() {
 
     let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
-    // TODO: use fontconfig-rs in the future: https://github.com/abonander/fontconfig-rs
-    let mut file = File::open("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf").unwrap();
-    let mut font_data: Vec<u8> = Vec::new();
-    let _ = file.read_to_end(&mut font_data).unwrap();
+    let font_property = system_fonts::FontPropertyBuilder::new().
+        family("Liberation Mono").build();
+
+    let font_data = system_fonts::get(&font_property).unwrap().0;
 
     let collection = rusttype::FontCollection::from_bytes(font_data);
     let font = collection.into_font().unwrap();
