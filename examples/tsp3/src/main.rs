@@ -14,7 +14,7 @@ extern crate darwin_rs;
 
 use std::sync::Arc;
 use rand::Rng;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 use clap::{Arg, App};
 use std::fs::File;
 use std::io::BufReader;
@@ -203,7 +203,7 @@ fn load_cities(file_name: Option<&str>) -> Vec<(f64, f64)> {
 fn main() {
     println!("Darwin test: traveling salesman problem");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     let matches = App::new("My Super Program")
         .version("0.1")
