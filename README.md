@@ -184,5 +184,7 @@ See also the example folder for full working programs.
 - [random-wheel-rs](https://github.com/Kerosene2000/random-wheel-rs)
 - [roulette-wheel-rs](https://github.com/Kerosene2000/roulette-wheel-rs)
 - [differential-evolution-rs](https://github.com/martinus/differential-evolution-rs)
+- [evolve-sbrain](https://github.com/LeoTindall/evolve-sbrain)
+- [Nodevo](https://github.com/bgalvao/nodevo)
 
 Any feedback is welcome!
