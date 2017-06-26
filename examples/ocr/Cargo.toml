@@ -11,6 +11,7 @@ image = "0.14"
 imageproc = "0.9"
 rusttype = "0.2"
 simplelog = "0.4"
+font-loader = "0.3.2"
 
 darwin-rs = {path = "../../../darwin-rs"}
 
