@@ -13,7 +13,7 @@ extern crate darwin_rs;
 
 use std::sync::Arc;
 use rand::Rng;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 
 // Internal modules
 use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
@@ -120,7 +120,7 @@ impl Individual for CityItem {
 fn main() {
     println!("Darwin test: traveling salesman problem");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     let cities = vec![(2.852197810188428, 90.31966506130796),
                       (33.62874999956513, 44.9790462485413),
