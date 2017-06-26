@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.4 - 2017-??
+- Allow user to specify num_of_global_fittest
+- Use error_chain
+- Add output_every, to only output every nth time a new fittest individual is found
+- Add share_every, to only share fittest individual after a number of iterations
+
 ## 0.3 - 2016-08-29
 - Write output into a log file instead of using print!().
 - Remove new() from trait Individual, provide reset() instead.

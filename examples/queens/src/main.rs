@@ -12,7 +12,7 @@ use rand::Rng;
 use simplelog::{SimpleLogger, LogLevelFilter};
 
 // internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 #[derive(Debug, Clone)]
 struct Queens {
@@ -183,7 +183,8 @@ fn main() {
         .finalize();
 
     match queens {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut queens_simulation) => {
             queens_simulation.run();
 

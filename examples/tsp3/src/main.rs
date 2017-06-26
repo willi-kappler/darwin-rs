@@ -16,9 +16,12 @@ use std::sync::Arc;
 use rand::Rng;
 use simplelog::{SimpleLogger, LogLevelFilter};
 use clap::{Arg, App};
+use std::fs::File;
+use std::io::BufReader;
+use std::io::prelude::*;
 
 // Internal modules
-use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, SimError};
+use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
 
 fn city_distance(city: &[(f64, f64)], index1: usize, index2: usize) -> f64 {
     let (x1, y1) = city[index1];
@@ -54,13 +57,15 @@ fn make_all_populations(individuals: u32, populations: u32, cities: &Vec<(f64, f
     let initial_population = make_population(individuals, &cities);
 
     for i in 1..(populations + 1) {
+        let reset_limit_end = if i == 1 { 0 } else { 1000 * i };
+
         let pop = PopulationBuilder::<CityItem>::new()
             .set_id(i)
             .initial_population(&initial_population)
-            .mutation_rate((1..10).cycle().take(individuals as usize).collect())
+            .increasing_exp_mutation_rate(1.1)
             .reset_limit_increment(100 * i)
             .reset_limit_start(100 * i)
-            .reset_limit_end(1000 * i)
+            .reset_limit_end(reset_limit_end)
             .finalize().unwrap();
 
         result.push(pop)
@@ -143,8 +148,35 @@ impl Individual for CityItem {
 
 fn load_cities(file_name: Option<&str>) -> Vec<(f64, f64)> {
     if let Some(file_name) = file_name {
-        vec![]
+        // NODE_COORD_SECTION
+        // 1 12183.3333 52233.3333
+        // EOF
+
+        let f = File::open(file_name).unwrap();
+        let f = BufReader::new(f);
+
+        let mut inside_data_section = false;
+        let mut result = Vec::new();
+
+        // Read in coordinates liny by line from a .tsp file
+        // The file format is specified here:
+        //
+        for line in f.lines() {
+            let line = line.unwrap();
+
+            if line.starts_with("NODE_COORD_SECTION") { inside_data_section = true }
+            else if line.starts_with("EOF") { inside_data_section = false }
+            else {
+                if inside_data_section {
+                    let line_items: Vec<&str> = line.split(char::is_whitespace).collect();
+                    result.push((line_items[1].parse().unwrap(), line_items[2].parse().unwrap()));
+                }
+            }
+        }
+
+        result
     } else {
+        // Default coordinates of cities
         vec![(2.852197810188428, 90.31966506130796),
               (33.62874999956513, 44.9790462485413),
               (22.064901432163996, 83.9172876840628),
@@ -179,32 +211,32 @@ fn main() {
         .about("Solves TSP (traveling salesman problem)")
         .arg(Arg::with_name("input_file")
             .short("f")
-            .help("Sets the input file")
+            .help("Sets the input file (default: built in coordinates)")
             .takes_value(true))
         .arg(Arg::with_name("end_fitness")
             .short("e")
-            .help("Sets the end fitness criteria")
+            .help("Sets the end fitness criteria (default: 500.0)")
             .takes_value(true))
         .arg(Arg::with_name("num_of_threads")
             .short("t")
-            .help("Sets the number of threads to use")
+            .help("Sets the number of threads to use (default: 4)")
             .takes_value(true))
         .arg(Arg::with_name("num_of_populations")
             .short("p")
-            .help("Sets the number of populations to use")
+            .help("Sets the number of populations to use (default: 10)")
             .takes_value(true))
         .arg(Arg::with_name("num_of_individuals")
             .short("i")
-            .help("Sets the number of individuals to use")
+            .help("Sets the number of individuals to use (default: 100)")
             .takes_value(true))
         .get_matches();
 
     let cities = load_cities(matches.value_of("input_file"));
 
-    let end_fitness = value_t!(matches.value_of("end_fitness"), f64).unwrap_or(500.0);
-    let num_of_threads = value_t!(matches.value_of("num_of_threads"), usize).unwrap_or(4);
-    let num_of_populations = value_t!(matches.value_of("num_of_populations"), u32).unwrap_or(4);
-    let num_of_individuals = value_t!(matches.value_of("num_of_individuals"), u32).unwrap_or(100);
+    let end_fitness = value_t!(matches.value_of("end_fitness"), f64).unwrap_or(1000.0);
+    let num_of_threads = value_t!(matches.value_of("num_of_threads"), usize).unwrap_or(8);
+    let num_of_populations = value_t!(matches.value_of("num_of_populations"), u32).unwrap_or(32);
+    let num_of_individuals = value_t!(matches.value_of("num_of_individuals"), u32).unwrap_or(20);
 
 
     let tsp = SimulationBuilder::<CityItem>::new()
@@ -212,11 +244,14 @@ fn main() {
           .fitness(end_fitness)
           .threads(num_of_threads)
           .add_multiple_populations(make_all_populations(num_of_individuals, num_of_populations, &cities))
+          .share_fittest()
+          .output_every(100)
           .finalize();
 
 
     match tsp {
-        Err(SimError::EndIterationTooLow) => println!("more than 10 iteratons needed"),
+        Err(simulation_builder::Error(simulation_builder::ErrorKind::EndIterationTooLow, _)) => println!("more than 10 iteratons needed"),
+        Err(e) => println!("unexpected error: {}", e),
         Ok(mut tsp_simulation) => {
             tsp_simulation.run();
 
