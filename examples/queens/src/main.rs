@@ -9,7 +9,7 @@ extern crate simplelog;
 extern crate darwin_rs;
 
 use rand::Rng;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
@@ -174,7 +174,7 @@ impl Individual for Queens {
 fn main() {
     println!("Darwin test: queens problem");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     let queens = SimulationBuilder::<Queens>::new()
         .fitness(0.0)
