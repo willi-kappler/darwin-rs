@@ -10,7 +10,7 @@ extern crate darwin_rs;
 
 use std::sync::Arc;
 use rand::Rng;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 
 // internal modules
 use darwin_rs::{Individual, SimulationBuilder, Population, PopulationBuilder, simulation_builder};
@@ -190,7 +190,7 @@ impl Individual for Sudoku {
 fn main() {
     println!("Darwin test: sudoku solver");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     let sudoku = SimulationBuilder::<Sudoku>::new()
         .fitness(0.0)
