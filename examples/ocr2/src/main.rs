@@ -23,7 +23,7 @@ use std::io::Read;
 use std::path::Path;
 use image::{ImageBuffer, Luma};
 use imageproc::stats::root_mean_squared_error;
-use simplelog::{SimpleLogger, LogLevelFilter};
+use simplelog::{SimpleLogger, LogLevelFilter, Config};
 use std::str;
 
 // internal modules
@@ -323,7 +323,7 @@ fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
 fn main() {
     println!("Darwin test: optical character recognition 2");
 
-    let _ = SimpleLogger::init(LogLevelFilter::Info);
+    let _ = SimpleLogger::init(LogLevelFilter::Info, Config::default());
 
     // TODO: use fontconfig-rs in the future: https://github.com/abonander/fontconfig-rs
     let mut file = File::open("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf").unwrap();
