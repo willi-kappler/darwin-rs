@@ -16,7 +16,7 @@ The example folder contains these examples:
 
 - TSP (traveling salesman problem): the classic type of problem for EA (see two pictures above).
 - Sudoku: a sudoku solver using EA.
-- Queens: solving the queens problem with EA. Although not as fast as [this one](https://github.com/reem/rust-n-queens) ;-)
+- Queens: solving the queens problem with EA. Although not as fast as [this one](https://github.com/reem/rust-n-queens) or [this one](https://github.com/Martin1887/oxigen/tree/master/nqueens-oxigen) ;-)
 - OCR: a simple optical character recognition example. Two strings are drawn (rendered) using a truetype font on a image buffer and then a perfect match representing the drawn text is found.
 
 darwin-rs uses [semantic versioning](http://semver.org/)
@@ -186,5 +186,6 @@ See also the example folder for full working programs.
 - [differential-evolution-rs](https://github.com/martinus/differential-evolution-rs)
 - [evolve-sbrain](https://github.com/LeoTindall/evolve-sbrain)
 - [Nodevo](https://github.com/bgalvao/nodevo)
+- [Oxigen](https://github.com/Martin1887/oxigen)
 
 Any feedback is welcome!
