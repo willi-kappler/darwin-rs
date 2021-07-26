@@ -10,7 +10,9 @@
 //!
 
 pub mod individual;
-pub mod simulation;
+pub mod simulation_server;
+pub mod simulation_node;
 
 pub use individual::Individual;
-pub use simulation::Simulation;
+pub use simulation_server::SimulationServer;
+pub use simulation_node::SimulationNode;

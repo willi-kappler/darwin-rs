@@ -20,6 +20,5 @@ thiserror = "1.0"
 serde = { version = "1", features = ["derive"] }
 node_crunch = "0.1"
 
-
 [profile.release]
 lto = true
