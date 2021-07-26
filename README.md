@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/willi-kappler/darwin-rs.svg?branch=master)](https://travis-ci.org/willi-kappler/darwin-rs)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Docs](https://docs.rs/darwin-rs/badge.svg?version=0.5.0)](https://docs.rs/darwin-rs/0.5.0/darwin-rs/index.html)
+[![Docs](https://docs.rs/darwin-rs/badge.svg)](https://docs.rs/darwin-rs/)
 [![Crates.io version](https://img.shields.io/crates/v/darwin-rs.svg)](https://crates.io/crates/darwin-rs)
 
 # darwin-rs
