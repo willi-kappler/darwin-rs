@@ -75,6 +75,7 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
             }
 
             // TODO: use a sorted data structure
+            // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
             self.population.append(&mut original1);
             self.population.append(&mut original2);
             self.population.sort();
@@ -82,7 +83,9 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
             self.population.truncate(self.num_of_individuals);
 
             for individual in self.unsorted_population.iter_mut() {
-                individual.mutate();
+                for _ in 0..self.num_of_mutations {
+                    individual.mutate();
+                }
                 individual.calculate_fitness();
             }
         }

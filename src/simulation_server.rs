@@ -90,6 +90,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
         match nc_decode_data::<IndividualWrapper<T>>(node_data) {
             Ok(individual) => {
                 // TODO: Use a sorted data structure
+                // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
                 self.population.push(individual);
                 self.population.sort();
                 self.population.dedup();
