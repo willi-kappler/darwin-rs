@@ -6,6 +6,11 @@ use node_crunch::{NCNode, NCError, NCConfiguration,
 use log::{info, error};
 use serde::{Serialize, de::DeserializeOwned};
 
+pub enum Method {
+    Simple,
+    OnlyBest,
+}
+
 pub struct SimulationNode<T> {
     population: Vec<IndividualWrapper<T>>,
     unsorted_population: Vec<IndividualWrapper<T>>,
@@ -13,6 +18,7 @@ pub struct SimulationNode<T> {
     nc_configuration: NCConfiguration,
     num_of_iterations: u64,
     num_of_mutations: u64,
+    method: Method,
 }
 
 impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
@@ -33,6 +39,7 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
             nc_configuration: NCConfiguration::default(),
             num_of_iterations: 1000,
             num_of_mutations: 10,
+            method: Method::Simple,
         }
     }
     pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
@@ -44,6 +51,9 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
     pub fn set_num_of_mutations(&mut self, num_of_mutations: u64) {
         self.num_of_mutations = num_of_mutations;
     }
+    pub fn set_method(&mut self, method: Method) {
+        self.method = method;
+    }
     pub fn run(self) {
         let mut node_starter = NCNodeStarter::new(self.nc_configuration.clone());
 
@@ -54,7 +64,7 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
             Err(e) => {
                 error!("An error occurred: {}", e);
             }
-        }    
+        }
     }
 }
 
@@ -63,30 +73,63 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
         let individual: IndividualWrapper<T> = nc_decode_data(&data)?;
         self.population.push(individual);
 
-        for _ in 0..self.num_of_iterations {
-            let mut original1 = self.population.clone();
-            let mut original2 = self.unsorted_population.clone();
+        match self.method {
+            Method::Simple => {
+                for _ in 0..self.num_of_iterations {
+                    let mut original1 = self.population.clone();
+                    let mut original2 = self.unsorted_population.clone();
 
-            for individual in self.population.iter_mut() {
-                for _ in 0..self.num_of_mutations {
-                    individual.mutate();
+                    for individual in self.population.iter_mut() {
+                        for _ in 0..self.num_of_mutations {
+                            individual.mutate();
+                        }
+                        individual.calculate_fitness();
+                    }
+
+                    // TODO: use a sorted data structure
+                    // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
+                    self.population.append(&mut original1);
+                    self.population.append(&mut original2);
+                    self.population.sort();
+                    self.population.dedup();
+                    self.population.truncate(self.num_of_individuals);
+
+                    for individual in self.unsorted_population.iter_mut() {
+                        individual.mutate();
+                        individual.calculate_fitness();
+                    }
                 }
-                individual.calculate_fitness();
             }
+            Method::OnlyBest => {
+                let mut potential_population = Vec::new();
 
-            // TODO: use a sorted data structure
-            // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
-            self.population.append(&mut original1);
-            self.population.append(&mut original2);
-            self.population.sort();
-            self.population.dedup();
-            self.population.truncate(self.num_of_individuals);
+                for _ in 0..self.num_of_iterations {
+                    let mut original2 = self.unsorted_population.clone();
 
-            for individual in self.unsorted_population.iter_mut() {
-                for _ in 0..self.num_of_mutations {
-                    individual.mutate();
+                    for individual in self.population.iter() {
+                        let mut mutated = individual.clone();
+                        let current_fitness = individual.get_fitness();
+
+                        for _ in 0..self.num_of_mutations {
+                            mutated.mutate();
+                            mutated.calculate_fitness();
+                            if mutated.get_fitness() < current_fitness {
+                                potential_population.push(mutated.clone());
+                            }
+                        }
+                    }
+
+                    self.population.append(&mut potential_population);
+                    self.population.append(&mut original2);
+                    self.population.sort();
+                    self.population.dedup();
+                    self.population.truncate(self.num_of_individuals);
+
+                    for individual in self.unsorted_population.iter_mut() {
+                        individual.mutate();
+                        individual.calculate_fitness();
+                    }
                 }
-                individual.calculate_fitness();
             }
         }
 

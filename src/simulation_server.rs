@@ -7,7 +7,7 @@ use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
 
 use std::fs::File;
-use std::io::Write;
+use std::io::{Write, Read};
 
 pub struct SimulationServer<T> {
     population: Vec<IndividualWrapper<T>>,
@@ -40,6 +40,18 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
     pub fn set_export_file_name(&mut self, export_file_name: &str) {
         self.export_file_name = export_file_name.to_string();
     }
+    pub fn read_population(&mut self, file_name: &str) -> Result<(), NCError> {
+        let mut file = File::open(file_name)?;
+        let mut data = Vec::new();
+
+        file.read_to_end(&mut data)?;
+
+        let population = nc_decode_data::<Vec<IndividualWrapper<T>>>(&data)?;
+
+        self.population = population;
+
+        Ok(())
+    }
     pub fn run(self) {
         let mut server_starter = NCServerStarter::new(self.nc_configuration.clone());
 
@@ -50,12 +62,14 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
             Err(e) => {
                 error!("An error occurred: {}", e);
             }
-        }    
+        }
     }
     fn save_population(&self) -> Result<(), NCError> {
         let data = nc_encode_data(&self.population)?;
         let mut file = File::create(&self.export_file_name)?;
+
         file.write_all(&data)?;
+
         Ok(())
     }
     fn is_job_done(&self) -> bool {
@@ -81,7 +95,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
                     error!("An error occurred while preparing the data for the node: {}, error: {}", node_id, e);
                     Err(e)
                 }
-            }    
+            }
         }
     }
     fn process_data_from_node(&mut self, node_id: NodeID, node_data: &[u8]) -> Result<(), NCError> {
@@ -91,10 +105,13 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
             Ok(individual) => {
                 // TODO: Use a sorted data structure
                 // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
+                debug!("Fitness from node: {}", individual.get_fitness());
+
                 self.population.push(individual);
                 self.population.sort();
                 self.population.dedup();
                 self.population.truncate(self.num_of_individuals);
+
                 Ok(())
             }
             Err(e) => {

@@ -15,4 +15,4 @@ pub mod simulation_node;
 
 pub use individual::Individual;
 pub use simulation_server::SimulationServer;
-pub use simulation_node::SimulationNode;
+pub use simulation_node::{SimulationNode, Method};
