@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.5 - 2021.x.y
+- Complete re-write
+- Use Node Crunch for distributed computing (https://github.com/willi-kappler/node_crunch)
+
 ## 0.4 - 2017-06-26
 - Allow user to specify num_of_global_fittest, fixes https://github.com/willi-kappler/darwin-rs/issues/12 .
 - Use error_chain.
