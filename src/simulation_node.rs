@@ -46,7 +46,7 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
             nc_configuration: NCConfiguration::default(),
             num_of_iterations: 1000,
             num_of_mutations: 10,
-            method: Method::Simple,
+            method: Method::OnlyBest,
             best_fitness,
             best_counter: 0,
         }

@@ -117,7 +117,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
                 let best_fitness = self.population[0].get_fitness();
 
                 if fitness < best_fitness {
-                    debug!("New best individual found: '{}'", fitness);
+                    debug!("New best individual found: '{}', node_id: '{}'", fitness, node_id);
                     self.population.insert(0, individual);
                     self.population.truncate(self.num_of_individuals);
                 } else {
