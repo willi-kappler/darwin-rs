@@ -3,7 +3,7 @@ use crate::individual::{Individual, IndividualWrapper};
 
 use node_crunch::{NCNode, NCError, NCConfiguration,
     NCNodeStarter, nc_decode_data, nc_encode_data};
-use log::{info, error};
+use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
 
 pub enum Method {
@@ -26,7 +26,9 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
         let mut population = Vec::with_capacity(num_of_individuals);
 
         for _ in 0..num_of_individuals {
-            let individual = IndividualWrapper::new(initial.clone());
+            let mut individual = IndividualWrapper::new(initial.clone());
+            individual.mutate();
+            individual.calculate_fitness();
             population.push(individual);
         }
 
@@ -70,7 +72,10 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
 
 impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for SimulationNode<T> {
     fn process_data_from_server(&mut self, data: &[u8]) -> Result<Vec<u8>, NCError> {
+        debug!("SimulationNode::process_data_from_server, new fittest individual received");
+
         let individual: IndividualWrapper<T> = nc_decode_data(&data)?;
+        debug!("Individual from server with fitness: '{}'", individual.get_fitness());
         self.population.push(individual);
 
         match self.method {
@@ -133,7 +138,9 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
             }
         }
 
-        let result = nc_encode_data(&self.population[0])?;
+        let best_individual = &self.population[0];
+        debug!("Sending best individual to server, with fitness: '{}'", best_individual.get_fitness());
+        let result = nc_encode_data(best_individual)?;
         Ok(result)
     }
 }

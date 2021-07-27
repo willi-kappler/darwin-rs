@@ -22,7 +22,9 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
         let mut population = Vec::with_capacity(num_of_individuals);
 
         for _ in 0..num_of_individuals {
-            let individual = IndividualWrapper::new(initial.clone());
+            let mut individual = IndividualWrapper::new(initial.clone());
+            individual.mutate();
+            individual.calculate_fitness();
             population.push(individual);
         }
 
@@ -64,7 +66,9 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
             }
         }
     }
-    fn save_population(&self) -> Result<(), NCError> {
+    pub fn save_population(&self) -> Result<(), NCError> {
+        debug!("SimulationServer::save_population, to file: '{}'", self.export_file_name);
+
         let data = nc_encode_data(&self.population)?;
         let mut file = File::create(&self.export_file_name)?;
 
@@ -79,7 +83,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
 
 impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCServer for SimulationServer<T> {
     fn prepare_data_for_node(&mut self, node_id: NodeID) -> Result<NCJobStatus, NCError> {
-        debug!("Server::prepare_data_for_node, node_id: {}", node_id);
+        debug!("SimulationServer::prepare_data_for_node, node_id: {}", node_id);
 
         if self.is_job_done() {
             Ok(NCJobStatus::Finished)
@@ -99,7 +103,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
         }
     }
     fn process_data_from_node(&mut self, node_id: NodeID, node_data: &[u8]) -> Result<(), NCError> {
-        debug!("Server::process_data_from_node, node_id: {}", node_id);
+        debug!("SimulationServer::process_data_from_node, node_id: {}", node_id);
 
         match nc_decode_data::<IndividualWrapper<T>>(node_data) {
             Ok(individual) => {
