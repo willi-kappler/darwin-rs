@@ -19,6 +19,8 @@ pub struct SimulationNode<T> {
     num_of_iterations: u64,
     num_of_mutations: u64,
     method: Method,
+    best_fitness: f64,
+    best_counter: u64,
 }
 
 impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
@@ -32,7 +34,10 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
             population.push(individual);
         }
 
+        population.sort();
+
         let unsorted_population = population.clone();
+        let best_fitness = population[0].get_fitness();
 
         Self {
             population,
@@ -42,6 +47,8 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
             num_of_iterations: 1000,
             num_of_mutations: 10,
             method: Method::Simple,
+            best_fitness,
+            best_counter: 0,
         }
     }
     pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
@@ -57,6 +64,8 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
         self.method = method;
     }
     pub fn run(self) {
+        debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}'", self.num_of_individuals, self.num_of_iterations, self.num_of_mutations);
+
         let mut node_starter = NCNodeStarter::new(self.nc_configuration.clone());
 
         match node_starter.start(self) {
@@ -72,11 +81,16 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
 
 impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for SimulationNode<T> {
     fn process_data_from_server(&mut self, data: &[u8]) -> Result<Vec<u8>, NCError> {
-        debug!("SimulationNode::process_data_from_server, new fittest individual received");
+        debug!("SimulationNode::process_data_from_server, new message received");
 
         let individual: IndividualWrapper<T> = nc_decode_data(&data)?;
-        debug!("Individual from server with fitness: '{}'", individual.get_fitness());
-        self.population.push(individual);
+        let fitness = individual.get_fitness();
+
+        if fitness < self.best_fitness {
+            debug!("New best individual from server with fitness: '{}'", fitness);
+            self.population.push(individual);
+            self.best_fitness = fitness;
+        }
 
         match self.method {
             Method::Simple => {
@@ -139,8 +153,18 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
         }
 
         let best_individual = &self.population[0];
-        debug!("Sending best individual to server, with fitness: '{}'", best_individual.get_fitness());
-        let result = nc_encode_data(best_individual)?;
-        Ok(result)
+        let fitness = best_individual.get_fitness();
+
+        let individual = if fitness < self.best_fitness {
+            self.best_counter += 1;
+            debug!("Sending best individual to server, with fitness: '{}', counter: {}", fitness, self.best_counter);
+            self.best_fitness = fitness;
+            Some(best_individual)
+        } else {
+            debug!("No new best individual found, fitness: '{}' >= best fitness: '{}'", fitness, self.best_fitness);
+            None
+        };
+
+        Ok(nc_encode_data(&individual)?)
     }
 }

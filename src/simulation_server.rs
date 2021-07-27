@@ -28,6 +28,8 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
             population.push(individual);
         }
 
+        population.sort();
+
         Self {
             population,
             fitness_limit,
@@ -55,6 +57,8 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
         Ok(())
     }
     pub fn run(self) {
+        debug!("Start server with fitness limit: '{}', population size: '{}'", self.fitness_limit, self.num_of_individuals);
+
         let mut server_starter = NCServerStarter::new(self.nc_configuration.clone());
 
         match server_starter.start(self) {
@@ -105,17 +109,25 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
     fn process_data_from_node(&mut self, node_id: NodeID, node_data: &[u8]) -> Result<(), NCError> {
         debug!("SimulationServer::process_data_from_node, node_id: {}", node_id);
 
-        match nc_decode_data::<IndividualWrapper<T>>(node_data) {
-            Ok(individual) => {
+        match nc_decode_data::<Option<IndividualWrapper<T>>>(node_data) {
+            Ok(Some(individual)) => {
                 // TODO: Use a sorted data structure
                 // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
-                debug!("Fitness from node: {}", individual.get_fitness());
+                let fitness = individual.get_fitness();
+                let best_fitness = self.population[0].get_fitness();
 
-                self.population.push(individual);
-                self.population.sort();
-                self.population.dedup();
-                self.population.truncate(self.num_of_individuals);
+                if fitness < best_fitness {
+                    debug!("New best individual found: '{}'", fitness);
+                    self.population.insert(0, individual);
+                    self.population.truncate(self.num_of_individuals);
+                } else {
+                    debug!("No new best individual found, fitness: '{}' >= best fitness: '{}'", fitness, best_fitness);
+                }
 
+                Ok(())
+            }
+            Ok(None) => {
+                debug!("No new best individual found by node");
                 Ok(())
             }
             Err(e) => {
