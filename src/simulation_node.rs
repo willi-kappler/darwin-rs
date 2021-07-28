@@ -9,6 +9,7 @@ use serde::{Serialize, de::DeserializeOwned};
 pub enum Method {
     Simple,
     OnlyBest,
+    LowMem,
 }
 
 pub struct SimulationNode<T> {
@@ -148,6 +149,23 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
                         individual.mutate();
                         individual.calculate_fitness();
                     }
+                }
+            }
+            Method::LowMem => {
+                for _ in 0..self.num_of_iterations {
+                    let current_best = self.population[0].clone();
+
+                    for individual in self.population.iter_mut() {
+                        for _ in 0..self.num_of_mutations {
+                            individual.mutate();
+                        }
+                        individual.calculate_fitness();
+                    }
+
+                    self.population.push(current_best);
+                    self.population.sort();
+                    self.population.dedup();
+                    self.population.truncate(self.num_of_individuals);
                 }
             }
         }
