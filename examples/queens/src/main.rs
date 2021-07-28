@@ -116,7 +116,7 @@ impl Individual for Queens {
         }
 
         // Pick a position where no queen is placed and this index is different from the other
-        while (index1 == index2) && (self.board[index2] != 0) {
+        while (index1 == index2) || (self.board[index2] != 0) {
             index2 = rng.generate_range(1_usize..last);
         }
 
@@ -180,6 +180,7 @@ fn main() {
         node.set_configuration(nc_configuration);
         node.set_num_of_iteration(options.num_of_iterations);
         node.set_num_of_mutations(options.num_of_mutations);
+        node.set_method(Method::Simple);
         node.run();
     }
 }
