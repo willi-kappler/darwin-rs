@@ -9,11 +9,11 @@ target/release/tsp2 -l 400.0 -s &
 
 sleep 2
 
-target/release/tsp2 -m 5 &
-target/release/tsp2 -m 10 &
-target/release/tsp2 -m 15 &
-target/release/tsp2 -m 20 &
-target/release/tsp2 -m 25 &
-target/release/tsp2 -m 30 &
-target/release/tsp2 -m 35 &
-target/release/tsp2 -m 40 &
+target/release/tsp2 -m 1 -i 50000 &
+target/release/tsp2 -m 2 -i 50000 &
+target/release/tsp2 -m 4 -i 50000 &
+target/release/tsp2 -m 8 -i 50000 &
+#target/release/tsp2 -m 25 &
+#target/release/tsp2 -m 30 &
+#target/release/tsp2 -m 35 &
+#target/release/tsp2 -m 40 &
