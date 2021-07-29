@@ -134,6 +134,7 @@ fn main() {
         node.set_configuration(nc_configuration);
         node.set_num_of_iteration(options.num_of_iterations);
         node.set_num_of_mutations(options.num_of_mutations);
+        node.set_fitness_limit(options.limit);
         node.run();
     }
 }

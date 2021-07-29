@@ -20,7 +20,7 @@ pub struct QueensOpt {
     port: u16,
     #[structopt(short = "o", long = "population", default_value = "20")]
     population: usize,
-    #[structopt(short = "l", long = "limit", default_value = "459.0")]
+    #[structopt(short = "l", long = "limit", default_value = "0.0")]
     limit: f64,
     #[structopt(short = "i", long = "iter", default_value = "1000")]
     num_of_iterations: u64,
@@ -180,6 +180,7 @@ fn main() {
         node.set_configuration(nc_configuration);
         node.set_num_of_iteration(options.num_of_iterations);
         node.set_num_of_mutations(options.num_of_mutations);
+        node.set_fitness_limit(options.limit);
         node.set_method(Method::Simple);
         node.run();
     }
