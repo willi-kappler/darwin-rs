@@ -1,7 +1,7 @@
 
 use crate::individual::{Individual, IndividualWrapper};
 
-use node_crunch::{NCNode, NCError, NCConfiguration,
+use node_crunch::{NCNode, NCError, NCConfiguration, NodeID,
     NCNodeStarter, nc_decode_data, nc_encode_data};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
@@ -22,6 +22,7 @@ pub struct SimulationNode<T> {
     method: Method,
     best_fitness: f64,
     best_counter: u64,
+    fitness_limit: f64,
 }
 
 impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
@@ -50,6 +51,7 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
             method: Method::OnlyBest,
             best_fitness,
             best_counter: 0,
+            fitness_limit: 0.0,
         }
     }
     pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
@@ -81,6 +83,10 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
 }
 
 impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for SimulationNode<T> {
+    fn set_initial_data(&mut self, _node_id: NodeID, initial_data: Option<Vec<u8>>) -> Result<(), NCError> {
+        self.fitness_limit = nc_decode_data(&initial_data.unwrap())?;
+        Ok(())
+    }
     fn process_data_from_server(&mut self, data: &[u8]) -> Result<Vec<u8>, NCError> {
         debug!("SimulationNode::process_data_from_server, new message received");
 
@@ -114,6 +120,10 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
                     self.population.dedup();
                     self.population.truncate(self.num_of_individuals);
 
+                    if self.population[0].get_fitness() < self.fitness_limit {
+                        break
+                    }
+
                     for individual in self.unsorted_population.iter_mut() {
                         individual.mutate();
                         individual.calculate_fitness();
@@ -145,6 +155,10 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
                     self.population.dedup();
                     self.population.truncate(self.num_of_individuals);
 
+                    if self.population[0].get_fitness() < self.fitness_limit {
+                        break
+                    }
+
                     for individual in self.unsorted_population.iter_mut() {
                         individual.mutate();
                         individual.calculate_fitness();
@@ -166,6 +180,10 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
                     self.population.sort();
                     self.population.dedup();
                     self.population.truncate(self.num_of_individuals);
+
+                    if self.population[0].get_fitness() < self.fitness_limit {
+                        break
+                    }
                 }
             }
         }
