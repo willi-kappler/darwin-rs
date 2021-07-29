@@ -1,0 +1,18 @@
+[package]
+name = "sudoku"
+version = "0.1.0"
+authors = ["Willi Kappler grandor@gmx.de"]
+edition = "2018"
+description = "Sudoku example for darwin-rs"
+license = "MIT"
+
+[dependencies]
+log = "0.4"
+simplelog = "0.10.0"
+structopt = "0.3"
+serde = { version = "1", features = ["derive"] }
+nanorand = "0.6.1"
+darwin-rs = {path = "../../../darwin-rs"}
+
+[profile.release]
+lto = true
