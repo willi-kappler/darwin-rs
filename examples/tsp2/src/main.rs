@@ -111,7 +111,7 @@ impl Individual for TSP2 {
 
 fn main() {
     let options = TSP2Opt::from_args();
-    let tsp = TSP2::new();
+    let tsp2 = TSP2::new();
 
     let nc_configuration = NCConfiguration {
         port: options.port,
@@ -120,13 +120,13 @@ fn main() {
     };
 
     let log_level = LevelFilter::Debug;
-    let log_config = Config::default();    
+    let log_config = Config::default();
 
     if options.server {
         let log_file = fs::File::create("server.log").unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut server = SimulationServer::new(tsp, options.population, options.limit);
+        let mut server = SimulationServer::new(tsp2, options.population, options.limit);
         server.set_configuration(nc_configuration);
         server.run();
     } else {
@@ -146,7 +146,7 @@ fn main() {
         let log_file = fs::File::create(&log_file_name).unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut node = SimulationNode::new(tsp, options.population);
+        let mut node = SimulationNode::new(tsp2, options.population);
         node.set_configuration(nc_configuration);
         node.set_num_of_iteration(options.num_of_iterations);
         node.set_num_of_mutations(options.num_of_mutations);

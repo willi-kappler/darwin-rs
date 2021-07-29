@@ -141,7 +141,7 @@ impl Individual for Queens {
 
 fn main() {
     let options = QueensOpt::from_args();
-    let tsp = Queens::new();
+    let queens = Queens::new();
 
     let nc_configuration = NCConfiguration {
         port: options.port,
@@ -156,7 +156,7 @@ fn main() {
         let log_file = fs::File::create("server.log").unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut server = SimulationServer::new(tsp, options.population, options.limit);
+        let mut server = SimulationServer::new(queens, options.population, options.limit);
         server.set_configuration(nc_configuration);
         server.run();
     } else {
@@ -176,7 +176,7 @@ fn main() {
         let log_file = fs::File::create(&log_file_name).unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut node = SimulationNode::new(tsp, options.population);
+        let mut node = SimulationNode::new(queens, options.population);
         node.set_configuration(nc_configuration);
         node.set_num_of_iteration(options.num_of_iterations);
         node.set_num_of_mutations(options.num_of_mutations);
