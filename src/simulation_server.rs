@@ -86,10 +86,6 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
 }
 
 impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCServer for SimulationServer<T> {
-    fn initial_data(&mut self) -> Result<Option<Vec<u8>>, NCError> {
-        let data = nc_encode_data(&self.fitness_limit)?;
-        Ok(Some(data))
-    }
     fn prepare_data_for_node(&mut self, node_id: NodeID) -> Result<NCJobStatus, NCError> {
         debug!("SimulationServer::prepare_data_for_node, node_id: {}", node_id);
 

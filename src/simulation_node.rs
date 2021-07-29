@@ -65,8 +65,12 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
     pub fn set_method(&mut self, method: Method) {
         self.method = method;
     }
+    pub fn set_fitness_limit(&mut self, limit: f64) {
+        self.fitness_limit = limit;
+    }
     pub fn run(mut self) {
-        debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}'", self.num_of_individuals, self.num_of_iterations, self.num_of_mutations);
+        debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}'",
+            self.num_of_individuals, self.num_of_iterations, self.num_of_mutations, self.fitness_limit);
 
         match self.method {
             Method::LowMem => {
@@ -94,10 +98,6 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
 }
 
 impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for SimulationNode<T> {
-    fn set_initial_data(&mut self, _node_id: NodeID, initial_data: Option<Vec<u8>>) -> Result<(), NCError> {
-        self.fitness_limit = nc_decode_data(&initial_data.unwrap())?;
-        Ok(())
-    }
     fn process_data_from_server(&mut self, data: &[u8]) -> Result<Vec<u8>, NCError> {
         debug!("SimulationNode::process_data_from_server, new message received");
 
