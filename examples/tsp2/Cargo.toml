@@ -12,7 +12,6 @@ simplelog = "0.10.0"
 structopt = "0.3"
 serde = { version = "1", features = ["derive"] }
 nanorand = "0.6.1"
-#fastrand = "1.5.0"
 darwin-rs = {path = "../../../darwin-rs"}
 
 [profile.release]
