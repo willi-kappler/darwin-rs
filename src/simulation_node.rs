@@ -1,7 +1,7 @@
 
 use crate::individual::{Individual, IndividualWrapper};
 
-use node_crunch::{NCNode, NCError, NCConfiguration, NodeID,
+use node_crunch::{NCNode, NCError, NCConfiguration,
     NCNodeStarter, nc_decode_data, nc_encode_data};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
