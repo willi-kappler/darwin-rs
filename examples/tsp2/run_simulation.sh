@@ -19,11 +19,10 @@ target/release/tsp2 -m 4 -i 50000 &
 sleep $DELAY
 target/release/tsp2 -m 8 -i 50000 &
 sleep $DELAY
-#target/release/tsp2 -m 25 &
+#target/release/tsp2 -m 16 -i 50000 &
 #sleep $DELAY
-#target/release/tsp2 -m 30 &
+#target/release/tsp2 -m 32 -i 50000 &
 #sleep $DELAY
-#target/release/tsp2 -m 35 &
+#target/release/tsp2 -m 64 -i 50000 &
 #sleep $DELAY
-#target/release/tsp2 -m 40 &
-
+#target/release/tsp2 -m 128 -i 50000 &
