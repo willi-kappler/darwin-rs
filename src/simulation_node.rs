@@ -38,12 +38,11 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
 
         population.sort();
 
-        let unsorted_population = population.clone();
         let best_fitness = population[0].get_fitness();
 
         Self {
             population,
-            unsorted_population,
+            unsorted_population: Vec::new(),
             num_of_individuals,
             nc_configuration: NCConfiguration::default(),
             num_of_iterations: 1000,
@@ -66,8 +65,20 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
     pub fn set_method(&mut self, method: Method) {
         self.method = method;
     }
-    pub fn run(self) {
+    pub fn run(mut self) {
         debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}'", self.num_of_individuals, self.num_of_iterations, self.num_of_mutations);
+
+        match self.method {
+            Method::LowMem => {
+                let mut individual = self.population[0].clone();
+                individual.mutate();
+                individual.calculate_fitness();
+                self.unsorted_population.push(individual);
+            }
+            _ => {
+                self.unsorted_population = self.population.clone();
+            }
+        }
 
         let mut node_starter = NCNodeStarter::new(self.nc_configuration.clone());
 
@@ -177,6 +188,7 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
                     }
 
                     self.population.push(current_best);
+                    self.population.push(self.unsorted_population[0].clone());
                     self.population.sort();
                     self.population.dedup();
                     self.population.truncate(self.num_of_individuals);
@@ -184,6 +196,9 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
                     if self.population[0].get_fitness() < self.fitness_limit {
                         break
                     }
+
+                    self.unsorted_population[0].mutate();
+                    self.unsorted_population[0].calculate_fitness();
                 }
             }
         }
