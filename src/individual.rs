@@ -6,6 +6,9 @@ use std::cmp::Ordering;
 pub trait Individual {
     fn mutate(&mut self);
     fn calculate_fitness(&self) -> f64;
+    fn get_additional_fitness(&self) -> f64 {
+        0.0
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -29,6 +32,9 @@ impl<T: Individual> IndividualWrapper<T> {
     }
     pub fn get_fitness(&self) -> f64 {
         self.fitness
+    }
+    pub fn get_additional_fitness(&self) -> f64 {
+        self.individual.get_additional_fitness()
     }
 }
 

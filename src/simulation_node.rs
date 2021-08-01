@@ -23,6 +23,7 @@ pub struct SimulationNode<T> {
     best_fitness: f64,
     best_counter: u64,
     fitness_limit: f64,
+    additional_fitness_threshold: Option<f64>,
 }
 
 impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
@@ -51,6 +52,7 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
             best_fitness,
             best_counter: 0,
             fitness_limit: 0.0,
+            additional_fitness_threshold: None,
         }
     }
     pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
@@ -67,6 +69,9 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> SimulationNode<T> {
     }
     pub fn set_fitness_limit(&mut self, limit: f64) {
         self.fitness_limit = limit;
+    }
+    pub fn set_additional_fitness_threshold(&mut self, threshold: f64) {
+        self.additional_fitness_threshold = Some(threshold);
     }
     pub fn run(mut self) {
         debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}'",
@@ -201,6 +206,22 @@ impl<T: Individual + Clone + Serialize + DeserializeOwned> NCNode for Simulation
                     self.unsorted_population[0].calculate_fitness();
                 }
             }
+        }
+
+        if let Some(threshold) = self.additional_fitness_threshold {
+            self.population.sort_by(|i1, i2|{
+                let f1 = i1.get_fitness();
+                let f2 = i2.get_fitness();
+
+                if (f1 - f2).abs() < threshold {
+                    let af1 = i1.get_additional_fitness();
+                    let af2 = i2.get_additional_fitness();
+
+                    af1.partial_cmp(&af2).unwrap()
+                } else {
+                    f1.partial_cmp(&f2).unwrap()
+                }
+            });
         }
 
         let best_individual = &self.population[0];
