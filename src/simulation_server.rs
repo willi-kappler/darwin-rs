@@ -9,6 +9,11 @@ use serde::{Serialize, de::DeserializeOwned};
 use std::fs::File;
 use std::io::{Write, Read};
 
+pub enum FileFormat {
+    Binary,
+    JSON,
+}
+
 pub struct SimulationServer<T> {
     population: Vec<IndividualWrapper<T>>,
     fitness_limit: f64,
@@ -17,6 +22,7 @@ pub struct SimulationServer<T> {
     export_file_name: String,
     save_new_best_individual: bool,
     individual_file_counter: u64,
+    file_format: FileFormat,
 }
 
 impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> SimulationServer<T> {
@@ -40,6 +46,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
             export_file_name: "population_result.dat".to_string(),
             save_new_best_individual: false,
             individual_file_counter: 0,
+            file_format: FileFormat::Binary,
         }
     }
     pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
@@ -54,15 +61,23 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
     pub fn set_population(&mut self, population: Vec<IndividualWrapper<T>>) {
         self.population = population;
     }
+    pub fn set_file_format(&mut self, file_format: FileFormat) {
+        self.file_format = file_format;
+    }
     pub fn read_population_bin(&mut self, file_name: &str) -> Result<(), NCError> {
         let mut file = File::open(file_name)?;
         let mut data = Vec::new();
 
         file.read_to_end(&mut data)?;
 
-        let population = nc_decode_data::<Vec<IndividualWrapper<T>>>(&data)?;
-
-        self.population = population;
+        match self.file_format {
+            FileFormat::Binary => {
+                self.population = nc_decode_data::<Vec<IndividualWrapper<T>>>(&data)?;
+            }
+            FileFormat::JSON => {
+                todo!()
+            }
+        }
 
         Ok(())
     }
@@ -80,10 +95,18 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
             }
         }
     }
-    pub fn save_population_bin(&self) -> Result<(), NCError> {
+    pub fn save_population(&self) -> Result<(), NCError> {
         debug!("SimulationServer::save_population, to file: '{}'", self.export_file_name);
 
-        let data = nc_encode_data(&self.population)?;
+        let data: Vec<u8> = match self.file_format {
+            FileFormat::Binary => {
+                nc_encode_data(&self.population)?
+            }
+            FileFormat::JSON => {
+                todo!();
+            }
+        };
+
         let mut file = File::create(&self.export_file_name)?;
 
         file.write_all(&data)?;
@@ -94,9 +117,16 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
         self.population[0].fitness < self.fitness_limit
     }
     fn save_individual(&mut self, index: usize) -> Result<(), NCError> {
-        let data = nc_encode_data(&self.population[index])?;
+        let (data, ext): (Vec<u8>, &str) = match self.file_format {
+            FileFormat::Binary => {
+                (nc_encode_data(&self.population[index])?, "dat")
+            }
+            FileFormat::JSON => {
+                todo!();
+            }
+        };
 
-        let file_name = format!("individual_{}.dat", self.individual_file_counter);
+        let file_name = format!("individual_{}.{}", self.individual_file_counter, ext);
         let mut file = File::create(&file_name)?;
 
         file.write_all(&data)?;
@@ -166,6 +196,6 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
         // Nothing to do
     }
     fn finish_job(&mut self) {
-        self.save_population_bin().unwrap();
+        self.save_population().unwrap();
     }
 }
