@@ -44,7 +44,10 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
     pub fn set_export_file_name(&mut self, export_file_name: &str) {
         self.export_file_name = export_file_name.to_string();
     }
-    pub fn read_population(&mut self, file_name: &str) -> Result<(), NCError> {
+    pub fn set_population(&mut self, population: Vec<IndividualWrapper<T>>) {
+        self.population = population;
+    }
+    pub fn read_population_bin(&mut self, file_name: &str) -> Result<(), NCError> {
         let mut file = File::open(file_name)?;
         let mut data = Vec::new();
 
@@ -70,7 +73,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
             }
         }
     }
-    pub fn save_population(&self) -> Result<(), NCError> {
+    pub fn save_population_bin(&self) -> Result<(), NCError> {
         debug!("SimulationServer::save_population, to file: '{}'", self.export_file_name);
 
         let data = nc_encode_data(&self.population)?;
@@ -140,6 +143,6 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
         // Nothing to do
     }
     fn finish_job(&mut self) {
-        self.save_population().unwrap();
+        self.save_population_bin().unwrap();
     }
 }
