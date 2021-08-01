@@ -15,6 +15,8 @@ pub struct SimulationServer<T> {
     num_of_individuals: usize,
     nc_configuration: NCConfiguration,
     export_file_name: String,
+    save_new_best_individual: bool,
+    individual_file_counter: u64,
 }
 
 impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> SimulationServer<T> {
@@ -36,6 +38,8 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
             num_of_individuals,
             nc_configuration: NCConfiguration::default(),
             export_file_name: "population_result.dat".to_string(),
+            save_new_best_individual: false,
+            individual_file_counter: 0,
         }
     }
     pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
@@ -43,6 +47,9 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
     }
     pub fn set_export_file_name(&mut self, export_file_name: &str) {
         self.export_file_name = export_file_name.to_string();
+    }
+    pub fn set_save_new_best_individual(&mut self, save_new_best_individual: bool) {
+        self.save_new_best_individual = save_new_best_individual;
     }
     pub fn set_population(&mut self, population: Vec<IndividualWrapper<T>>) {
         self.population = population;
@@ -86,6 +93,17 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
     fn is_job_done(&self) -> bool {
         self.population[0].fitness < self.fitness_limit
     }
+    fn save_individual(&mut self, index: usize) -> Result<(), NCError> {
+        let data = nc_encode_data(&self.population[index])?;
+
+        let file_name = format!("individual_{}.dat", self.individual_file_counter);
+        let mut file = File::create(&file_name)?;
+
+        file.write_all(&data)?;
+
+        self.individual_file_counter += 1;
+        Ok(())
+    }
 }
 
 impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCServer for SimulationServer<T> {
@@ -121,8 +139,13 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
 
                 if fitness < best_fitness {
                     debug!("New best individual found: '{}', node_id: '{}'", fitness, node_id);
+
                     self.population.insert(0, individual);
                     self.population.truncate(self.num_of_individuals);
+
+                    if self.save_new_best_individual {
+                        self.save_individual(0)?;
+                    }
                 } else {
                     debug!("No new best individual found, fitness: '{}' >= best fitness: '{}'", fitness, best_fitness);
                 }

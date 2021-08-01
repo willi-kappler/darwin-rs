@@ -112,6 +112,7 @@ fn main() {
 
         let mut server = SimulationServer::new(tsp1, options.population, options.limit);
         server.set_configuration(nc_configuration);
+        server.set_save_new_best_individual(true);
         server.run();
     } else {
         let mut postfix: u64 = 1;
