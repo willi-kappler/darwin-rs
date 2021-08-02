@@ -10,6 +10,7 @@ use serde_json;
 
 use std::fs::File;
 use std::io::{Write, Read};
+// use std::collections::HashMap;
 
 pub enum DWFileFormat {
     Binary,
@@ -25,6 +26,7 @@ pub struct DWSimulationServer<T> {
     save_new_best_individual: bool,
     individual_file_counter: u64,
     file_format: DWFileFormat,
+    // node_score: HashMap<NodeID, u64>,
 }
 
 impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DWSimulationServer<T> {
@@ -49,6 +51,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
             save_new_best_individual: false,
             individual_file_counter: 0,
             file_format: DWFileFormat::Binary,
+            // node_score: HashMap::new(),
         }
     }
     pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
@@ -198,6 +201,9 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
 
                     self.population.insert(0, individual);
                     self.population.truncate(self.num_of_individuals);
+
+                    // let counter = self.node_score.entry(node_id).or_insert(0);
+                    // *counter += 1;
 
                     if self.save_new_best_individual {
                         match self.save_individual(0) {
