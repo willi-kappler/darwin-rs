@@ -9,12 +9,13 @@
 //!
 //!
 
-pub mod individual;
-pub mod simulation_server;
-pub mod simulation_node;
+pub mod dw_individual;
+pub mod dw_simulation_server;
+pub mod dw_simulation_node;
+pub mod dw_error;
 
-pub use individual::Individual;
-pub use simulation_server::SimulationServer;
-pub use simulation_node::{SimulationNode, Method};
+pub use dw_individual::DWIndividual;
+pub use dw_simulation_server::{DWSimulationServer, DWFileFormat};
+pub use dw_simulation_node::{DWSimulationNode, DWMethod};
 
 pub use node_crunch::NCConfiguration;

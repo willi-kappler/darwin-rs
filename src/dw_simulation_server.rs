@@ -1,36 +1,38 @@
 
-use crate::individual::{Individual, IndividualWrapper};
+use crate::dw_individual::{DWIndividual, DWIndividualWrapper};
+use crate::dw_error::DWError;
 
-use node_crunch::{NCServer, NCJobStatus, NCConfiguration, NCError, NodeID,
-    NCServerStarter, nc_decode_data, nc_encode_data};
+use node_crunch::{NCServer, NCJobStatus, NCConfiguration, NodeID,
+    NCServerStarter, nc_decode_data, nc_encode_data, NCError};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
+use serde_json;
 
 use std::fs::File;
 use std::io::{Write, Read};
 
-pub enum FileFormat {
+pub enum DWFileFormat {
     Binary,
     JSON,
 }
 
-pub struct SimulationServer<T> {
-    population: Vec<IndividualWrapper<T>>,
+pub struct DWSimulationServer<T> {
+    population: Vec<DWIndividualWrapper<T>>,
     fitness_limit: f64,
     num_of_individuals: usize,
     nc_configuration: NCConfiguration,
     export_file_name: String,
     save_new_best_individual: bool,
     individual_file_counter: u64,
-    file_format: FileFormat,
+    file_format: DWFileFormat,
 }
 
-impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> SimulationServer<T> {
+impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DWSimulationServer<T> {
     pub fn new(initial: T, num_of_individuals: usize, fitness_limit: f64) -> Self {
         let mut population = Vec::with_capacity(num_of_individuals);
 
         for _ in 0..num_of_individuals {
-            let mut individual = IndividualWrapper::new(initial.clone());
+            let mut individual = DWIndividualWrapper::new(initial.clone());
             individual.mutate();
             individual.calculate_fitness();
             population.push(individual);
@@ -46,7 +48,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
             export_file_name: "population_result.dat".to_string(),
             save_new_best_individual: false,
             individual_file_counter: 0,
-            file_format: FileFormat::Binary,
+            file_format: DWFileFormat::Binary,
         }
     }
     pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
@@ -58,24 +60,24 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
     pub fn set_save_new_best_individual(&mut self, save_new_best_individual: bool) {
         self.save_new_best_individual = save_new_best_individual;
     }
-    pub fn set_population(&mut self, population: Vec<IndividualWrapper<T>>) {
+    pub fn set_population(&mut self, population: Vec<DWIndividualWrapper<T>>) {
         self.population = population;
     }
-    pub fn set_file_format(&mut self, file_format: FileFormat) {
+    pub fn set_file_format(&mut self, file_format: DWFileFormat) {
         self.file_format = file_format;
     }
-    pub fn read_population_bin(&mut self, file_name: &str) -> Result<(), NCError> {
+    pub fn read_population_bin(&mut self, file_name: &str) -> Result<(), DWError> {
         let mut file = File::open(file_name)?;
         let mut data = Vec::new();
 
         file.read_to_end(&mut data)?;
 
         match self.file_format {
-            FileFormat::Binary => {
-                self.population = nc_decode_data::<Vec<IndividualWrapper<T>>>(&data)?;
+            DWFileFormat::Binary => {
+                self.population = nc_decode_data(&data)?;
             }
-            FileFormat::JSON => {
-                todo!()
+            DWFileFormat::JSON => {
+                self.population = serde_json::from_slice(&data)?;
             }
         }
 
@@ -95,15 +97,15 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
             }
         }
     }
-    pub fn save_population(&self) -> Result<(), NCError> {
+    pub fn save_population(&self) -> Result<(), DWError> {
         debug!("SimulationServer::save_population, to file: '{}'", self.export_file_name);
 
         let data: Vec<u8> = match self.file_format {
-            FileFormat::Binary => {
+            DWFileFormat::Binary => {
                 nc_encode_data(&self.population)?
             }
-            FileFormat::JSON => {
-                todo!();
+            DWFileFormat::JSON => {
+                serde_json::ser::to_vec(&self.population)?
             }
         };
 
@@ -116,13 +118,13 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
     fn is_job_done(&self) -> bool {
         self.population[0].fitness < self.fitness_limit
     }
-    fn save_individual(&mut self, index: usize) -> Result<(), NCError> {
+    fn save_individual(&mut self, index: usize) -> Result<(), DWError> {
         let (data, ext): (Vec<u8>, &str) = match self.file_format {
-            FileFormat::Binary => {
+            DWFileFormat::Binary => {
                 (nc_encode_data(&self.population[index])?, "dat")
             }
-            FileFormat::JSON => {
-                todo!();
+            DWFileFormat::JSON => {
+                (serde_json::ser::to_vec(&self.population[index])?, "json")
             }
         };
 
@@ -136,7 +138,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> Simu
     }
 }
 
-impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCServer for SimulationServer<T> {
+impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NCServer for DWSimulationServer<T> {
     fn prepare_data_for_node(&mut self, node_id: NodeID) -> Result<NCJobStatus, NCError> {
         debug!("SimulationServer::prepare_data_for_node, node_id: {}", node_id);
 
@@ -160,7 +162,7 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
     fn process_data_from_node(&mut self, node_id: NodeID, node_data: &[u8]) -> Result<(), NCError> {
         debug!("SimulationServer::process_data_from_node, node_id: {}", node_id);
 
-        match nc_decode_data::<Option<IndividualWrapper<T>>>(node_data) {
+        match nc_decode_data::<Option<DWIndividualWrapper<T>>>(node_data) {
             Ok(Some(individual)) => {
                 // TODO: Use a sorted data structure
                 // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
@@ -174,7 +176,14 @@ impl<T: 'static + Individual + Clone + Send + Serialize + DeserializeOwned> NCSe
                     self.population.truncate(self.num_of_individuals);
 
                     if self.save_new_best_individual {
-                        self.save_individual(0)?;
+                        match self.save_individual(0) {
+                            Ok(_) => {
+
+                            }
+                            Err(e) => {
+                                error!("An error occurred while saving the new best individual: {}", e);
+                            }
+                        }
                     }
                 } else {
                     debug!("No new best individual found, fitness: '{}' >= best fitness: '{}'", fitness, best_fitness);

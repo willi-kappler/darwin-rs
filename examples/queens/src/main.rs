@@ -1,6 +1,6 @@
 
 
-use darwin_rs::{SimulationNode, SimulationServer, Individual, Method, NCConfiguration};
+use darwin_rs::{DWSimulationNode, DWSimulationServer, DWIndividual, DWMethod, NCConfiguration};
 
 use nanorand::{Rng, WyRand};
 use structopt::StructOpt;
@@ -102,7 +102,7 @@ impl Queens {
     }
 }
 
-impl Individual for Queens {
+impl DWIndividual for Queens {
     fn mutate(&mut self) {
         let mut rng = WyRand::new();
         let last = self.board.len();
@@ -156,7 +156,7 @@ fn main() {
         let log_file = fs::File::create("server.log").unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut server = SimulationServer::new(queens, options.population, options.limit);
+        let mut server = DWSimulationServer::new(queens, options.population, options.limit);
         server.set_configuration(nc_configuration);
         server.run();
     } else {
@@ -176,12 +176,12 @@ fn main() {
         let log_file = fs::File::create(&log_file_name).unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut node = SimulationNode::new(queens, options.population);
+        let mut node = DWSimulationNode::new(queens, options.population);
         node.set_configuration(nc_configuration);
         node.set_num_of_iteration(options.num_of_iterations);
         node.set_num_of_mutations(options.num_of_mutations);
         node.set_fitness_limit(options.limit);
-        node.set_method(Method::Simple);
+        node.set_method(DWMethod::Simple);
         node.run();
     }
 }

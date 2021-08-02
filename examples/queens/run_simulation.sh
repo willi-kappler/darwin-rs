@@ -2,7 +2,7 @@
 
 killall queens
 
-rm *.log *.dat
+rm *.log *.dat *.json
 
 DELAY=0.1
 

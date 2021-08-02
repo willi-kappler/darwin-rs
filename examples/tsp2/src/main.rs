@@ -1,6 +1,7 @@
 
 
-use darwin_rs::{SimulationNode, SimulationServer, Individual, Method, NCConfiguration};
+use darwin_rs::{DWSimulationNode, DWSimulationServer, DWIndividual,
+    DWFileFormat, NCConfiguration};
 
 use nanorand::{Rng, WyRand};
 use structopt::StructOpt;
@@ -61,7 +62,7 @@ impl TSP2 {
     }
 }
 
-impl Individual for TSP2 {
+impl DWIndividual for TSP2 {
     fn mutate(&mut self) {
         let mut rng = WyRand::new();
         let last = self.cities.len();
@@ -126,9 +127,10 @@ fn main() {
         let log_file = fs::File::create("server.log").unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut server = SimulationServer::new(tsp2, options.population, options.limit);
+        let mut server = DWSimulationServer::new(tsp2, options.population, options.limit);
         server.set_configuration(nc_configuration);
         server.set_save_new_best_individual(true);
+        server.set_file_format(DWFileFormat::JSON);
         server.run();
     } else {
         let mut postfix: u64 = 1;
@@ -147,7 +149,7 @@ fn main() {
         let log_file = fs::File::create(&log_file_name).unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut node = SimulationNode::new(tsp2, options.population);
+        let mut node = DWSimulationNode::new(tsp2, options.population);
         node.set_configuration(nc_configuration);
         node.set_num_of_iteration(options.num_of_iterations);
         node.set_num_of_mutations(options.num_of_mutations);
