@@ -66,7 +66,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
     pub fn set_file_format(&mut self, file_format: DWFileFormat) {
         self.file_format = file_format;
     }
-    pub fn read_population_bin(&mut self, file_name: &str) -> Result<(), DWError> {
+    pub fn read_population(&mut self, file_name: &str) -> Result<(), DWError> {
         let mut file = File::open(file_name)?;
         let mut data = Vec::new();
 
@@ -82,6 +82,30 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
         }
 
         Ok(())
+    }
+    pub fn read_individual(&mut self, file_name: &str) -> Result<(), DWError> {
+        let mut file = File::open(file_name)?;
+        let mut data = Vec::new();
+
+        file.read_to_end(&mut data)?;
+
+        let individual: DWIndividualWrapper<T> = match self.file_format {
+            DWFileFormat::Binary => {
+                nc_decode_data(&data)?
+            }
+            DWFileFormat::JSON => {
+                serde_json::from_slice(&data)?
+            }
+        };
+
+        self.add_individual(individual);
+
+        Ok(())
+    }
+    pub fn add_individual(&mut self, individual: DWIndividualWrapper<T>) {
+        self.population.push(individual);
+        self.population.sort();
+        self.population.truncate(self.num_of_individuals);
     }
     pub fn run(self) {
         debug!("Start server with fitness limit: '{}', population size: '{}'", self.fitness_limit, self.num_of_individuals);
