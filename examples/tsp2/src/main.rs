@@ -73,7 +73,7 @@ impl DWIndividual for TSP2 {
             index2 = rng.generate_range(1_usize..last);
         }
 
-        let operation = rng.generate_range(0_u8..2);
+        let operation = rng.generate_range(0_u8..3);
 
         match operation {
             0 => {
@@ -84,6 +84,15 @@ impl DWIndividual for TSP2 {
                 // Rotate (shift) items
                 let tmp = self.cities.remove(index1);
                 self.cities.insert(index2, tmp);
+            }
+            2 => {
+                // Reverse order of items
+                let slice = if index1 < index2 {
+                    &mut self.cities[index1..index2]
+                } else {
+                    &mut self.cities[index2..index1]
+                };
+                slice.reverse();
             }
             _ => {
                 error!("Unknown operation: '{}'", operation);
