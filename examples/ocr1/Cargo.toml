@@ -1,0 +1,21 @@
+[package]
+name = "ocr1"
+version = "0.1.0"
+authors = ["Willi Kappler grandor@gmx.de"]
+edition = "2018"
+description = "OCR1 example for darwin-rs"
+license = "MIT"
+
+[dependencies]
+log = "0.4"
+simplelog = "0.10"
+structopt = "0.3"
+serde = { version = "1", features = ["derive"] }
+nanorand = "0.6"
+darwin-rs = {path = "../../../darwin-rs"}
+image = "0.23"
+imageproc = "0.22"
+fontdue = "0.5"
+
+[profile.release]
+lto = true
