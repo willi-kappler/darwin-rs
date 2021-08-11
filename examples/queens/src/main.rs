@@ -1,10 +1,10 @@
 
 
-use darwin_rs::{DWSimulationNode, DWSimulationServer, DWIndividual, DWMethod, NCConfiguration};
+use darwin_rs::{DWNode, DWServer, DWIndividual, NCConfiguration, DWConfiguration};
 
 use nanorand::{Rng, WyRand};
 use structopt::StructOpt;
-use simplelog::{WriteLogger, LevelFilter, Config};
+use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
 
 use std::fs;
@@ -149,15 +149,22 @@ fn main() {
         ..Default::default()
     };
 
+    let dw_configuration = DWConfiguration {
+        num_of_individuals: options.population,
+        fitness_limit: options.limit,
+        num_of_iterations: options.num_of_iterations,
+        num_of_mutations: options.num_of_mutations,
+        ..Default::default()
+    };
+
     let log_level = LevelFilter::Debug;
-    let log_config = Config::default();
+    let log_config = ConfigBuilder::new().set_time_format_str("%Y.%m.%d %H:%M:%S").build();
 
     if options.server {
         let log_file = fs::File::create("server.log").unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut server = DWSimulationServer::new(queens, options.population, options.limit);
-        server.set_configuration(nc_configuration);
+        let server = DWServer::new(queens, dw_configuration, nc_configuration);
         server.run();
     } else {
         let mut postfix: u64 = 1;
@@ -176,12 +183,7 @@ fn main() {
         let log_file = fs::File::create(&log_file_name).unwrap();
         WriteLogger::init(log_level, log_config, log_file).unwrap();
 
-        let mut node = DWSimulationNode::new(queens, options.population);
-        node.set_configuration(nc_configuration);
-        node.set_num_of_iteration(options.num_of_iterations);
-        node.set_num_of_mutations(options.num_of_mutations);
-        node.set_fitness_limit(options.limit);
-        node.set_method(DWMethod::Simple);
+        let node = DWNode::new(queens, dw_configuration, nc_configuration);
         node.run();
     }
 }
