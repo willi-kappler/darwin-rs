@@ -1,6 +1,7 @@
 
 use crate::dw_individual::{DWIndividual, DWIndividualWrapper};
 use crate::dw_error::DWError;
+use crate::dw_config::DWConfiguration;
 
 use node_crunch::{NCServer, NCJobStatus, NCConfiguration, NodeID,
     NCServerStarter, nc_decode_data, nc_encode_data, NCError};
@@ -12,12 +13,13 @@ use std::fs::File;
 use std::io::{Write, Read};
 // use std::collections::HashMap;
 
+#[derive(Debug, Clone)]
 pub enum DWFileFormat {
     Binary,
     JSON,
 }
 
-pub struct DWSimulationServer<T> {
+pub struct DWServer<T> {
     population: Vec<DWIndividualWrapper<T>>,
     fitness_limit: f64,
     num_of_individuals: usize,
@@ -29,8 +31,9 @@ pub struct DWSimulationServer<T> {
     // node_score: HashMap<NodeID, u64>,
 }
 
-impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DWSimulationServer<T> {
-    pub fn new(initial: T, num_of_individuals: usize, fitness_limit: f64) -> Self {
+impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DWServer<T> {
+    pub fn new(initial: T, dw_configuration: DWConfiguration, nc_configuration: NCConfiguration) -> Self {
+        let num_of_individuals = dw_configuration.num_of_individuals;
         let mut population = Vec::with_capacity(num_of_individuals);
 
         for _ in 0..num_of_individuals {
@@ -44,30 +47,18 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
 
         Self {
             population,
-            fitness_limit,
+            fitness_limit: dw_configuration.fitness_limit,
             num_of_individuals,
-            nc_configuration: NCConfiguration::default(),
-            export_file_name: "population_result.dat".to_string(),
-            save_new_best_individual: false,
+            nc_configuration,
+            export_file_name: dw_configuration.export_file_name,
+            save_new_best_individual: dw_configuration.save_new_best_individual,
             individual_file_counter: 0,
-            file_format: DWFileFormat::Binary,
+            file_format: dw_configuration.file_format,
             // node_score: HashMap::new(),
         }
     }
-    pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
-        self.nc_configuration = nc_configuration;
-    }
-    pub fn set_export_file_name(&mut self, export_file_name: &str) {
-        self.export_file_name = export_file_name.to_string();
-    }
-    pub fn set_save_new_best_individual(&mut self, save_new_best_individual: bool) {
-        self.save_new_best_individual = save_new_best_individual;
-    }
     pub fn set_population(&mut self, population: Vec<DWIndividualWrapper<T>>) {
         self.population = population;
-    }
-    pub fn set_file_format(&mut self, file_format: DWFileFormat) {
-        self.file_format = file_format;
     }
     pub fn read_population(&mut self, file_name: &str) -> Result<(), DWError> {
         let mut file = File::open(file_name)?;
@@ -117,7 +108,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
 
         match server_starter.start(self) {
             Ok(_) => {
-                info!("Calculation finished");
+                info!("Simulation finished");
             }
             Err(e) => {
                 error!("An error occurred: {}", e);
@@ -165,7 +156,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
     }
 }
 
-impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NCServer for DWSimulationServer<T> {
+impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NCServer for DWServer<T> {
     fn prepare_data_for_node(&mut self, node_id: NodeID) -> Result<NCJobStatus, NCError> {
         debug!("SimulationServer::prepare_data_for_node, node_id: {}", node_id);
 

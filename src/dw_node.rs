@@ -1,33 +1,36 @@
 
 use crate::dw_individual::{DWIndividual, DWIndividualWrapper};
+use crate::dw_config::DWConfiguration;
 
 use node_crunch::{NCNode, NCConfiguration, NCError,
     NCNodeStarter, nc_decode_data, nc_encode_data};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
 
+#[derive(Debug, Clone)]
 pub enum DWMethod {
     Simple,
     OnlyBest,
     LowMem,
 }
 
-pub struct DWSimulationNode<T> {
+pub struct DWNode<T> {
     population: Vec<DWIndividualWrapper<T>>,
     unsorted_population: Vec<DWIndividualWrapper<T>>,
     num_of_individuals: usize,
     nc_configuration: NCConfiguration,
     num_of_iterations: u64,
     num_of_mutations: u64,
-    method: DWMethod,
+    mutate_method: DWMethod,
     best_fitness: f64,
     best_counter: u64,
     fitness_limit: f64,
     additional_fitness_threshold: Option<f64>,
 }
 
-impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWSimulationNode<T> {
-    pub fn new(initial: T, num_of_individuals: usize) -> Self {
+impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
+    pub fn new(initial: T, dw_configuration: DWConfiguration, nc_configuration: NCConfiguration) -> Self {
+        let num_of_individuals = dw_configuration.num_of_individuals;
         let mut population = Vec::with_capacity(num_of_individuals);
 
         for _ in 0..num_of_individuals {
@@ -45,39 +48,21 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWSimulationNode<T>
             population,
             unsorted_population: Vec::new(),
             num_of_individuals,
-            nc_configuration: NCConfiguration::default(),
-            num_of_iterations: 1000,
-            num_of_mutations: 10,
-            method: DWMethod::OnlyBest,
+            nc_configuration,
+            num_of_iterations: dw_configuration.num_of_iterations,
+            num_of_mutations: dw_configuration.num_of_mutations,
+            mutate_method: dw_configuration.mutate_method,
             best_fitness,
             best_counter: 0,
-            fitness_limit: 0.0,
-            additional_fitness_threshold: None,
+            fitness_limit: dw_configuration.fitness_limit,
+            additional_fitness_threshold: dw_configuration.additional_fitness_threshold,
         }
-    }
-    pub fn set_configuration(&mut self, nc_configuration: NCConfiguration) {
-        self.nc_configuration = nc_configuration;
-    }
-    pub fn set_num_of_iteration(&mut self, num_of_iterations: u64) {
-        self.num_of_iterations = num_of_iterations;
-    }
-    pub fn set_num_of_mutations(&mut self, num_of_mutations: u64) {
-        self.num_of_mutations = num_of_mutations;
-    }
-    pub fn set_method(&mut self, method: DWMethod) {
-        self.method = method;
-    }
-    pub fn set_fitness_limit(&mut self, limit: f64) {
-        self.fitness_limit = limit;
-    }
-    pub fn set_additional_fitness_threshold(&mut self, threshold: f64) {
-        self.additional_fitness_threshold = Some(threshold);
     }
     pub fn run(mut self) {
         debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}'",
             self.num_of_individuals, self.num_of_iterations, self.num_of_mutations, self.fitness_limit);
 
-        match self.method {
+        match self.mutate_method {
             DWMethod::LowMem => {
                 let mut individual = self.population[0].clone();
                 individual.mutate();
@@ -93,7 +78,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWSimulationNode<T>
 
         match node_starter.start(self) {
             Ok(_) => {
-                info!("Calculation finished");
+                info!("Simulation finished");
             }
             Err(e) => {
                 error!("An error occurred: {}", e);
@@ -102,7 +87,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWSimulationNode<T>
     }
 }
 
-impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWSimulationNode<T> {
+impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T> {
     fn process_data_from_server(&mut self, data: &[u8]) -> Result<Vec<u8>, NCError> {
         debug!("SimulationNode::process_data_from_server, new message received");
 
@@ -115,7 +100,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWSimula
             self.best_fitness = fitness;
         }
 
-        match self.method {
+        match self.mutate_method {
             DWMethod::Simple => {
                 for _ in 0..self.num_of_iterations {
                     let mut original1 = self.population.clone();
