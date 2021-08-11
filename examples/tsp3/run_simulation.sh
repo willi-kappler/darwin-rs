@@ -6,23 +6,23 @@ rm *.log *.dat
 
 DELAY=0.1
 
-# best may be: 91379.51073418828
-target/release/tsp3 -l 91380.0 -s &
+# best may be: 90878.5569909252
+target/release/tsp3 -l 90880.0 -s &
 
 sleep 2
 
-target/release/tsp3 -m 1 -i 500000 &
+target/release/tsp3 -m 10 -i 10000 -o 10 &
 sleep $DELAY
-target/release/tsp3 -m 2 -i 500000 &
+target/release/tsp3 -m 10 -i 10000 -o 100 &
 sleep $DELAY
-target/release/tsp3 -m 4 -i 500000 &
+target/release/tsp3 -m 10 -i 100000 -o 10 &
 sleep $DELAY
-target/release/tsp3 -m 8 -i 500000 &
+target/release/tsp3 -m 10 -i 100000 -o 100 &
 sleep $DELAY
-#target/release/tsp3 -m 16 -i 500000 &
-#sleep $DELAY
-#target/release/tsp3 -m 32 -i 500000 &
-#sleep $DELAY
-#target/release/tsp3 -m 64 -i 500000 &
-#sleep $DELAY
-#target/release/tsp3 -m 128 -i 500000 &
+target/release/tsp3 -m 100 -i 10000 -o 10 &
+sleep $DELAY
+target/release/tsp3 -m 100 -i 10000 -o 100 &
+sleep $DELAY
+target/release/tsp3 -m 100 -i 100000 -o 10 &
+sleep $DELAY
+target/release/tsp3 -m 100 -i 100000 -o 100 &
