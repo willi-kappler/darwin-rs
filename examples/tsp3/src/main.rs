@@ -1,6 +1,6 @@
 
 
-use darwin_rs::{DWNode, DWServer, DWIndividual, NCConfiguration, DWConfiguration};
+use darwin_rs::{DWNode, DWServer, DWIndividual, DWMethod, NCConfiguration, DWConfiguration};
 
 use nanorand::{Rng, WyRand};
 use structopt::StructOpt;
@@ -150,6 +150,7 @@ fn main() {
         fitness_limit: options.limit,
         num_of_iterations: options.num_of_iterations,
         num_of_mutations: options.num_of_mutations,
+        mutate_method: DWMethod::OnlyBest,
         ..Default::default()
     };
 
