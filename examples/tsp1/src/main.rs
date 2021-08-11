@@ -20,7 +20,7 @@ pub struct TSP1Opt {
     port: u16,
     #[structopt(short = "o", long = "population", default_value = "20")]
     population: usize,
-    #[structopt(short = "l", long = "limit", default_value = "459.0")]
+    #[structopt(short = "l", long = "limit", default_value = "1.0")]
     limit: f64,
     #[structopt(short = "i", long = "iter", default_value = "1000")]
     num_of_iterations: u64,
