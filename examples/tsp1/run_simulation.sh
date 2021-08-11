@@ -11,13 +11,13 @@ target/release/tsp1 -l 400.0 -s &
 
 sleep 2
 
-target/release/tsp1 -m 1 -i 50000 &
+target/release/tsp1 -m 1 -i 500000 &
 sleep $DELAY
-target/release/tsp1 -m 2 -i 50000 &
+target/release/tsp1 -m 2 -i 500000 &
 sleep $DELAY
-target/release/tsp1 -m 4 -i 50000 &
+target/release/tsp1 -m 4 -i 500000 &
 sleep $DELAY
-target/release/tsp1 -m 8 -i 50000 &
+target/release/tsp1 -m 8 -i 500000 &
 sleep $DELAY
 #target/release/tsp1 -m 16 -i 50000 &
 #sleep $DELAY
