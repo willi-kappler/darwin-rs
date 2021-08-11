@@ -61,6 +61,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
     pub fn run(mut self) {
         debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}'",
             self.num_of_individuals, self.num_of_iterations, self.num_of_mutations, self.fitness_limit);
+        debug!("Starting with best fitness: {}", self.best_fitness);
 
         match self.mutate_method {
             DWMethod::LowMem => {
@@ -207,6 +208,10 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     f1.partial_cmp(&f2).unwrap()
                 }
             });
+        }
+
+        for individual in self.population.iter() {
+            debug!("fitness: {}", individual.get_fitness());
         }
 
         let best_individual = &self.population[0];
