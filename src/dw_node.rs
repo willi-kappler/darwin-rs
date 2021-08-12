@@ -12,6 +12,7 @@ pub enum DWMethod {
     Simple,
     OnlyBest,
     LowMem,
+    Keep,
 }
 
 pub struct DWNode<T> {
@@ -101,6 +102,9 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             self.best_fitness = fitness;
         }
 
+        // TODO: use a sorted data structure
+        // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
+
         match self.mutate_method {
             DWMethod::Simple => {
                 for _ in 0..self.num_of_iterations {
@@ -114,8 +118,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         individual.calculate_fitness();
                     }
 
-                    // TODO: use a sorted data structure
-                    // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
                     self.population.append(&mut original1);
                     self.population.append(&mut original2);
                     self.population.sort();
@@ -190,6 +192,32 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                     self.unsorted_population[0].mutate();
                     self.unsorted_population[0].calculate_fitness();
+                }
+            }
+            DWMethod::Keep => {
+                for _ in 0..self.num_of_iterations {
+                    let mut original = self.unsorted_population.clone();
+
+                    for individual in self.population.iter_mut() {
+                        for _ in 0..self.num_of_mutations {
+                            individual.mutate();
+                        }
+                        individual.calculate_fitness();
+                    }
+
+                    self.population.append(&mut original);
+                    self.population.sort();
+                    self.population.dedup();
+                    self.population.truncate(self.num_of_individuals);
+
+                    if self.population[0].get_fitness() < self.fitness_limit {
+                        break
+                    }
+
+                    for individual in self.unsorted_population.iter_mut() {
+                        individual.mutate();
+                        individual.calculate_fitness();
+                    }
                 }
             }
         }
