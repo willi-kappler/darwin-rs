@@ -1,11 +1,18 @@
 
+
 use crate::dw_individual::{DWIndividual, DWIndividualWrapper};
 use crate::dw_config::DWConfiguration;
+use crate::dw_error::DWError;
 
 use node_crunch::{NCNode, NCConfiguration, NCError,
     NCNodeStarter, nc_decode_data, nc_encode_data};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
+    
+use std::convert::TryFrom;
+use std::fmt::Display;
+use std::str::FromStr;
+
 
 #[derive(Debug, Clone)]
 pub enum DWMethod {
@@ -13,6 +20,73 @@ pub enum DWMethod {
     OnlyBest,
     LowMem,
     Keep,
+}
+
+impl FromStr for DWMethod {
+    type Err = DWError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "simple" => {
+                Ok(DWMethod::Simple)
+            }
+            "only_best" => {
+                Ok(DWMethod::OnlyBest)
+            }
+            "low_mem" => {
+                Ok(DWMethod::LowMem)
+            }
+            "keep" => {
+                Ok(DWMethod::Keep)
+            }
+            _ => {
+                Err(DWError::ParseDWMethodError(s.to_string()))
+            }
+        }
+    }
+}
+
+impl TryFrom<u8> for DWMethod {
+    type Error = DWError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => {
+                Ok(DWMethod::Simple)
+            }
+            1 => {
+                Ok(DWMethod::OnlyBest)
+            }
+            2 => {
+                Ok(DWMethod::LowMem)
+            }
+            3 => {
+                Ok(DWMethod::Keep)
+            }
+            _ => {
+                Err(DWError::ConvertDWMethodError(value))
+            }
+        }
+    }
+}
+
+impl Display for DWMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DWMethod::Simple => {
+                write!(f, "simple")
+            }
+            DWMethod::OnlyBest => {
+                write!(f, "only_best")
+            }
+            DWMethod::LowMem => {
+                write!(f, "low_mem")
+            }
+            DWMethod::Keep => {
+                write!(f, "keep")
+            }
+        }
+    }
 }
 
 pub struct DWNode<T> {
@@ -60,8 +134,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
         }
     }
     pub fn run(mut self) {
-        debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}'",
-            self.num_of_individuals, self.num_of_iterations, self.num_of_mutations, self.fitness_limit);
+        debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}', method: '{}'",
+            self.num_of_individuals, self.num_of_iterations, self.num_of_mutations, self.fitness_limit, self.mutate_method);
         debug!("Starting with best fitness: {}", self.best_fitness);
 
         match self.mutate_method {

@@ -15,5 +15,11 @@ pub enum DWError {
     IOError(#[from] io::Error),
     /// Serde JSON error
     #[error("Serde JSON error: {0}")]
-    JSONError(#[from] serde_json::Error)
+    JSONError(#[from] serde_json::Error),
+    /// Parse DWMethod error
+    #[error("Could not parse DWMethod: {0}")]
+    ParseDWMethodError(String),
+    /// Convert DWMethod error
+    #[error("Could not convert integer to DWMethod: {0}")]
+    ConvertDWMethodError(u8),
 }

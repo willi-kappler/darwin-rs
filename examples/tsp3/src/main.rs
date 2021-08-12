@@ -29,6 +29,8 @@ pub struct TSP3Opt {
     num_of_mutations: u64,
     #[structopt(short = "f", long = "file", default_value = "att532.txt")]
     input_file: String,
+    #[structopt(long = "method", default_value = "only_best")]
+    method: DWMethod,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -164,7 +166,7 @@ fn main() {
         fitness_limit: options.limit,
         num_of_iterations: options.num_of_iterations,
         num_of_mutations: options.num_of_mutations,
-        mutate_method: DWMethod::OnlyBest,
+        mutate_method: options.method,
         ..Default::default()
     };
 
