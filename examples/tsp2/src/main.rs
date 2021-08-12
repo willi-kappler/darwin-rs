@@ -72,7 +72,7 @@ impl DWIndividual for TSP2 {
             index2 = rng.generate_range(1_usize..last);
         }
 
-        let operation = rng.generate_range(0_u8..3);
+        let operation = rng.generate_range(0_u8..4);
 
         match operation {
             0 => {
@@ -92,6 +92,20 @@ impl DWIndividual for TSP2 {
                     &mut self.cities[index2..index1]
                 };
                 slice.reverse();
+            }
+            3 => {
+                // Split and swap two parts
+                let mut temp = vec![(0.0, 0.0); last];
+                temp[0] = self.cities[0];
+                let index3 = last - index1 + 1;
+
+                for i in 1..index3 {
+                    temp[i] = self.cities[index1 + i - 1];
+                }
+                for i in index3..last {
+                    temp[i] = self.cities[i - index3 + 1];
+                }
+                self.cities = temp;
             }
             _ => {
                 error!("Unknown operation: '{}'", operation);
