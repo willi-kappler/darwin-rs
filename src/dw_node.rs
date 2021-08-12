@@ -196,6 +196,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             }
             DWMethod::Keep => {
                 for _ in 0..self.num_of_iterations {
+                    let current_best = self.population[0].clone();
                     let mut original = self.unsorted_population.clone();
 
                     for individual in self.population.iter_mut() {
@@ -205,6 +206,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         individual.calculate_fitness();
                     }
 
+                    self.population.push(current_best);
                     self.population.append(&mut original);
                     self.population.sort();
                     self.population.dedup();
