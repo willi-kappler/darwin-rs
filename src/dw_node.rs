@@ -8,18 +8,19 @@ use node_crunch::{NCNode, NCConfiguration, NCError,
     NCNodeStarter, nc_decode_data, nc_encode_data};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
-    
+
 use std::convert::TryFrom;
 use std::fmt::Display;
 use std::str::FromStr;
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DWMethod {
     Simple,
     OnlyBest,
     LowMem,
     Keep,
+    Reset,
 }
 
 impl FromStr for DWMethod {
@@ -38,6 +39,9 @@ impl FromStr for DWMethod {
             }
             "keep" => {
                 Ok(DWMethod::Keep)
+            }
+            "reset" => {
+                Ok(DWMethod::Reset)
             }
             _ => {
                 Err(DWError::ParseDWMethodError(s.to_string()))
@@ -63,6 +67,9 @@ impl TryFrom<u8> for DWMethod {
             3 => {
                 Ok(DWMethod::Keep)
             }
+            4 => {
+                Ok(DWMethod::Reset)
+            }
             _ => {
                 Err(DWError::ConvertDWMethodError(value))
             }
@@ -85,6 +92,9 @@ impl Display for DWMethod {
             DWMethod::Keep => {
                 write!(f, "keep")
             }
+            DWMethod::Reset => {
+                write!(f, "reset")
+            }
         }
     }
 }
@@ -101,6 +111,7 @@ pub struct DWNode<T> {
     best_counter: u64,
     fitness_limit: f64,
     additional_fitness_threshold: Option<f64>,
+    reset_initial: Option<DWIndividualWrapper<T>>,
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
@@ -119,9 +130,24 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
 
         let best_fitness = population[0].get_fitness();
 
+        let mut unsorted_population = Vec::new();
+        let mut reset_initial = None;
+
+        if dw_configuration.mutate_method == DWMethod::LowMem {
+            let individual = population[0].clone();
+            unsorted_population.push(individual);
+        } else {
+            unsorted_population = population.clone();
+
+            if dw_configuration.mutate_method == DWMethod::Reset {
+                reset_initial = Some(DWIndividualWrapper::new(initial.clone()));
+            }
+        }
+
+
         Self {
             population,
-            unsorted_population: Vec::new(),
+            unsorted_population,
             num_of_individuals,
             nc_configuration,
             num_of_iterations: dw_configuration.num_of_iterations,
@@ -131,24 +157,13 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
             best_counter: 0,
             fitness_limit: dw_configuration.fitness_limit,
             additional_fitness_threshold: dw_configuration.additional_fitness_threshold,
+            reset_initial,
         }
     }
-    pub fn run(mut self) {
+    pub fn run(self) {
         debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}', method: '{}'",
             self.num_of_individuals, self.num_of_iterations, self.num_of_mutations, self.fitness_limit, self.mutate_method);
         debug!("Starting with best fitness: {}", self.best_fitness);
-
-        match self.mutate_method {
-            DWMethod::LowMem => {
-                let mut individual = self.population[0].clone();
-                individual.mutate();
-                individual.calculate_fitness();
-                self.unsorted_population.push(individual);
-            }
-            _ => {
-                self.unsorted_population = self.population.clone();
-            }
-        }
 
         let mut node_starter = NCNodeStarter::new(self.nc_configuration.clone());
 
@@ -172,7 +187,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
         if fitness < self.best_fitness {
             debug!("New best individual from server with fitness: '{}'", fitness);
-            self.population.push(individual);
+            self.population.insert(0, individual);
             self.best_fitness = fitness;
         }
 
@@ -282,6 +297,41 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                     self.population.push(current_best);
                     self.population.append(&mut original);
+                    self.population.sort();
+                    self.population.dedup();
+                    self.population.truncate(self.num_of_individuals);
+
+                    if self.population[0].get_fitness() < self.fitness_limit {
+                        break
+                    }
+
+                    for individual in self.unsorted_population.iter_mut() {
+                        individual.mutate();
+                        individual.calculate_fitness();
+                    }
+                }
+            }
+            DWMethod::Reset => {
+                if let Some(initial) = self.reset_initial.clone() {
+                    for individual in self.population.iter_mut() {
+                        *individual = initial.clone();
+                        individual.mutate();
+                        individual.calculate_fitness();
+                    }
+                }
+                for _ in 0..self.num_of_iterations {
+                    let mut original1 = self.population.clone();
+                    let mut original2 = self.unsorted_population.clone();
+
+                    for individual in self.population.iter_mut() {
+                        for _ in 0..self.num_of_mutations {
+                            individual.mutate();
+                        }
+                        individual.calculate_fitness();
+                    }
+
+                    self.population.append(&mut original1);
+                    self.population.append(&mut original2);
                     self.population.sort();
                     self.population.dedup();
                     self.population.truncate(self.num_of_individuals);
