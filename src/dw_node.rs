@@ -8,6 +8,7 @@ use node_crunch::{NCNode, NCConfiguration, NCError,
     NCNodeStarter, nc_decode_data, nc_encode_data};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
+use nanorand::{WyRand, Rng};
 
 use std::convert::TryFrom;
 use std::fmt::Display;
@@ -176,6 +177,28 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
             }
         }
     }
+
+    fn clean(&mut self) {
+        self.population.sort();
+        self.population.dedup();
+        self.population.truncate(self.num_of_individuals);
+    }
+
+    fn mutate_with_other(&mut self) {
+        let mut rng = WyRand::new();
+
+        let len = self.population.len();
+        let index1 = rng.generate_range(0..len);
+        let mut index2 = rng.generate_range(0..len);
+
+        while index1 == index2 {
+            index2 = rng.generate_range(0..len);
+        }
+
+        let mut individual = self.population[index1].clone();
+        individual.mutate_with_other(&self.population[index2]);
+        self.population.push(individual);
+    }
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T> {
@@ -191,7 +214,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             self.best_fitness = fitness;
         }
 
-        // TODO: use a sorted data structure
+        // TODO: Maybe use a sorted data structure
         // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
 
         match self.mutate_method {
@@ -209,9 +232,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                     self.population.append(&mut original1);
                     self.population.append(&mut original2);
-                    self.population.sort();
-                    self.population.dedup();
-                    self.population.truncate(self.num_of_individuals);
+                    self.mutate_with_other();
+                    self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {
                         break
@@ -244,9 +266,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                     self.population.append(&mut potential_population);
                     self.population.append(&mut original2);
-                    self.population.sort();
-                    self.population.dedup();
-                    self.population.truncate(self.num_of_individuals);
+                    self.mutate_with_other();
+                    self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {
                         break
@@ -271,9 +292,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                     self.population.push(current_best);
                     self.population.push(self.unsorted_population[0].clone());
-                    self.population.sort();
-                    self.population.dedup();
-                    self.population.truncate(self.num_of_individuals);
+                    self.mutate_with_other();
+                    self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {
                         break
@@ -297,9 +317,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                     self.population.push(current_best);
                     self.population.append(&mut original);
-                    self.population.sort();
-                    self.population.dedup();
-                    self.population.truncate(self.num_of_individuals);
+                    self.mutate_with_other();
+                    self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {
                         break
@@ -332,9 +351,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                     self.population.append(&mut original1);
                     self.population.append(&mut original2);
-                    self.population.sort();
-                    self.population.dedup();
-                    self.population.truncate(self.num_of_individuals);
+                    self.mutate_with_other();
+                    self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {
                         break

@@ -5,6 +5,9 @@ use std::cmp::Ordering;
 
 pub trait DWIndividual {
     fn mutate(&mut self);
+    fn mutate_with_other(&mut self, _other: &Self) {
+
+    }
     fn calculate_fitness(&self) -> f64;
     fn get_additional_fitness(&self) -> f64 {
         0.0
@@ -26,6 +29,9 @@ impl<T: DWIndividual> DWIndividualWrapper<T> {
     }
     pub fn mutate(&mut self) {
         self.individual.mutate();
+    }
+    pub fn mutate_with_other(&mut self, other: &Self) {
+        self.individual.mutate_with_other(&other.individual);
     }
     pub fn calculate_fitness(&mut self) {
         self.fitness = self.individual.calculate_fitness();

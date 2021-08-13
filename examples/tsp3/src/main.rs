@@ -44,6 +44,7 @@ impl TSP3 {
             cities,
         }
     }
+
     pub fn new_from_file(file_name: &str) -> Self {
         let mut cities: Vec<(f64, f64)> = Vec::new();
 
@@ -131,6 +132,35 @@ impl DWIndividual for TSP3 {
             }
         }
     }
+
+    fn mutate_with_other(&mut self, other: &Self) {
+        let mut rng = WyRand::new();
+
+        let mut result = Vec::new();
+        result.push(self.cities[0]);
+
+        let mut index1 = 1;
+        let mut index2 = 2;
+
+        while result.len() < self.cities.len() {
+            if rng.generate::<bool>() {
+                if index1 < self.cities.len() {
+                    if !result.contains(&self.cities[index1]) {
+                        result.push(self.cities[index1]);
+                    }
+                    index1 += 1;
+                }
+            } else {
+                if index2 < other.cities.len() {
+                    if !result.contains(&other.cities[index2]) {
+                        result.push(other.cities[index2]);
+                    }
+                    index2 += 1;
+                }
+            }
+        }
+    }
+
     fn calculate_fitness(&self) -> f64 {
         let mut distance = 0.0;
         let last = self.cities.len() - 1;
