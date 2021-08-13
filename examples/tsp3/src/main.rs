@@ -140,7 +140,7 @@ impl DWIndividual for TSP3 {
         result.push(self.cities[0]);
 
         let mut index1 = 1;
-        let mut index2 = 2;
+        let mut index2 = 1;
 
         while result.len() < self.cities.len() {
             if rng.generate::<bool>() {
