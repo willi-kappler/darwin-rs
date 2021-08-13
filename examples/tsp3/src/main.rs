@@ -159,6 +159,8 @@ impl DWIndividual for TSP3 {
                 }
             }
         }
+
+        self.cities = result;
     }
 
     fn calculate_fitness(&self) -> f64 {

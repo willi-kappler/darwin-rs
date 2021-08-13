@@ -197,6 +197,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
 
         let mut individual = self.population[index1].clone();
         individual.mutate_with_other(&self.population[index2]);
+        individual.calculate_fitness();
         self.population.push(individual);
     }
 }
