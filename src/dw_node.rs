@@ -369,15 +369,18 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         }
 
         let best_individual = &self.population[0];
-        let fitness = best_individual.get_fitness();
+        let fitness1 = best_individual.get_fitness();
+        let fitness2 = self.population[self.population.len() - 1].get_fitness();
 
-        let individual = if fitness < self.best_fitness {
+        debug!("Difference between best and worst fitness: {}", fitness2 - fitness1);
+
+        let individual = if fitness1 < self.best_fitness {
             self.best_counter += 1;
-            debug!("Sending best individual to server, with fitness: '{}', counter: {}", fitness, self.best_counter);
-            self.best_fitness = fitness;
+            debug!("Sending best individual to server, with fitness: '{}', counter: {}", fitness1, self.best_counter);
+            self.best_fitness = fitness1;
             Some(best_individual)
         } else {
-            debug!("No new best individual found, fitness: '{}' >= best fitness: '{}'", fitness, self.best_fitness);
+            debug!("No new best individual found, fitness: '{}' >= best fitness: '{}'", fitness1, self.best_fitness);
             None
         };
 
