@@ -2,7 +2,7 @@
 
 use darwin_rs::{DWNode, DWServer, DWIndividual, NCConfiguration, DWConfiguration};
 
-use nanorand::{Rng, WyRand};
+use rand::{thread_rng, Rng};
 use structopt::StructOpt;
 use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
@@ -125,18 +125,18 @@ impl Sudoku {
 
 impl DWIndividual for Sudoku {
     fn mutate(&mut self) {
-        let mut rng = WyRand::new();
+        let mut rng = thread_rng();
         let last = self.solved.len();
 
-        let mut index: usize = rng.generate_range(0..last);
+        let mut index: usize = rng.gen_range(0..last);
 
         // pick free (= not pre set) position
         while self.unsolved[index] != 0 {
-            index = rng.generate_range(0..last);
+            index = rng.gen_range(0..last);
         }
 
         // and set it to a random value
-        self.solved[index] = rng.generate_range(1..10);
+        self.solved[index] = rng.gen_range(1..10);
     }
     fn calculate_fitness(&self) -> f64 {
         let mut result = 0.0;

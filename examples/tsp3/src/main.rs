@@ -2,7 +2,7 @@
 
 use darwin_rs::{DWNode, DWServer, DWIndividual, DWMethod, NCConfiguration, DWConfiguration};
 
-use nanorand::{Rng, WyRand};
+use rand::{thread_rng, Rng};
 use structopt::StructOpt;
 use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
@@ -98,16 +98,16 @@ impl TSP3 {
 
 impl DWIndividual for TSP3 {
     fn mutate(&mut self) {
-        let mut rng = WyRand::new();
+        let mut rng = thread_rng();
         let last = self.cities.len();
-        let index1 = rng.generate_range(1_usize..last);
-        let mut index2 = rng.generate_range(1_usize..last);
+        let index1 = rng.gen_range(1_usize..last);
+        let mut index2 = rng.gen_range(1_usize..last);
 
         while index1 == index2 {
-            index2 = rng.generate_range(1_usize..last);
+            index2 = rng.gen_range(1_usize..last);
         }
 
-        let operation = rng.generate_range(0_u8..5);
+        let operation = rng.gen_range(0_u8..5);
 
         match operation {
             0 => {
@@ -145,7 +145,7 @@ impl DWIndividual for TSP3 {
             4 => {
                 // Permutate a small slice and find best configuration
                 let permut_len = 5;
-                let index = rng.generate_range(1_usize..(last - permut_len));
+                let index = rng.gen_range(1_usize..(last - permut_len));
                 let init = self.cities[index..(index + permut_len)].to_vec();
                 let mut best = init.clone();
                 let mut best_length = self.calculate_length(&best, permut_len);
@@ -169,7 +169,7 @@ impl DWIndividual for TSP3 {
     }
 
     fn mutate_with_other(&mut self, other: &Self) {
-        let mut rng = WyRand::new();
+        let mut rng = thread_rng();
 
         let mut result = Vec::new();
         result.push(self.cities[0]);
@@ -178,7 +178,7 @@ impl DWIndividual for TSP3 {
         let mut index2 = 1;
 
         while result.len() < self.cities.len() {
-            if rng.generate::<bool>() {
+            if rng.gen::<bool>() {
                 if index1 < self.cities.len() {
                     if !result.contains(&self.cities[index1]) {
                         result.push(self.cities[index1]);

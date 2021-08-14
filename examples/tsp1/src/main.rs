@@ -2,7 +2,7 @@
 
 use darwin_rs::{DWNode, DWServer, DWIndividual, NCConfiguration, DWConfiguration};
 
-use nanorand::{Rng, WyRand};
+use rand::{thread_rng, Rng};
 use structopt::StructOpt;
 use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
@@ -62,15 +62,16 @@ impl TSP1 {
 
 impl DWIndividual for TSP1 {
     fn mutate(&mut self) {
-        let mut rng = WyRand::new();
+        let mut rng = thread_rng();
         let last = self.cities.len();
-        let index1 = rng.generate_range(1_usize..last);
-        let mut index2 = rng.generate_range(1_usize..last);
+        let index1 = rng.gen_range(1_usize..last);
+        let mut index2 = rng.gen_range(1_usize..last);
 
         while index1 == index2 {
-            index2 = rng.generate_range(1_usize..last);
+            index2 = rng.gen_range(1_usize..last);
         }
 
+        // This is just a very simple and dumb mutation...
         self.cities.swap(index1, index2);
     }
     fn calculate_fitness(&self) -> f64 {

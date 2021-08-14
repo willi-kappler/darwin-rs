@@ -7,7 +7,7 @@ rm *.log *.dat
 DELAY=0.1
 
 # maybe best: 89190.21485389463
-target/release/tsp3 -l 89191.0 -s &
+target/release/tsp3 -l 1.0 -s &
 
 sleep 2
 

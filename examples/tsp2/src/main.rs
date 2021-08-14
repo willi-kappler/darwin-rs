@@ -2,11 +2,12 @@
 
 use darwin_rs::{DWNode, DWServer, DWIndividual, NCConfiguration, DWConfiguration};
 
-use nanorand::{Rng, WyRand};
+use rand::{thread_rng, Rng};
 use structopt::StructOpt;
 use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
 use log::{error};
+use itertools::Itertools;
 
 use std::fs;
 
@@ -59,20 +60,34 @@ impl TSP2 {
                         (55.760857794890796, 26.95947234362994)],
         }
     }
+
+    fn calculate_length(&self, cities: &[(f64, f64)], len: usize) -> f64 {
+        let mut length = 0.0;
+
+        for i in 1..len {
+            let (x1, y1) = cities[i - 1];
+            let (x2, y2) = cities[i];
+            let dx = x2 - x1;
+            let dy = y2 - y1;
+            length += dx.hypot(dy);
+        }
+
+        length
+    }
 }
 
 impl DWIndividual for TSP2 {
     fn mutate(&mut self) {
-        let mut rng = WyRand::new();
+        let mut rng = thread_rng();
         let last = self.cities.len();
-        let index1 = rng.generate_range(1_usize..last);
-        let mut index2 = rng.generate_range(1_usize..last);
+        let index1 = rng.gen_range(1_usize..last);
+        let mut index2 = rng.gen_range(1_usize..last);
 
         while index1 == index2 {
-            index2 = rng.generate_range(1_usize..last);
+            index2 = rng.gen_range(1_usize..last);
         }
 
-        let operation = rng.generate_range(0_u8..4);
+        let operation = rng.gen_range(0_u8..5);
 
         match operation {
             0 => {
@@ -107,11 +122,62 @@ impl DWIndividual for TSP2 {
                 }
                 self.cities = temp;
             }
+            4 => {
+                // Permutate a small slice and find best configuration
+                let permut_len = 5;
+                let index = rng.gen_range(1_usize..(last - permut_len));
+                let init = self.cities[index..(index + permut_len)].to_vec();
+                let mut best = init.clone();
+                let mut best_length = self.calculate_length(&best, permut_len);
+
+                for permutation in init.into_iter().permutations(permut_len) {
+                    let new_length = self.calculate_length(&permutation, permut_len);
+                    if new_length < best_length {
+                        best = permutation.clone();
+                        best_length = new_length;
+                    }
+                }
+
+                for i in index..(index + permut_len) {
+                    self.cities[i] = best[i - index]
+                }
+            }
             _ => {
                 error!("Unknown operation: '{}'", operation);
             }
         }
     }
+
+    fn mutate_with_other(&mut self, other: &Self) {
+        let mut rng = thread_rng();
+
+        let mut result = Vec::new();
+        result.push(self.cities[0]);
+
+        let mut index1 = 1;
+        let mut index2 = 1;
+
+        while result.len() < self.cities.len() {
+            if rng.gen::<bool>() {
+                if index1 < self.cities.len() {
+                    if !result.contains(&self.cities[index1]) {
+                        result.push(self.cities[index1]);
+                    }
+                    index1 += 1;
+                }
+            } else {
+                if index2 < other.cities.len() {
+                    if !result.contains(&other.cities[index2]) {
+                        result.push(other.cities[index2]);
+                    }
+                    index2 += 1;
+                }
+            }
+        }
+
+        self.cities = result;
+    }
+
     fn calculate_fitness(&self) -> f64 {
         let mut distance = 0.0;
         let last = self.cities.len() - 1;

@@ -2,7 +2,7 @@
 
 use darwin_rs::{DWNode, DWServer, DWIndividual, NCConfiguration, DWConfiguration};
 
-use nanorand::{Rng, WyRand};
+use rand::{thread_rng, Rng};
 use structopt::StructOpt;
 use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
@@ -104,20 +104,20 @@ impl Queens {
 
 impl DWIndividual for Queens {
     fn mutate(&mut self) {
-        let mut rng = WyRand::new();
+        let mut rng = thread_rng();
         let last = self.board.len();
-        let mut index1 = rng.generate_range(1_usize..last);
-        let mut index2 = rng.generate_range(1_usize..last);
+        let mut index1 = rng.gen_range(1_usize..last);
+        let mut index2 = rng.gen_range(1_usize..last);
 
         // Pick a position where a queen is placed.
         // Try random position until it finds a queen
         while self.board[index1] != 1 {
-            index1 = rng.generate_range(1_usize..last);
+            index1 = rng.gen_range(1_usize..last);
         }
 
         // Pick a position where no queen is placed and this index is different from the other
         while (index1 == index2) || (self.board[index2] != 0) {
-            index2 = rng.generate_range(1_usize..last);
+            index2 = rng.gen_range(1_usize..last);
         }
 
         // Move queen onto an empty position

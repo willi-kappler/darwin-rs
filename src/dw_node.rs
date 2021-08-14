@@ -8,7 +8,7 @@ use node_crunch::{NCNode, NCConfiguration, NCError,
     NCNodeStarter, nc_decode_data, nc_encode_data};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
-use nanorand::{WyRand, Rng};
+use rand::{thread_rng, Rng};
 
 use std::convert::TryFrom;
 use std::fmt::Display;
@@ -185,14 +185,14 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
     }
 
     fn mutate_with_other(&mut self) {
-        let mut rng = WyRand::new();
+        let mut rng = thread_rng();
 
         let len = self.population.len();
-        let index1 = rng.generate_range(0..len);
-        let mut index2 = rng.generate_range(0..len);
+        let index1 = rng.gen_range(0..len);
+        let mut index2 = rng.gen_range(0..len);
 
         while index1 == index2 {
-            index2 = rng.generate_range(0..len);
+            index2 = rng.gen_range(0..len);
         }
 
         let mut individual = self.population[index1].clone();
@@ -212,8 +212,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         self.population.sort();
         self.population.truncate(self.num_of_individuals);
 
-        let mut rng = WyRand::new();
-        let index = rng.generate_range(0..self.slow_population.len());
+        let mut rng = thread_rng();
+        let index = rng.gen_range(0..self.slow_population.len());
         let new_individual = self.slow_population[index].clone();
         self.slow_population.push(new_individual);
 
@@ -398,7 +398,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
         debug!("Difference between best and worst fitness: {}", fitness2 - fitness1);
         debug!("Slow population best fitness: '{}', worst fitness: '{}'",
-            self.slow_population[0].get_fitness(), self.slow_population[self.num_of_individuals - 1].get_fitness());
+            self.slow_population[0].get_fitness(), self.slow_population[self.slow_population.len() - 1].get_fitness());
 
         if fitness1 < self.best_fitness {
             self.best_fitness = fitness1;

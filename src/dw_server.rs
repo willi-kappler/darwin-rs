@@ -8,7 +8,7 @@ use node_crunch::{NCServer, NCJobStatus, NCConfiguration, NodeID,
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json;
-use nanorand::{WyRand, Rng};
+use rand::{thread_rng, Rng};
 
 use std::fs::File;
 use std::io::{Write, Read};
@@ -168,8 +168,8 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
         if self.is_job_done() {
             Ok(NCJobStatus::Finished)
         } else {
-            let mut rng = WyRand::new();
-            let index = rng.generate_range(0..self.num_of_individuals);
+            let mut rng = thread_rng();
+            let index = rng.gen_range(0..self.num_of_individuals);
             let individual = self.population[index].clone();
 
             match nc_encode_data(&individual) {
