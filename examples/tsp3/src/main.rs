@@ -7,6 +7,7 @@ use structopt::StructOpt;
 use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
 use log::{error};
+use itertools::Itertools;
 
 use std::{fs, io, io::BufRead};
 
@@ -79,6 +80,20 @@ impl TSP3 {
 
         Self::new(cities)
     }
+
+    fn calculate_length(&self, cities: &[(f64, f64)], len: usize) -> f64 {
+        let mut length = 0.0;
+
+        for i in 1..len {
+            let (x1, y1) = cities[i - 1];
+            let (x2, y2) = cities[i];
+            let dx = x2 - x1;
+            let dy = y2 - y1;
+            length += dx.hypot(dy);
+        }
+
+        length
+    }
 }
 
 impl DWIndividual for TSP3 {
@@ -92,7 +107,7 @@ impl DWIndividual for TSP3 {
             index2 = rng.generate_range(1_usize..last);
         }
 
-        let operation = rng.generate_range(0_u8..4);
+        let operation = rng.generate_range(0_u8..5);
 
         match operation {
             0 => {
@@ -126,6 +141,26 @@ impl DWIndividual for TSP3 {
                     temp[i] = self.cities[i - index3 + 1];
                 }
                 self.cities = temp;
+            }
+            4 => {
+                // Permutate a small slice and find best configuration
+                let permut_len = 4;
+                let index = rng.generate_range(1_usize..(last - 4));
+                let init = self.cities[index..(index + 4)].to_vec();
+                let mut best = init.clone();
+                let mut best_length = self.calculate_length(&best, permut_len);
+
+                for permutation in init.into_iter().permutations(4) {
+                    let new_length = self.calculate_length(&permutation, permut_len);
+                    if new_length < best_length {
+                        best = permutation.clone();
+                        best_length = new_length;
+                    }
+                }
+
+                for i in index..(index + 4) {
+                    self.cities[i] = best[i]
+                }
             }
             _ => {
                 error!("Unknown operation: '{}'", operation);
