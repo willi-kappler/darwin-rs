@@ -108,12 +108,23 @@ impl DWIndividual for TSP3 {
             index2 = rng.gen_range(1_usize..last);
         }
 
-        let operation = rng.gen_range(0_u8..6);
+        let operation = rng.gen_range(0_u8..5);
 
         match operation {
             0 => {
-                // Just swap two positions
-                self.cities.swap(index1, index2);
+                let dice = rng.gen_range(0..10);
+
+                match dice {
+                    0 => {
+                        // Random shuffle
+                        self.cities[1..].shuffle(&mut rng);
+                    }
+                    _ => {
+                        // Just swap two positions
+                        self.cities.swap(index1, index2);
+                    }
+                }
+
             }
             1 => {
                 // Rotate (shift) items
@@ -162,10 +173,6 @@ impl DWIndividual for TSP3 {
                 for i in index..(index + permut_len) {
                     self.cities[i] = best[i - index]
                 }
-            }
-            5 => {
-                // Random shuffle
-                self.cities[1..].shuffle(&mut rng);
             }
             _ => {
                 error!("Unknown operation: '{}'", operation);
