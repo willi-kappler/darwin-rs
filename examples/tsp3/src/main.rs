@@ -150,7 +150,7 @@ impl DWIndividual for TSP3 {
                 let mut best = init.clone();
                 let mut best_length = self.calculate_length(&best, permut_len);
 
-                for permutation in init.into_iter().permutations(4) {
+                for permutation in init.into_iter().permutations(permut_len) {
                     let new_length = self.calculate_length(&permutation, permut_len);
                     if new_length < best_length {
                         best = permutation.clone();
