@@ -102,7 +102,7 @@ impl Display for DWMethod {
 
 pub struct DWNode<T> {
     population: Vec<DWIndividualWrapper<T>>,
-    unsorted_population: Vec<DWIndividualWrapper<T>>,
+    slow_population: Vec<DWIndividualWrapper<T>>,
     num_of_individuals: usize,
     nc_configuration: NCConfiguration,
     num_of_iterations: u64,
@@ -131,14 +131,14 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
 
         let best_fitness = population[0].get_fitness();
 
-        let mut unsorted_population = Vec::new();
+        let mut slow_population = Vec::new();
         let mut reset_initial = None;
 
         if dw_configuration.mutate_method == DWMethod::LowMem {
             let individual = population[0].clone();
-            unsorted_population.push(individual);
+            slow_population.push(individual);
         } else {
-            unsorted_population = population.clone();
+            slow_population = population.clone();
 
             if dw_configuration.mutate_method == DWMethod::Reset {
                 reset_initial = Some(DWIndividualWrapper::new(initial.clone()));
@@ -148,7 +148,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
 
         Self {
             population,
-            unsorted_population,
+            slow_population,
             num_of_individuals,
             nc_configuration,
             num_of_iterations: dw_configuration.num_of_iterations,
@@ -215,6 +215,12 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             self.best_fitness = fitness;
         }
 
+        let mut rng = WyRand::new();
+        let index = rng.generate_range(0..self.slow_population.len());
+        let new_individual = self.slow_population[index].clone();
+        self.slow_population.push(new_individual);
+
+
         // TODO: Maybe use a sorted data structure
         // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
 
@@ -222,7 +228,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             DWMethod::Simple => {
                 for _ in 0..self.num_of_iterations {
                     let mut original1 = self.population.clone();
-                    let mut original2 = self.unsorted_population.clone();
+                    let mut original2 = self.slow_population.clone();
 
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
@@ -240,7 +246,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         break
                     }
 
-                    for individual in self.unsorted_population.iter_mut() {
+                    for individual in self.slow_population.iter_mut() {
                         individual.mutate();
                         individual.calculate_fitness();
                     }
@@ -250,7 +256,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                 let mut potential_population = Vec::new();
 
                 for _ in 0..self.num_of_iterations {
-                    let mut original2 = self.unsorted_population.clone();
+                    let mut original2 = self.slow_population.clone();
 
                     for individual in self.population.iter() {
                         let mut mutated = individual.clone();
@@ -274,7 +280,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         break
                     }
 
-                    for individual in self.unsorted_population.iter_mut() {
+                    for individual in self.slow_population.iter_mut() {
                         individual.mutate();
                         individual.calculate_fitness();
                     }
@@ -292,7 +298,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     }
 
                     self.population.push(current_best);
-                    self.population.push(self.unsorted_population[0].clone());
+                    self.population.push(self.slow_population[0].clone());
                     self.mutate_with_other();
                     self.clean();
 
@@ -300,14 +306,14 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         break
                     }
 
-                    self.unsorted_population[0].mutate();
-                    self.unsorted_population[0].calculate_fitness();
+                    self.slow_population[0].mutate();
+                    self.slow_population[0].calculate_fitness();
                 }
             }
             DWMethod::Keep => {
                 for _ in 0..self.num_of_iterations {
                     let current_best = self.population[0].clone();
-                    let mut original = self.unsorted_population.clone();
+                    let mut original = self.slow_population.clone();
 
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
@@ -325,7 +331,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         break
                     }
 
-                    for individual in self.unsorted_population.iter_mut() {
+                    for individual in self.slow_population.iter_mut() {
                         individual.mutate();
                         individual.calculate_fitness();
                     }
@@ -341,7 +347,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                 }
                 for _ in 0..self.num_of_iterations {
                     let mut original1 = self.population.clone();
-                    let mut original2 = self.unsorted_population.clone();
+                    let mut original2 = self.slow_population.clone();
 
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
@@ -359,13 +365,17 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         break
                     }
 
-                    for individual in self.unsorted_population.iter_mut() {
+                    for individual in self.slow_population.iter_mut() {
                         individual.mutate();
                         individual.calculate_fitness();
                     }
                 }
             }
         }
+
+        self.slow_population.sort();
+        self.slow_population.dedup();
+        self.slow_population.truncate(self.num_of_individuals);
 
         if let Some(threshold) = self.additional_fitness_threshold {
             self.population.sort_by(|i1, i2|{
