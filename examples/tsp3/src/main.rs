@@ -144,9 +144,9 @@ impl DWIndividual for TSP3 {
             }
             4 => {
                 // Permutate a small slice and find best configuration
-                let permut_len = 4;
-                let index = rng.generate_range(1_usize..(last - 4));
-                let init = self.cities[index..(index + 4)].to_vec();
+                let permut_len = 5;
+                let index = rng.generate_range(1_usize..(last - permut_len));
+                let init = self.cities[index..(index + permut_len)].to_vec();
                 let mut best = init.clone();
                 let mut best_length = self.calculate_length(&best, permut_len);
 
@@ -158,7 +158,7 @@ impl DWIndividual for TSP3 {
                     }
                 }
 
-                for i in index..(index + 4) {
+                for i in index..(index + permut_len) {
                     self.cities[i] = best[i]
                 }
             }
