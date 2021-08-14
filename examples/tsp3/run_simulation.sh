@@ -27,6 +27,6 @@ target/release/tsp3 -m 100 -i 3000 -o 100 --method only_best &
 sleep $DELAY
 target/release/tsp3 -m 100 -i 4000 -o 100 --method only_best &
 sleep $DELAY
-target/release/tsp3 -m 10 -i 1000 -o 100 --method keep &
+target/release/tsp3 -m 10 -i 10000 -o 100 --method keep &
 sleep $DELAY
 target/release/tsp3 -m 100 -i 1000 -o 100 --method keep &

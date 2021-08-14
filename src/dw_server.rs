@@ -8,6 +8,7 @@ use node_crunch::{NCServer, NCJobStatus, NCConfiguration, NodeID,
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json;
+use nanorand::{WyRand, Rng};
 
 use std::fs::File;
 use std::io::{Write, Read};
@@ -28,6 +29,7 @@ pub struct DWServer<T> {
     save_new_best_individual: bool,
     individual_file_counter: u64,
     file_format: DWFileFormat,
+    best_fitness: f64,
     // node_score: HashMap<NodeID, u64>,
 }
 
@@ -45,6 +47,8 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
 
         population.sort();
 
+        let best_fitness = population[0].get_fitness();
+
         Self {
             population,
             fitness_limit: dw_configuration.fitness_limit,
@@ -54,6 +58,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
             save_new_best_individual: dw_configuration.save_new_best_individual,
             individual_file_counter: 0,
             file_format: dw_configuration.file_format,
+            best_fitness,
             // node_score: HashMap::new(),
         }
     }
@@ -163,7 +168,9 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
         if self.is_job_done() {
             Ok(NCJobStatus::Finished)
         } else {
-            let individual = self.population[0].clone();
+            let mut rng = WyRand::new();
+            let index = rng.generate_range(0..self.num_of_individuals);
+            let individual = self.population[index].clone();
 
             match nc_encode_data(&individual) {
                 Ok(data) => {
@@ -179,41 +186,26 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
     }
     fn process_data_from_node(&mut self, node_id: NodeID, node_data: &[u8]) -> Result<(), NCError> {
         debug!("SimulationServer::process_data_from_node, node_id: {}", node_id);
+        // TODO: Use a sorted data structure
+        // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
 
-        match nc_decode_data::<Option<DWIndividualWrapper<T>>>(node_data) {
-            Ok(Some(individual)) => {
-                // TODO: Use a sorted data structure
-                // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
-                let fitness = individual.get_fitness();
-                let best_fitness = self.population[0].get_fitness();
+        match nc_decode_data::<DWIndividualWrapper<T>>(node_data) {
+            Ok(individual) => {
+                self.population.push(individual);
+                self.population.sort();
+                self.population.truncate(self.num_of_individuals);
 
-                if fitness < best_fitness {
-                    debug!("New best individual found: '{}', node_id: '{}'", fitness, node_id);
-
-                    self.population.insert(0, individual);
-                    self.population.truncate(self.num_of_individuals);
-
+                if self.population[0].get_fitness() < self.best_fitness {
+                    self.best_fitness = self.population[0].get_fitness();
+                    debug!("New best individual found: '{}', node_id: '{}'", self.best_fitness, node_id);
                     // let counter = self.node_score.entry(node_id).or_insert(0);
                     // *counter += 1;
-
                     if self.save_new_best_individual {
-                        match self.save_individual(0) {
-                            Ok(_) => {
-
-                            }
-                            Err(e) => {
-                                error!("An error occurred while saving the new best individual: {}", e);
-                            }
+                        if let Err(e) = self.save_individual(0) {
+                            error!("An error occurred while saving the new best individual: {}", e);
                         }
                     }
-                } else {
-                    debug!("No new best individual found, fitness: '{}' >= best fitness: '{}'", fitness, best_fitness);
                 }
-
-                Ok(())
-            }
-            Ok(None) => {
-                debug!("No new best individual found by node");
                 Ok(())
             }
             Err(e) => {

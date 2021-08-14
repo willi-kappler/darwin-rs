@@ -207,13 +207,9 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         debug!("SimulationNode::process_data_from_server, new message received");
 
         let individual: DWIndividualWrapper<T> = nc_decode_data(&data)?;
-        let fitness = individual.get_fitness();
-
-        if fitness < self.best_fitness {
-            debug!("New best individual from server with fitness: '{}'", fitness);
-            self.population.insert(0, individual);
-            self.best_fitness = fitness;
-        }
+        self.population.push(individual);
+        self.population.sort();
+        self.population.truncate(self.num_of_individuals);
 
         let mut rng = WyRand::new();
         let index = rng.generate_range(0..self.slow_population.len());
@@ -399,20 +395,16 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
         let best_individual = &self.population[0];
         let fitness1 = best_individual.get_fitness();
-        let fitness2 = self.population[self.population.len() - 1].get_fitness();
+        let fitness2 = self.population[self.num_of_individuals - 1].get_fitness();
 
         debug!("Difference between best and worst fitness: {}", fitness2 - fitness1);
 
-        let individual = if fitness1 < self.best_fitness {
-            self.best_counter += 1;
-            debug!("Sending best individual to server, with fitness: '{}', counter: {}", fitness1, self.best_counter);
+        if fitness1 < self.best_fitness {
             self.best_fitness = fitness1;
-            Some(best_individual)
-        } else {
-            debug!("No new best individual found, fitness: '{}' >= best fitness: '{}'", fitness1, self.best_fitness);
-            None
-        };
+            self.best_counter += 1;
+            debug!("New best individual found: '{}', counter: '{}'", self.best_fitness, self.best_counter);
+        }
 
-        Ok(nc_encode_data(&individual)?)
+        Ok(nc_encode_data(&best_individual)?)
     }
 }
