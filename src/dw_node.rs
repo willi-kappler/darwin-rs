@@ -207,6 +207,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         debug!("SimulationNode::process_data_from_server, new message received");
 
         let individual: DWIndividualWrapper<T> = nc_decode_data(&data)?;
+        debug!("Individual from server, fitness: '{}'", individual.get_fitness());
         self.population.push(individual);
         self.population.sort();
         self.population.truncate(self.num_of_individuals);
@@ -308,7 +309,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             }
             DWMethod::Keep => {
                 for _ in 0..self.num_of_iterations {
-                    let current_best = self.population[0].clone();
                     let mut original = self.slow_population.clone();
 
                     for individual in self.population.iter_mut() {
@@ -318,7 +318,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         individual.calculate_fitness();
                     }
 
-                    self.population.push(current_best);
                     self.population.append(&mut original);
                     self.mutate_with_other();
                     self.clean();
@@ -398,6 +397,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         let fitness2 = self.population[self.num_of_individuals - 1].get_fitness();
 
         debug!("Difference between best and worst fitness: {}", fitness2 - fitness1);
+        debug!("Slow population best fitness: '{}', worst fitness: '{}'",
+            self.slow_population[0].get_fitness(), self.slow_population[self.num_of_individuals - 1].get_fitness());
 
         if fitness1 < self.best_fitness {
             self.best_fitness = fitness1;
