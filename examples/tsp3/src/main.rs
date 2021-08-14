@@ -159,7 +159,7 @@ impl DWIndividual for TSP3 {
                 }
 
                 for i in index..(index + permut_len) {
-                    self.cities[i] = best[i]
+                    self.cities[i] = best[i - index]
                 }
             }
             _ => {
