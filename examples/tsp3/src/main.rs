@@ -3,6 +3,7 @@
 use darwin_rs::{DWNode, DWServer, DWIndividual, DWMethod, NCConfiguration, DWConfiguration};
 
 use rand::{thread_rng, Rng};
+use rand::seq::SliceRandom;
 use structopt::StructOpt;
 use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
@@ -107,7 +108,7 @@ impl DWIndividual for TSP3 {
             index2 = rng.gen_range(1_usize..last);
         }
 
-        let operation = rng.gen_range(0_u8..5);
+        let operation = rng.gen_range(0_u8..6);
 
         match operation {
             0 => {
@@ -161,6 +162,10 @@ impl DWIndividual for TSP3 {
                 for i in index..(index + permut_len) {
                     self.cities[i] = best[i - index]
                 }
+            }
+            5 => {
+                // Random shuffle
+                self.cities[1..].shuffle(&mut rng);
             }
             _ => {
                 error!("Unknown operation: '{}'", operation);
