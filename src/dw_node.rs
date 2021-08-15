@@ -298,6 +298,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                         for individual in self.population.iter_mut() {
                             individual.random_reset();
+                            individual.calculate_fitness();
                         }
                     }
                 } else {
