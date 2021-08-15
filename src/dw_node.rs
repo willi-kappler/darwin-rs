@@ -290,6 +290,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                 if self.population[0].get_fitness() == self.reset_individual.get_fitness() {
                     self.reset_counter += 1;
+                    debug!("Reset counter increased: {}", self.reset_counter);
 
                     if self.reset_counter == 10 {
                         debug!("Reset counter max reached, resetting population with random_reset()");
