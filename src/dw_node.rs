@@ -292,6 +292,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     self.reset_counter += 1;
 
                     if self.reset_counter == 10 {
+                        debug!("Reset counter max reached, resetting population with random_reset()");
                         self.reset_counter = 0;
 
                         for individual in self.population.iter_mut() {
