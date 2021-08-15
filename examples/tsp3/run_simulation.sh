@@ -25,6 +25,8 @@ target/release/tsp3 -m 64 -i 1000 -o 100 --method simple &
 sleep $DELAY
 target/release/tsp3 -m 100 -i 1000 -o 100 --method only_best &
 sleep $DELAY
-target/release/tsp3 -m 10 -i 1000 -o 100 --method keep &
+target/release/tsp3 -m 1 -i 10000 -o 100 --method reset &
 sleep $DELAY
-target/release/tsp3 -m 1 -i 1000 -o 100 --method reset &
+target/release/tsp3 -m 10 -i 10000 -o 100 --method reset &
+sleep $DELAY
+target/release/tsp3 -m 100 -i 10000 -o 100 --method reset &
