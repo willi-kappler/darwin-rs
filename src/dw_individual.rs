@@ -6,11 +6,12 @@ use std::cmp::Ordering;
 pub trait DWIndividual {
     fn mutate(&mut self);
     fn mutate_with_other(&mut self, _other: &Self) {
-
     }
     fn calculate_fitness(&self) -> f64;
     fn get_additional_fitness(&self) -> f64 {
         0.0
+    }
+    fn random_reset(&mut self) {
     }
 }
 
@@ -41,6 +42,9 @@ impl<T: DWIndividual> DWIndividualWrapper<T> {
     }
     pub fn get_additional_fitness(&self) -> f64 {
         self.individual.get_additional_fitness()
+    }
+    pub fn random_reset(&mut self) {
+        self.individual.random_reset();
     }
 }
 

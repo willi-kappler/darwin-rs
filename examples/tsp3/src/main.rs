@@ -228,6 +228,11 @@ impl DWIndividual for TSP3 {
 
         distance
     }
+
+    fn random_reset(&mut self) {
+        let mut rng = thread_rng();
+        self.cities[1..].shuffle(&mut rng);
+    }
 }
 
 fn main() {
