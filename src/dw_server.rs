@@ -193,6 +193,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
             Ok(individual) => {
                 self.population.push(individual);
                 self.population.sort();
+                self.population.dedup();
                 self.population.truncate(self.num_of_individuals);
 
                 if self.population[0].get_fitness() < self.best_fitness {
