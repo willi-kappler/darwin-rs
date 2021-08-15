@@ -112,12 +112,12 @@ impl DWIndividual for TSP3 {
 
         match operation {
             0 => {
-                let dice = rng.gen_range(0..10);
+                let dice = rng.gen_range(0..20);
 
                 match dice {
                     0 => {
                         // Random shuffle
-                        self.cities[1..].shuffle(&mut rng);
+                        self.cities[index1..].shuffle(&mut rng);
                     }
                     _ => {
                         // Just swap two positions
@@ -156,7 +156,7 @@ impl DWIndividual for TSP3 {
             }
             4 => {
                 // Permutate a small slice and find best configuration
-                let permut_len = 5;
+                let permut_len = rng.gen_range(3..8);
                 let index = rng.gen_range(1_usize..(last - permut_len));
                 let init = self.cities[index..(index + permut_len)].to_vec();
                 let mut best = init.clone();
