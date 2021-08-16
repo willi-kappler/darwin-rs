@@ -211,6 +211,9 @@ impl DWIndividual for TSP3 {
         }
 
         self.cities = result;
+
+        let counter = self.mutation_counter.entry(200).or_insert(0);
+        *counter += 1;
     }
 
     fn calculate_fitness(&self) -> f64 {
@@ -239,7 +242,14 @@ impl DWIndividual for TSP3 {
     }
 
     fn new_best_individual(&self) {
-        debug!("Mutations statistics: {:#?}", self.mutation_counter);
+        debug!("Mutations statistics:\nswap: {}, rotate: {}, reverse: {}, split: {}, permutation: {}, mutate with other: {}",
+            self.mutation_counter.get(&0).unwrap_or(&0),
+            self.mutation_counter.get(&1).unwrap_or(&0),
+            self.mutation_counter.get(&2).unwrap_or(&0),
+            self.mutation_counter.get(&3).unwrap_or(&0),
+            self.mutation_counter.get(&4).unwrap_or(&0),
+            self.mutation_counter.get(&200).unwrap_or(&0),
+        );
     }
 }
 
@@ -266,6 +276,7 @@ fn main() {
     let log_config = ConfigBuilder::new()
         .set_time_format_str("%Y.%m.%d %H:%M:%S")
         .set_time_to_local(true)
+        .add_filter_ignore_str("node_crunch")
         .build();
 
     if options.server {
