@@ -14,7 +14,7 @@ IP=127.0.0.1
 POPULATION=100
 
 # maybe best: 89190.21485389463
-target/release/tsp3 -l 1.0 -o 100 -s &
+target/release/tsp3 -l 1.0 -o $POPULATION -s &
 
 # Give the server a chance to start up
 sleep 2
