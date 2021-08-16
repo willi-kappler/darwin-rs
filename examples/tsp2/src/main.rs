@@ -1,15 +1,17 @@
 
 
-use darwin_rs::{DWNode, DWServer, DWIndividual, NCConfiguration, DWConfiguration};
+use darwin_rs::{DWNode, DWServer, DWIndividual, DWMethod, NCConfiguration, DWConfiguration};
 
 use rand::{thread_rng, Rng};
+use rand::seq::SliceRandom;
 use structopt::StructOpt;
 use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
-use log::{error};
+use log::{error, debug};
 use itertools::Itertools;
 
 use std::fs;
+use std::collections::HashMap;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "tsp2")]
@@ -28,11 +30,14 @@ pub struct TSP2Opt {
     num_of_iterations: u64,
     #[structopt(short = "m", long = "mutate", default_value = "10")]
     num_of_mutations: u64,
+    #[structopt(long = "method", default_value = "only_best")]
+    method: DWMethod,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TSP2 {
     cities: Vec<(f64, f64)>,
+    mutation_counter: HashMap<u8, u64>,
 }
 
 impl TSP2 {
@@ -58,6 +63,7 @@ impl TSP2 {
                         (22.070195932187254, 59.73489434853766),
                         (86.29060211377086, 83.14129496517567),
                         (55.760857794890796, 26.95947234362994)],
+	     mutation_counter: HashMap::new(),
         }
     }
 
@@ -93,11 +99,16 @@ impl DWIndividual for TSP2 {
             0 => {
                 // Just swap two positions
                 self.cities.swap(index1, index2);
+                let counter = self.mutation_counter.entry(0).or_insert(0);
+                *counter += 1;
+
             }
             1 => {
                 // Rotate (shift) items
                 let tmp = self.cities.remove(index1);
                 self.cities.insert(index2, tmp);
+                let counter = self.mutation_counter.entry(1).or_insert(0);
+                *counter += 1;
             }
             2 => {
                 // Reverse order of items
@@ -107,6 +118,8 @@ impl DWIndividual for TSP2 {
                     &mut self.cities[index2..index1]
                 };
                 slice.reverse();
+                let counter = self.mutation_counter.entry(2).or_insert(0);
+                *counter += 1;
             }
             3 => {
                 // Split and swap two parts
@@ -121,10 +134,12 @@ impl DWIndividual for TSP2 {
                     temp[i] = self.cities[i - index3 + 1];
                 }
                 self.cities = temp;
+                let counter = self.mutation_counter.entry(3).or_insert(0);
+                *counter += 1;
             }
             4 => {
                 // Permutate a small slice and find best configuration
-                let permut_len = 5;
+                let permut_len = rng.gen_range(3..8);
                 let index = rng.gen_range(1_usize..(last - permut_len));
                 let init = self.cities[index..(index + permut_len)].to_vec();
                 let mut best = init.clone();
@@ -141,6 +156,8 @@ impl DWIndividual for TSP2 {
                 for i in index..(index + permut_len) {
                     self.cities[i] = best[i - index]
                 }
+                let counter = self.mutation_counter.entry(4).or_insert(0);
+                *counter += 1;
             }
             _ => {
                 error!("Unknown operation: '{}'", operation);
@@ -176,6 +193,9 @@ impl DWIndividual for TSP2 {
         }
 
         self.cities = result;
+
+        let counter = self.mutation_counter.entry(200).or_insert(0);
+        *counter += 1;
     }
 
     fn calculate_fitness(&self) -> f64 {
@@ -196,6 +216,23 @@ impl DWIndividual for TSP2 {
 
         distance
     }
+
+    fn random_reset(&mut self) {
+        let mut rng = thread_rng();
+        self.cities[1..].shuffle(&mut rng);
+        self.mutation_counter.clear();
+    }
+
+    fn new_best_individual(&self) {
+        debug!("Mutations statistics:\nswap: {}, rotate: {}, reverse: {}, split: {}, permutation: {}, mutate with other: {}",
+            self.mutation_counter.get(&0).unwrap_or(&0),
+            self.mutation_counter.get(&1).unwrap_or(&0),
+            self.mutation_counter.get(&2).unwrap_or(&0),
+            self.mutation_counter.get(&3).unwrap_or(&0),
+            self.mutation_counter.get(&4).unwrap_or(&0),
+            self.mutation_counter.get(&200).unwrap_or(&0),
+        );
+    }
 }
 
 fn main() {
@@ -213,11 +250,16 @@ fn main() {
         fitness_limit: options.limit,
         num_of_iterations: options.num_of_iterations,
         num_of_mutations: options.num_of_mutations,
+        mutate_method: options.method,
         ..Default::default()
     };
 
     let log_level = LevelFilter::Debug;
-    let log_config = ConfigBuilder::new().set_time_format_str("%Y.%m.%d %H:%M:%S").build();
+    let log_config = ConfigBuilder::new()
+        .set_time_format_str("%Y.%m.%d %H:%M:%S")
+        .set_time_to_local(true)
+        .add_filter_ignore_str("node_crunch")
+        .build();
 
     if options.server {
         let log_file = fs::File::create("server.log").unwrap();

@@ -1,6 +1,6 @@
 
 
-use darwin_rs::{DWNode, DWServer, DWIndividual, NCConfiguration, DWConfiguration};
+use darwin_rs::{DWNode, DWServer, DWIndividual, DWMethod, NCConfiguration, DWConfiguration};
 
 use rand::{thread_rng, Rng};
 use structopt::StructOpt;
@@ -26,6 +26,8 @@ pub struct QueensOpt {
     num_of_iterations: u64,
     #[structopt(short = "m", long = "mutate", default_value = "10")]
     num_of_mutations: u64,
+    #[structopt(long = "method", default_value = "only_best")]
+    method: DWMethod,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -154,11 +156,16 @@ fn main() {
         fitness_limit: options.limit,
         num_of_iterations: options.num_of_iterations,
         num_of_mutations: options.num_of_mutations,
+        mutate_method: options.method,
         ..Default::default()
     };
 
     let log_level = LevelFilter::Debug;
-    let log_config = ConfigBuilder::new().set_time_format_str("%Y.%m.%d %H:%M:%S").build();
+    let log_config = ConfigBuilder::new()
+        .set_time_format_str("%Y.%m.%d %H:%M:%S")
+        .set_time_to_local(true)
+        .add_filter_ignore_str("node_crunch")
+        .build();
 
     if options.server {
         let log_file = fs::File::create("server.log").unwrap();
