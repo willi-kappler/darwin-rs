@@ -170,7 +170,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
             Ok(NCJobStatus::Finished)
         } else {
             let mut rng = thread_rng();
-            let index = rng.gen_range(0..self.num_of_individuals);
+            let index = rng.gen_range(0..self.population.len());
             let individual = self.population[index].clone();
 
             match nc_encode_data(&individual) {
