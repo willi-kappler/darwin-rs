@@ -263,7 +263,10 @@ fn main() {
     };
 
     let log_level = LevelFilter::Debug;
-    let log_config = ConfigBuilder::new().set_time_format_str("%Y.%m.%d %H:%M:%S").build();
+    let log_config = ConfigBuilder::new()
+        .set_time_format_str("%Y.%m.%d %H:%M:%S")
+        .set_time_to_local(true)
+        .build();
 
     if options.server {
         let log_file = fs::File::create("server.log").unwrap();
