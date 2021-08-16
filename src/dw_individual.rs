@@ -5,13 +5,20 @@ use std::cmp::Ordering;
 
 pub trait DWIndividual {
     fn mutate(&mut self);
+
     fn mutate_with_other(&mut self, _other: &Self) {
     }
+
     fn calculate_fitness(&self) -> f64;
+
     fn get_additional_fitness(&self) -> f64 {
         0.0
     }
+
     fn random_reset(&mut self) {
+    }
+
+    fn new_best_individual(&self) {
     }
 }
 
@@ -28,23 +35,33 @@ impl<T: DWIndividual> DWIndividualWrapper<T> {
             fitness: f64::MAX,
         }
     }
+
     pub fn mutate(&mut self) {
         self.individual.mutate();
     }
+
     pub fn mutate_with_other(&mut self, other: &Self) {
         self.individual.mutate_with_other(&other.individual);
     }
+
     pub fn calculate_fitness(&mut self) {
         self.fitness = self.individual.calculate_fitness();
     }
+
     pub fn get_fitness(&self) -> f64 {
         self.fitness
     }
+
     pub fn get_additional_fitness(&self) -> f64 {
         self.individual.get_additional_fitness()
     }
+
     pub fn random_reset(&mut self) {
         self.individual.random_reset();
+    }
+
+    pub fn new_best_individual(&self) {
+        self.individual.new_best_individual();
     }
 }
 

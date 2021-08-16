@@ -7,10 +7,11 @@ use rand::seq::SliceRandom;
 use structopt::StructOpt;
 use simplelog::{WriteLogger, LevelFilter, ConfigBuilder};
 use serde::{Serialize, Deserialize};
-use log::{error};
+use log::{error, debug};
 use itertools::Itertools;
 
 use std::{fs, io, io::BufRead};
+use std::collections::HashMap;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "tsp3")]
@@ -38,12 +39,14 @@ pub struct TSP3Opt {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TSP3 {
     cities: Vec<(f64, f64)>,
+    mutation_counter: HashMap<u8, u64>,
 }
 
 impl TSP3 {
     pub fn new(cities: Vec<(f64, f64)>) -> Self {
         Self {
             cities,
+            mutation_counter: HashMap::new(),
         }
     }
 
@@ -112,24 +115,18 @@ impl DWIndividual for TSP3 {
 
         match operation {
             0 => {
-                let dice = rng.gen_range(0..20);
-
-                match dice {
-                    0 => {
-                        // Random shuffle
-                        self.cities[index1..].shuffle(&mut rng);
-                    }
-                    _ => {
-                        // Just swap two positions
-                        self.cities.swap(index1, index2);
-                    }
-                }
+                // Just swap two positions
+                self.cities.swap(index1, index2);
+                let counter = self.mutation_counter.entry(0).or_insert(0);
+                *counter += 1;
 
             }
             1 => {
                 // Rotate (shift) items
                 let tmp = self.cities.remove(index1);
                 self.cities.insert(index2, tmp);
+                let counter = self.mutation_counter.entry(1).or_insert(0);
+                *counter += 1;
             }
             2 => {
                 // Reverse order of items
@@ -139,6 +136,8 @@ impl DWIndividual for TSP3 {
                     &mut self.cities[index2..index1]
                 };
                 slice.reverse();
+                let counter = self.mutation_counter.entry(2).or_insert(0);
+                *counter += 1;
             }
             3 => {
                 // Split and swap two parts
@@ -153,6 +152,8 @@ impl DWIndividual for TSP3 {
                     temp[i] = self.cities[i - index3 + 1];
                 }
                 self.cities = temp;
+                let counter = self.mutation_counter.entry(3).or_insert(0);
+                *counter += 1;
             }
             4 => {
                 // Permutate a small slice and find best configuration
@@ -173,6 +174,8 @@ impl DWIndividual for TSP3 {
                 for i in index..(index + permut_len) {
                     self.cities[i] = best[i - index]
                 }
+                let counter = self.mutation_counter.entry(4).or_insert(0);
+                *counter += 1;
             }
             _ => {
                 error!("Unknown operation: '{}'", operation);
@@ -232,6 +235,11 @@ impl DWIndividual for TSP3 {
     fn random_reset(&mut self) {
         let mut rng = thread_rng();
         self.cities[1..].shuffle(&mut rng);
+        self.mutation_counter.clear();
+    }
+
+    fn new_best_individual(&self) {
+        debug!("Mutations statistics: {:#?}", self.mutation_counter);
     }
 }
 

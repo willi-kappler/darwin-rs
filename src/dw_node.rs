@@ -357,6 +357,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             self.best_fitness = fitness1;
             self.best_counter += 1;
             debug!("New best individual found: '{}', counter: '{}'", self.best_fitness, self.best_counter);
+            best_individual.new_best_individual();
         }
 
         Ok(nc_encode_data(&best_individual)?)

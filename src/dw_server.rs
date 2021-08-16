@@ -196,9 +196,12 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
                 self.population.dedup();
                 self.population.truncate(self.num_of_individuals);
 
-                if self.population[0].get_fitness() < self.best_fitness {
-                    self.best_fitness = self.population[0].get_fitness();
+                let best_individual = &self.population[0];
+
+                if best_individual.get_fitness() < self.best_fitness {
+                    self.best_fitness = best_individual.get_fitness();
                     debug!("New best individual found: '{}', node_id: '{}'", self.best_fitness, node_id);
+                    best_individual.new_best_individual();
                     // let counter = self.node_score.entry(node_id).or_insert(0);
                     // *counter += 1;
                     if self.save_new_best_individual {
