@@ -83,7 +83,7 @@ impl TSP2 {
 }
 
 impl DWIndividual for TSP2 {
-    fn mutate(&mut self) {
+    fn mutate(&mut self, other: &Self) {
         let mut rng = thread_rng();
         let last = self.cities.len();
         let index1 = rng.gen_range(1_usize..last);
@@ -93,13 +93,13 @@ impl DWIndividual for TSP2 {
             index2 = rng.gen_range(1_usize..last);
         }
 
-        let operation = rng.gen_range(0_u8..5);
+        let operation = rng.gen_range(0_u8..6);
 
         match operation {
             0 => {
                 // Just swap two positions
                 self.cities.swap(index1, index2);
-                let counter = self.mutation_counter.entry(0).or_insert(0);
+                let counter = self.mutation_counter.entry(operation).or_insert(0);
                 *counter += 1;
 
             }
@@ -107,7 +107,7 @@ impl DWIndividual for TSP2 {
                 // Rotate (shift) items
                 let tmp = self.cities.remove(index1);
                 self.cities.insert(index2, tmp);
-                let counter = self.mutation_counter.entry(1).or_insert(0);
+                let counter = self.mutation_counter.entry(operation).or_insert(0);
                 *counter += 1;
             }
             2 => {
@@ -118,7 +118,7 @@ impl DWIndividual for TSP2 {
                     &mut self.cities[index2..index1]
                 };
                 slice.reverse();
-                let counter = self.mutation_counter.entry(2).or_insert(0);
+                let counter = self.mutation_counter.entry(operation).or_insert(0);
                 *counter += 1;
             }
             3 => {
@@ -134,7 +134,7 @@ impl DWIndividual for TSP2 {
                     temp[i] = self.cities[i - index3 + 1];
                 }
                 self.cities = temp;
-                let counter = self.mutation_counter.entry(3).or_insert(0);
+                let counter = self.mutation_counter.entry(operation).or_insert(0);
                 *counter += 1;
             }
             4 => {
@@ -156,46 +156,44 @@ impl DWIndividual for TSP2 {
                 for i in index..(index + permut_len) {
                     self.cities[i] = best[i - index]
                 }
-                let counter = self.mutation_counter.entry(4).or_insert(0);
+                let counter = self.mutation_counter.entry(operation).or_insert(0);
+                *counter += 1;
+            }
+            5 => {
+                // Take "genes" from other individual and mix them into self
+                let mut result = Vec::new();
+                result.push(self.cities[0]);
+
+                let mut index1 = 1;
+                let mut index2 = 1;
+
+                while result.len() < self.cities.len() {
+                    if rng.gen::<bool>() {
+                        if index1 < self.cities.len() {
+                            if !result.contains(&self.cities[index1]) {
+                                result.push(self.cities[index1]);
+                            }
+                            index1 += 1;
+                        }
+                    } else {
+                        if index2 < other.cities.len() {
+                            if !result.contains(&other.cities[index2]) {
+                                result.push(other.cities[index2]);
+                            }
+                            index2 += 1;
+                        }
+                    }
+                }
+
+                self.cities = result;
+
+                let counter = self.mutation_counter.entry(operation).or_insert(0);
                 *counter += 1;
             }
             _ => {
                 error!("Unknown operation: '{}'", operation);
             }
         }
-    }
-
-    fn mutate_with_other(&mut self, other: &Self) {
-        let mut rng = thread_rng();
-
-        let mut result = Vec::new();
-        result.push(self.cities[0]);
-
-        let mut index1 = 1;
-        let mut index2 = 1;
-
-        while result.len() < self.cities.len() {
-            if rng.gen::<bool>() {
-                if index1 < self.cities.len() {
-                    if !result.contains(&self.cities[index1]) {
-                        result.push(self.cities[index1]);
-                    }
-                    index1 += 1;
-                }
-            } else {
-                if index2 < other.cities.len() {
-                    if !result.contains(&other.cities[index2]) {
-                        result.push(other.cities[index2]);
-                    }
-                    index2 += 1;
-                }
-            }
-        }
-
-        self.cities = result;
-
-        let counter = self.mutation_counter.entry(200).or_insert(0);
-        *counter += 1;
     }
 
     fn calculate_fitness(&self) -> f64 {
@@ -230,7 +228,7 @@ impl DWIndividual for TSP2 {
             self.mutation_counter.get(&2).unwrap_or(&0),
             self.mutation_counter.get(&3).unwrap_or(&0),
             self.mutation_counter.get(&4).unwrap_or(&0),
-            self.mutation_counter.get(&200).unwrap_or(&0),
+            self.mutation_counter.get(&5).unwrap_or(&0),
         );
     }
 }

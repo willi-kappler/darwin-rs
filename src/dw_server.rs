@@ -37,10 +37,11 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
     pub fn new(initial: T, dw_configuration: DWConfiguration, nc_configuration: NCConfiguration) -> Self {
         let num_of_individuals = dw_configuration.num_of_individuals;
         let mut population = Vec::with_capacity(num_of_individuals);
+        let initial = DWIndividualWrapper::new(initial);
 
         for _ in 0..num_of_individuals {
-            let mut individual = DWIndividualWrapper::new(initial.clone());
-            individual.mutate();
+            let mut individual = initial.clone();
+            individual.mutate(&initial);
             individual.calculate_fitness();
             population.push(individual);
         }

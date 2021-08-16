@@ -105,7 +105,7 @@ impl Queens {
 }
 
 impl DWIndividual for Queens {
-    fn mutate(&mut self) {
+    fn mutate(&mut self, _other: &Self) {
         let mut rng = thread_rng();
         let last = self.board.len();
         let mut index1 = rng.gen_range(1_usize..last);

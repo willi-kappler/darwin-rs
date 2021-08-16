@@ -126,7 +126,7 @@ impl Sudoku {
 }
 
 impl DWIndividual for Sudoku {
-    fn mutate(&mut self) {
+    fn mutate(&mut self, _other: &Self) {
         let mut rng = thread_rng();
         let last = self.solved.len();
 

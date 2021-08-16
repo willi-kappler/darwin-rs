@@ -119,10 +119,11 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
     pub fn new(initial: T, dw_configuration: DWConfiguration, nc_configuration: NCConfiguration) -> Self {
         let num_of_individuals = dw_configuration.num_of_individuals;
         let mut population = Vec::with_capacity(num_of_individuals);
+        let initial = DWIndividualWrapper::new(initial);
 
         for _ in 0..num_of_individuals {
-            let mut individual = DWIndividualWrapper::new(initial.clone());
-            individual.mutate();
+            let mut individual = initial.clone();
+            individual.mutate(&initial);
             individual.calculate_fitness();
             population.push(individual);
         }
@@ -170,23 +171,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
         self.population.dedup();
         self.population.truncate(self.num_of_individuals);
     }
-
-    fn mutate_with_other(&mut self) {
-        let mut rng = thread_rng();
-
-        let len = self.population.len();
-        let index1 = rng.gen_range(0..len);
-        let mut index2 = rng.gen_range(0..len);
-
-        while index1 == index2 {
-            index2 = rng.gen_range(0..len);
-        }
-
-        let mut individual = self.population[index1].clone();
-        individual.mutate_with_other(&self.population[index2]);
-        individual.calculate_fitness();
-        self.population.push(individual);
-    }
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T> {
@@ -197,6 +181,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         debug!("Individual from server, fitness: '{}'", individual.get_fitness());
         self.population.push(individual);
 
+        let mut rng = thread_rng();
+
         // TODO: Maybe use a sorted data structure
         // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
 
@@ -205,15 +191,17 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                 for _ in 0..self.num_of_iterations {
                     let mut original1 = self.population.clone();
 
+                    let index = rng.gen_range(0..self.population.len());
+                    let other = self.population[index].clone();
+
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
-                            individual.mutate();
+                            individual.mutate(&other);
                         }
                         individual.calculate_fitness();
                     }
 
                     self.population.append(&mut original1);
-                    self.mutate_with_other();
                     self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {
@@ -225,12 +213,15 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                 let mut potential_population = Vec::new();
 
                 for _ in 0..self.num_of_iterations {
+                    let index = rng.gen_range(0..self.population.len());
+                    let other = &self.population[index];
+
                     for individual in self.population.iter() {
                         let mut mutated = individual.clone();
                         let current_fitness = individual.get_fitness();
 
                         for _ in 0..self.num_of_mutations {
-                            mutated.mutate();
+                            mutated.mutate(other);
                             mutated.calculate_fitness();
                             if mutated.get_fitness() < current_fitness {
                                 potential_population.push(mutated.clone());
@@ -239,7 +230,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     }
 
                     self.population.append(&mut potential_population);
-                    self.mutate_with_other();
                     self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {
@@ -250,16 +240,17 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             DWMethod::LowMem => {
                 for _ in 0..self.num_of_iterations {
                     let current_best = self.population[0].clone();
+                    let index = rng.gen_range(0..self.population.len());
+                    let other = self.population[index].clone();
 
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
-                            individual.mutate();
+                            individual.mutate(&other);
                         }
                         individual.calculate_fitness();
                     }
 
                     self.population.push(current_best);
-                    self.mutate_with_other();
                     self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {
@@ -269,14 +260,16 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             }
             DWMethod::Keep => {
                 for _ in 0..self.num_of_iterations {
+                    let index = rng.gen_range(0..self.population.len());
+                    let other = self.population[index].clone();
+
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
-                            individual.mutate();
+                            individual.mutate(&other);
                         }
                         individual.calculate_fitness();
                     }
 
-                    self.mutate_with_other();
                     self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {
@@ -308,16 +301,17 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                 for _ in 0..self.num_of_iterations {
                     let mut original = self.population.clone();
+                    let index = rng.gen_range(0..self.population.len());
+                    let other = self.population[index].clone();
 
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
-                            individual.mutate();
+                            individual.mutate(&other);
                         }
                         individual.calculate_fitness();
                     }
 
                     self.population.append(&mut original);
-                    self.mutate_with_other();
                     self.clean();
 
                     if self.population[0].get_fitness() < self.fitness_limit {

@@ -61,7 +61,7 @@ impl TSP1 {
 }
 
 impl DWIndividual for TSP1 {
-    fn mutate(&mut self) {
+    fn mutate(&mut self, _other: &Self) {
         let mut rng = thread_rng();
         let last = self.cities.len();
         let index1 = rng.gen_range(1_usize..last);
