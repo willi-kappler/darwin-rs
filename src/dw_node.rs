@@ -159,6 +159,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
             reset_counter: 0,
         }
     }
+
     pub fn run(self) {
         debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}', method: '{}'",
             self.num_of_individuals, self.num_of_iterations, self.num_of_mutations, self.fitness_limit, self.mutate_method);
@@ -180,6 +181,10 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
         self.population.sort();
         self.population.dedup();
         self.population.truncate(self.num_of_individuals);
+    }
+
+    fn job_done(&self) -> bool {
+        self.population[0].get_fitness() < self.fitness_limit
     }
 }
 
@@ -214,7 +219,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     self.population.append(&mut original1);
                     self.clean();
 
-                    if self.population[0].get_fitness() < self.fitness_limit {
+                    if self.job_done() {
                         break
                     }
                 }
@@ -242,7 +247,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     self.population.append(&mut potential_population);
                     self.clean();
 
-                    if self.population[0].get_fitness() < self.fitness_limit {
+                    if self.job_done() {
                         break
                     }
                 }
@@ -263,7 +268,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     self.population.push(current_best);
                     self.clean();
 
-                    if self.population[0].get_fitness() < self.fitness_limit {
+                    if self.job_done() {
                         break
                     }
                 }
@@ -282,7 +287,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                     self.clean();
 
-                    if self.population[0].get_fitness() < self.fitness_limit {
+                    if self.job_done() {
                         break
                     }
                 }
@@ -324,7 +329,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     self.population.append(&mut original);
                     self.clean();
 
-                    if self.population[0].get_fitness() < self.fitness_limit {
+                    if self.job_done() {
                         break
                     }
                 }
@@ -354,6 +359,9 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         self.population.swap_remove(index);
                     }
 
+                    if self.job_done() {
+                        break
+                    }
                 }
             }
         }
@@ -391,6 +399,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             best_individual.new_best_individual();
         }
 
-        Ok(nc_encode_data(&best_individual)?)
+        Ok(nc_encode_data(best_individual)?)
     }
 }

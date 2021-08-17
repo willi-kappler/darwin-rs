@@ -63,9 +63,11 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
             // node_score: HashMap::new(),
         }
     }
+
     pub fn set_population(&mut self, population: Vec<DWIndividualWrapper<T>>) {
         self.population = population;
     }
+
     pub fn read_population(&mut self, file_name: &str) -> Result<(), DWError> {
         let mut file = File::open(file_name)?;
         let mut data = Vec::new();
@@ -83,6 +85,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
 
         Ok(())
     }
+
     pub fn read_individual(&mut self, file_name: &str) -> Result<(), DWError> {
         let mut file = File::open(file_name)?;
         let mut data = Vec::new();
@@ -102,11 +105,13 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
 
         Ok(())
     }
+
     pub fn add_individual(&mut self, individual: DWIndividualWrapper<T>) {
         self.population.push(individual);
         self.population.sort();
         self.population.truncate(self.num_of_individuals);
     }
+
     pub fn run(self) {
         debug!("Start server with fitness limit: '{}', population size: '{}'", self.fitness_limit, self.num_of_individuals);
 
@@ -121,6 +126,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
             }
         }
     }
+
     pub fn save_population(&self) -> Result<(), DWError> {
         debug!("SimulationServer::save_population, to file: '{}'", self.export_file_name);
 
@@ -139,9 +145,11 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
 
         Ok(())
     }
+
     fn is_job_done(&self) -> bool {
         self.population[0].fitness < self.fitness_limit
     }
+
     fn save_individual(&mut self, index: usize) -> Result<(), DWError> {
         let (data, ext): (Vec<u8>, &str) = match self.file_format {
             DWFileFormat::Binary => {
@@ -171,9 +179,9 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
         } else {
             let mut rng = thread_rng();
             let index = rng.gen_range(0..self.population.len());
-            let individual = self.population[index].clone();
+            let individual = &self.population[index];
 
-            match nc_encode_data(&individual) {
+            match nc_encode_data(individual) {
                 Ok(data) => {
                     debug!("preparing data for node {}", node_id);
                     Ok(NCJobStatus::Unfinished(data))
@@ -185,6 +193,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
             }
         }
     }
+
     fn process_data_from_node(&mut self, node_id: NodeID, node_data: &[u8]) -> Result<(), NCError> {
         debug!("SimulationServer::process_data_from_node, node_id: {}", node_id);
         // TODO: Use a sorted data structure
@@ -219,9 +228,11 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
             }
         }
     }
+
     fn heartbeat_timeout(&mut self, _nodes: Vec<NodeID>) {
         // Nothing to do
     }
+
     fn finish_job(&mut self) {
         self.save_population().unwrap();
     }
