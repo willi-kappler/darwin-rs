@@ -22,6 +22,7 @@ pub enum DWMethod {
     LowMem,
     Keep,
     Reset,
+    RandomDelete,
 }
 
 impl FromStr for DWMethod {
@@ -43,6 +44,9 @@ impl FromStr for DWMethod {
             }
             "reset" => {
                 Ok(DWMethod::Reset)
+            }
+            "random_delete" => {
+                Ok(DWMethod::RandomDelete)
             }
             _ => {
                 Err(DWError::ParseDWMethodError(s.to_string()))
@@ -71,6 +75,9 @@ impl TryFrom<u8> for DWMethod {
             4 => {
                 Ok(DWMethod::Reset)
             }
+            5 => {
+                Ok(DWMethod::RandomDelete)
+            }
             _ => {
                 Err(DWError::ConvertDWMethodError(value))
             }
@@ -95,6 +102,9 @@ impl Display for DWMethod {
             }
             DWMethod::Reset => {
                 write!(f, "reset")
+            }
+            DWMethod::RandomDelete => {
+                write!(f, "random_delete")
             }
         }
     }
@@ -317,6 +327,33 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     if self.population[0].get_fitness() < self.fitness_limit {
                         break
                     }
+                }
+            }
+            DWMethod::RandomDelete => {
+                for _ in 0..self.num_of_iterations {
+                    for _ in 0..self.num_of_mutations {
+                        let index1 = rng.gen_range(0..self.population.len());
+                        let mut index2 = rng.gen_range(0..self.population.len());
+
+                        while index1 == index2 {
+                            index2 = rng.gen_range(0..self.population.len());
+                        }
+
+                        let mut individual = self.population[index1].clone();
+                        let other = &self.population[index2];
+                        individual.mutate(other);
+                        individual.calculate_fitness();
+
+                        self.population.push(individual);
+                    }
+
+                    self.population.sort();
+                    while self.population.len() > self.num_of_individuals {
+                        // Keep the best, randomly remove the others
+                        let index = rng.gen_range(1..self.population.len());
+                        self.population.swap_remove(index);
+                    }
+
                 }
             }
         }
