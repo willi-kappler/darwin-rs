@@ -8,7 +8,7 @@ use node_crunch::{NCNode, NCConfiguration, NCError,
     NCNodeStarter, nc_decode_data, nc_encode_data};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
-use rand::{thread_rng, Rng};
+use rand::{thread_rng, Rng, rngs::ThreadRng};
 
 use std::convert::TryFrom;
 use std::fmt::Display;
@@ -123,6 +123,7 @@ pub struct DWNode<T> {
     additional_fitness_threshold: Option<f64>,
     reset_individual: DWIndividualWrapper<T>,
     reset_counter: u8,
+    rng: ThreadRng,
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
@@ -157,6 +158,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
             additional_fitness_threshold: dw_configuration.additional_fitness_threshold,
             reset_individual,
             reset_counter: 0,
+            rng: thread_rng(),
         }
     }
 
@@ -186,6 +188,27 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
     fn job_done(&self) -> bool {
         self.population[0].get_fitness() < self.fitness_limit
     }
+
+    fn random_index(&mut self) -> usize {
+        self.rng.gen_range(0..self.population.len())
+    }
+
+    fn random_index_new(&mut self, index: usize) -> usize {
+        let mut new_index = self.random_index();
+        while index == new_index {
+            new_index = self.random_index();
+        }
+        new_index
+    }
+
+    fn random_index_from(&mut self, start: usize) -> usize {
+        self.rng.gen_range(start..self.population.len())
+    }
+
+    fn random_individual(&mut self) -> &DWIndividualWrapper<T> {
+        let index = self.random_index();
+        &self.population[index]
+    }
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T> {
@@ -196,8 +219,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         debug!("Individual from server, fitness: '{}'", individual.get_fitness());
         self.population.push(individual);
 
-        let mut rng = thread_rng();
-
         // TODO: Maybe use a sorted data structure
         // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
 
@@ -205,9 +226,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             DWMethod::Simple => {
                 for _ in 0..self.num_of_iterations {
                     let mut original1 = self.population.clone();
-
-                    let index = rng.gen_range(0..self.population.len());
-                    let other = self.population[index].clone();
+                    let other = self.random_individual().clone();
 
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
@@ -228,7 +247,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                 let mut potential_population = Vec::new();
 
                 for _ in 0..self.num_of_iterations {
-                    let index = rng.gen_range(0..self.population.len());
+                    let index = self.random_index();
                     let other = &self.population[index];
 
                     for individual in self.population.iter() {
@@ -255,8 +274,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             DWMethod::LowMem => {
                 for _ in 0..self.num_of_iterations {
                     let current_best = self.population[0].clone();
-                    let index = rng.gen_range(0..self.population.len());
-                    let other = self.population[index].clone();
+                    let other = self.random_individual().clone();
 
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
@@ -275,8 +293,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             }
             DWMethod::Keep => {
                 for _ in 0..self.num_of_iterations {
-                    let index = rng.gen_range(0..self.population.len());
-                    let other = self.population[index].clone();
+                    let other = self.random_individual().clone();
 
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
@@ -316,8 +333,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                 for _ in 0..self.num_of_iterations {
                     let mut original = self.population.clone();
-                    let index = rng.gen_range(0..self.population.len());
-                    let other = self.population[index].clone();
+                    let other = self.random_individual().clone();
 
                     for individual in self.population.iter_mut() {
                         for _ in 0..self.num_of_mutations {
@@ -337,12 +353,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             DWMethod::RandomDelete => {
                 for _ in 0..self.num_of_iterations {
                     for _ in 0..self.num_of_mutations {
-                        let index1 = rng.gen_range(0..self.population.len());
-                        let mut index2 = rng.gen_range(0..self.population.len());
-
-                        while index1 == index2 {
-                            index2 = rng.gen_range(0..self.population.len());
-                        }
+                        let index1 = self.random_index();
+                        let index2 = self.random_index_new(index1);
 
                         let mut individual = self.population[index1].clone();
                         let other = &self.population[index2];
@@ -355,7 +367,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     self.population.sort();
                     while self.population.len() > self.num_of_individuals {
                         // Keep the best, randomly remove the others
-                        let index = rng.gen_range(1..self.population.len());
+                        let index = self.random_index_from(1);
                         self.population.swap_remove(index);
                     }
 
