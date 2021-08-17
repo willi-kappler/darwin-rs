@@ -181,8 +181,25 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
 
     fn clean(&mut self) {
         self.population.sort();
-        self.population.dedup();
-        self.population.truncate(self.num_of_individuals);
+        //self.population.dedup();
+
+        let mut new_population = Vec::new();
+        let first = self.population[0].clone();
+        let mut limit = first.get_fitness();
+        new_population.push(first);
+
+        for i in 1..self.population.len() {
+            let individual = self.population[i].clone();
+            let fitness = individual.get_fitness();
+            if fitness * 0.9 > limit {
+                limit = fitness;
+                new_population.push(individual);
+            }
+        }
+
+        new_population.truncate(self.num_of_individuals);
+
+        self.population = new_population;
     }
 
     fn job_done(&self) -> bool {
@@ -365,6 +382,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     }
 
                     self.population.sort();
+
                     while self.population.len() > self.num_of_individuals {
                         // Keep the best, randomly remove the others
                         let index = self.random_index_from(1);
