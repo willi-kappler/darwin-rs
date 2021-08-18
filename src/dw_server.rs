@@ -173,11 +173,6 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
         Ok(())
     }
 
-    fn get_random_individual(&mut self) -> &DWIndividualWrapper<T> {
-        let index = self.rng.gen_range(0..self.population.len());
-        &self.population[index]
-    }
-
     fn clean(&mut self) {
         self.population.sort();
 
@@ -198,6 +193,27 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
         new_population.truncate(self.num_of_individuals);
 
         self.population = new_population;
+    }
+
+    fn random_index_from(&mut self, start: usize) -> usize {
+        self.rng.gen_range(start..self.population.len())
+    }
+
+    fn random_index(&mut self) -> usize {
+        self.random_index_from(0)
+    }
+
+    fn get_random_individual(&mut self) -> &DWIndividualWrapper<T> {
+        let index = self.random_index();
+        &self.population[index]
+    }
+
+    fn random_delete(&mut self) {
+        while self.population.len() > self.num_of_individuals {
+            // Keep the best, randomly remove the others
+            let index = self.random_index_from(1);
+            self.population.swap_remove(index);
+        }
     }
 }
 

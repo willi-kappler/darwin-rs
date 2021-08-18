@@ -230,8 +230,12 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
         self.population[0].get_fitness() < self.fitness_limit
     }
 
+    fn random_index_from(&mut self, start: usize) -> usize {
+        self.rng.gen_range(start..self.population.len())
+    }
+
     fn random_index(&mut self) -> usize {
-        self.rng.gen_range(0..self.population.len())
+        self.random_index_from(0)
     }
 
     fn random_index_new(&mut self, index: usize) -> usize {
@@ -242,13 +246,17 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
         new_index
     }
 
-    fn random_index_from(&mut self, start: usize) -> usize {
-        self.rng.gen_range(start..self.population.len())
-    }
-
     fn random_individual(&mut self) -> &DWIndividualWrapper<T> {
         let index = self.random_index();
         &self.population[index]
+    }
+
+    fn random_delete(&mut self) {
+        while self.population.len() > self.num_of_individuals {
+            // Keep the best, randomly remove the others
+            let index = self.random_index_from(1);
+            self.population.swap_remove(index);
+        }
     }
 }
 
@@ -365,12 +373,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                     }
 
                     self.population.sort();
-
-                    while self.population.len() > self.num_of_individuals {
-                        // Keep the best, randomly remove the others
-                        let index = self.random_index_from(1);
-                        self.population.swap_remove(index);
-                    }
+                    self.random_delete();
 
                     if self.job_done() {
                         break
