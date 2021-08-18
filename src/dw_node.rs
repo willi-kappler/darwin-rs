@@ -155,8 +155,9 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
     }
 
     pub fn run(self) {
-        debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}', method: '{}'",
-            self.num_of_individuals, self.num_of_iterations, self.num_of_mutations, self.fitness_limit, self.mutate_method);
+        debug!("Start node with config: population size: '{}', iterations: '{}', mutations: '{}', fitness limit: '{}', method: '{}', reset limit: '{}'",
+            self.num_of_individuals, self.num_of_iterations, self.num_of_mutations, self.fitness_limit, self.mutate_method,
+            if let Some(limit) = self.reset_limit { limit } else { 0 });
         debug!("Starting with best fitness: {}", self.best_fitness);
 
         let mut node_starter = NCNodeStarter::new(self.nc_configuration.clone());
@@ -212,7 +213,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
         for i in 1..self.population.len() {
             let individual = self.population[i].clone();
             let fitness = individual.get_fitness();
-            if fitness * 0.9 > limit {
+            if fitness * 0.99 > limit {
                 limit = fitness;
                 new_population.push(individual);
             }
