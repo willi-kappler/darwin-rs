@@ -14,6 +14,7 @@ pub mod dw_server;
 pub mod dw_node;
 pub mod dw_error;
 pub mod dw_config;
+pub mod dw_population;
 
 pub use dw_individual::DWIndividual;
 pub use dw_server::{DWServer, DWFileFormat};

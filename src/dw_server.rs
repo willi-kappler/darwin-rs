@@ -2,13 +2,13 @@
 use crate::dw_individual::{DWIndividual, DWIndividualWrapper};
 use crate::dw_error::DWError;
 use crate::dw_config::DWConfiguration;
+use crate::dw_population::DWPopulation;
 
 use node_crunch::{NCServer, NCJobStatus, NCConfiguration, NodeID,
     NCServerStarter, nc_decode_data, nc_encode_data, NCError};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json;
-use rand::{Rng, rngs::StdRng, SeedableRng};
 
 use std::fs::File;
 use std::io::{Write, Read};
@@ -21,55 +21,39 @@ pub enum DWFileFormat {
 }
 
 pub struct DWServer<T> {
-    population: Vec<DWIndividualWrapper<T>>,
-    fitness_limit: f64,
-    num_of_individuals: usize,
+    population: DWPopulation<T>,
     nc_configuration: NCConfiguration,
     export_file_name: String,
     save_new_best_individual: bool,
     individual_file_counter: u64,
     file_format: DWFileFormat,
-    best_fitness: f64,
-    delete_limit: f64,
-    rng: StdRng,
     // node_score: HashMap<NodeID, u64>,
 }
 
 impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DWServer<T> {
     pub fn new(initial: T, dw_configuration: DWConfiguration, nc_configuration: NCConfiguration) -> Self {
-        let num_of_individuals = dw_configuration.num_of_individuals;
-        let mut population = Vec::with_capacity(num_of_individuals);
         let initial = DWIndividualWrapper::new(initial);
+        let max_population_size = dw_configuration.num_of_individuals;
+        let fitness_limit = dw_configuration.fitness_limit;
+        let mut population = DWPopulation::new(initial, &dw_configuration);
+        population.calc_new_best_individual();
 
-        for _ in 0..num_of_individuals {
-            let mut individual = initial.clone();
-            individual.mutate(&initial);
-            individual.calculate_fitness();
-            population.push(individual);
-        }
-
-        population.sort();
-
-        let best_fitness = population[0].get_fitness();
+        debug!("Max population size: '{}' fitness limit: '{}', initial best fitness: '{}'",
+            max_population_size, fitness_limit, population.get_new_best_fitness());
 
         Self {
             population,
-            fitness_limit: dw_configuration.fitness_limit,
-            num_of_individuals,
             nc_configuration,
             export_file_name: dw_configuration.export_file_name,
             save_new_best_individual: dw_configuration.save_new_best_individual,
             individual_file_counter: 0,
             file_format: dw_configuration.file_format,
-            best_fitness,
-            delete_limit: dw_configuration.delete_limit,
-            rng: SeedableRng::from_entropy(),
             // node_score: HashMap::new(),
         }
     }
 
-    pub fn set_population(&mut self, population: Vec<DWIndividualWrapper<T>>) {
-        self.population = population;
+    pub fn set_population(&mut self, population: &mut Vec<DWIndividualWrapper<T>>) {
+        self.population.from_vec(population);
     }
 
     pub fn read_population(&mut self, file_name: &str) -> Result<(), DWError> {
@@ -78,14 +62,16 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
 
         file.read_to_end(&mut data)?;
 
-        match self.file_format {
+        let mut population: Vec<DWIndividualWrapper<T>> = match self.file_format {
             DWFileFormat::Binary => {
-                self.population = nc_decode_data(&data)?;
+                nc_decode_data(&data)?
             }
             DWFileFormat::JSON => {
-                self.population = serde_json::from_slice(&data)?;
+                serde_json::from_slice(&data)?
             }
-        }
+        };
+
+        self.population.from_vec(&mut population);
 
         Ok(())
     }
@@ -111,14 +97,10 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
     }
 
     pub fn add_individual(&mut self, individual: DWIndividualWrapper<T>) {
-        self.population.push(individual);
-        self.population.sort();
-        self.population.truncate(self.num_of_individuals);
+        self.population.add_individual(individual);
     }
 
     pub fn run(self) {
-        debug!("Start server with fitness limit: '{}', population size: '{}'", self.fitness_limit, self.num_of_individuals);
-
         let mut server_starter = NCServerStarter::new(self.nc_configuration.clone());
 
         match server_starter.start(self) {
@@ -136,10 +118,10 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
 
         let data: Vec<u8> = match self.file_format {
             DWFileFormat::Binary => {
-                nc_encode_data(&self.population)?
+                nc_encode_data(self.population.to_vec())?
             }
             DWFileFormat::JSON => {
-                serde_json::ser::to_vec(&self.population)?
+                serde_json::ser::to_vec(self.population.to_vec())?
             }
         };
 
@@ -151,16 +133,18 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
     }
 
     fn is_job_done(&self) -> bool {
-        self.population[0].fitness < self.fitness_limit
+        self.population.is_job_done()
     }
 
-    fn save_individual(&mut self, index: usize) -> Result<(), DWError> {
+    fn save_best_individual(&mut self) -> Result<(), DWError> {
+        let individual = self.population.get_best_individual();
+
         let (data, ext): (Vec<u8>, &str) = match self.file_format {
             DWFileFormat::Binary => {
-                (nc_encode_data(&self.population[index])?, "dat")
+                (nc_encode_data(&individual)?, "dat")
             }
             DWFileFormat::JSON => {
-                (serde_json::ser::to_vec(&self.population[index])?, "json")
+                (serde_json::ser::to_vec(&individual)?, "json")
             }
         };
 
@@ -172,49 +156,6 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
         self.individual_file_counter += 1;
         Ok(())
     }
-
-    fn clean(&mut self) {
-        self.population.sort();
-
-        let mut new_population = Vec::new();
-        let first = self.population[0].clone();
-        let mut limit = first.get_fitness();
-        new_population.push(first);
-
-        for i in 1..self.population.len() {
-            let individual = self.population[i].clone();
-            let fitness = individual.get_fitness();
-            if fitness * self.delete_limit > limit {
-                limit = fitness;
-                new_population.push(individual);
-            }
-        }
-
-        new_population.truncate(self.num_of_individuals);
-
-        self.population = new_population;
-    }
-
-    fn random_index_from(&mut self, start: usize) -> usize {
-        self.rng.gen_range(start..self.population.len())
-    }
-
-    fn random_index(&mut self) -> usize {
-        self.random_index_from(0)
-    }
-
-    fn get_random_individual(&mut self) -> &DWIndividualWrapper<T> {
-        let index = self.random_index();
-        &self.population[index]
-    }
-
-    fn random_delete(&mut self) {
-        while self.population.len() > self.num_of_individuals {
-            // Keep the best, randomly remove the others
-            let index = self.random_index_from(1);
-            self.population.swap_remove(index);
-        }
-    }
 }
 
 impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NCServer for DWServer<T> {
@@ -224,7 +165,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
         if self.is_job_done() {
             Ok(NCJobStatus::Finished)
         } else {
-            let individual = self.get_random_individual();
+            let individual = self.population.get_random_individual();
 
             match nc_encode_data(individual) {
                 Ok(data) => {
@@ -241,29 +182,29 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
 
     fn process_data_from_node(&mut self, node_id: NodeID, node_data: &[u8]) -> Result<(), NCError> {
         debug!("SimulationServer::process_data_from_node, node_id: {}", node_id);
-        // TODO: Use a sorted data structure
-        // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
 
         match nc_decode_data::<DWIndividualWrapper<T>>(node_data) {
             Ok(individual) => {
-                self.population.push(individual);
-                self.clean();
+                debug!("Fitness: '{}'", individual.get_fitness());
 
-                let best_individual = &self.population[0];
-                let new_fitness = best_individual.get_fitness();
+                self.population.add_individual(individual);
+                self.population.random_delete();
 
-                if new_fitness < self.best_fitness {
-                    self.best_fitness = new_fitness;
-                    debug!("New best individual found: '{}', node_id: '{}'", self.best_fitness, node_id);
-                    best_individual.new_best_individual();
+                if self.population.has_new_best_individual() {
+                    let new_best_fitness = self.population.get_new_best_fitness();
+                    debug!("New best individual found: '{}', node id: '{}'", new_best_fitness, node_id);
                     // let counter = self.node_score.entry(node_id).or_insert(0);
                     // *counter += 1;
+                    let individual = self.population.get_best_individual();
+                    individual.new_best_individual();
+
                     if self.save_new_best_individual {
-                        if let Err(e) = self.save_individual(0) {
+                        if let Err(e) = self.save_best_individual() {
                             error!("An error occurred while saving the new best individual: {}", e);
                         }
                     }
                 }
+
                 Ok(())
             }
             Err(e) => {
