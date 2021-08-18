@@ -33,4 +33,6 @@ target/release/tsp3 --ip $IP -m 100 -i 100 -o $POPULATION --method only_best &
 sleep $DELAY
 target/release/tsp3 --ip $IP -m 10 -i 10000 -o $POPULATION --method random_delete &
 sleep $DELAY
+target/release/tsp3 --ip $IP -m 10 -r 20 -i 10000 -o $POPULATION --method random_delete &
+sleep $DELAY
 target/release/tsp3 --ip $IP -m 100 -i 10000 -o $POPULATION --method random_delete &
