@@ -258,6 +258,32 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
             self.population.swap_remove(index);
         }
     }
+
+    fn random_delete2(&mut self) {
+        let mut worst_fitness = 0.0;
+
+        for individual in self.population.iter() {
+            let new_fitness = individual.get_fitness();
+            if new_fitness > worst_fitness {
+                worst_fitness = new_fitness;
+            }
+        }
+
+        let mut index = 0;
+        while self.population.len() > self.num_of_individuals {
+            let dice = self.rng.gen::<f64>();
+            let probability = (self.population[index].get_fitness() / worst_fitness) * 0.5;
+
+            if dice < probability {
+                self.population.swap_remove(index);
+            }
+
+            index += 1;
+            if index >= self.population.len() {
+                index = 0;
+            }
+        }
+    }
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T> {
