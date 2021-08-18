@@ -17,6 +17,7 @@ pub struct DWConfiguration {
     pub mutate_method: DWMethod,
     pub additional_fitness_threshold: Option<f64>,
     pub reset_limit: Option<u64>,
+    pub delete_limit: f64,
 }
 
 impl Default for DWConfiguration {
@@ -35,6 +36,7 @@ impl Default for DWConfiguration {
             mutate_method: DWMethod::Simple,
             additional_fitness_threshold: None,
             reset_limit: None,
+            delete_limit: 0.999
         }
     }
 }

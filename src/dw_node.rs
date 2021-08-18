@@ -110,6 +110,7 @@ pub struct DWNode<T> {
     best_fitness: f64,
     best_counter: u64,
     fitness_limit: f64,
+    delete_limit: f64,
     additional_fitness_threshold: Option<f64>,
     reset_individual: DWIndividualWrapper<T>,
     reset_counter: u64,
@@ -146,6 +147,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
             best_fitness,
             best_counter: 0,
             fitness_limit: dw_configuration.fitness_limit,
+            delete_limit: dw_configuration.delete_limit,
             additional_fitness_threshold: dw_configuration.additional_fitness_threshold,
             reset_individual,
             reset_counter: 0,
@@ -213,7 +215,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
         for i in 1..self.population.len() {
             let individual = self.population[i].clone();
             let fitness = individual.get_fitness();
-            if fitness * 0.99 > limit {
+            if fitness * self.delete_limit > limit {
                 limit = fitness;
                 new_population.push(individual);
             }

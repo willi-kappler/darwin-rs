@@ -36,6 +36,8 @@ pub struct TSP3Opt {
     method: DWMethod,
     #[structopt(short = "r", long = "reset", default_value = "0")]
     reset_limit: u64,
+    #[structopt(short = "d", long = "delete", default_value = "0.999")]
+    delete_limit: f64,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -270,6 +272,7 @@ fn main() {
         num_of_mutations: options.num_of_mutations,
         mutate_method: options.method,
         reset_limit: if options.reset_limit == 0 { None } else { Some(options.reset_limit) },
+        delete_limit: options.delete_limit,
         ..Default::default()
     };
 
