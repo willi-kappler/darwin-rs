@@ -8,7 +8,7 @@ use node_crunch::{NCServer, NCJobStatus, NCConfiguration, NodeID,
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json;
-use rand::{thread_rng, Rng};
+use rand::{Rng, rngs::StdRng, SeedableRng};
 
 use std::fs::File;
 use std::io::{Write, Read};
@@ -30,6 +30,8 @@ pub struct DWServer<T> {
     individual_file_counter: u64,
     file_format: DWFileFormat,
     best_fitness: f64,
+    delete_limit: f64,
+    rng: StdRng,
     // node_score: HashMap<NodeID, u64>,
 }
 
@@ -60,6 +62,8 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
             individual_file_counter: 0,
             file_format: dw_configuration.file_format,
             best_fitness,
+            delete_limit: dw_configuration.delete_limit,
+            rng: SeedableRng::from_entropy(),
             // node_score: HashMap::new(),
         }
     }
@@ -169,10 +173,31 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
         Ok(())
     }
 
-    fn get_random_individual(&self) -> &DWIndividualWrapper<T> {
-        let mut rng = thread_rng();
-        let index = rng.gen_range(0..self.population.len());
+    fn get_random_individual(&mut self) -> &DWIndividualWrapper<T> {
+        let index = self.rng.gen_range(0..self.population.len());
         &self.population[index]
+    }
+
+    fn clean(&mut self) {
+        self.population.sort();
+
+        let mut new_population = Vec::new();
+        let first = self.population[0].clone();
+        let mut limit = first.get_fitness();
+        new_population.push(first);
+
+        for i in 1..self.population.len() {
+            let individual = self.population[i].clone();
+            let fitness = individual.get_fitness();
+            if fitness * self.delete_limit > limit {
+                limit = fitness;
+                new_population.push(individual);
+            }
+        }
+
+        new_population.truncate(self.num_of_individuals);
+
+        self.population = new_population;
     }
 }
 
@@ -206,9 +231,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
         match nc_decode_data::<DWIndividualWrapper<T>>(node_data) {
             Ok(individual) => {
                 self.population.push(individual);
-                self.population.sort();
-                self.population.dedup();
-                self.population.truncate(self.num_of_individuals);
+                self.clean();
 
                 let best_individual = &self.population[0];
 
