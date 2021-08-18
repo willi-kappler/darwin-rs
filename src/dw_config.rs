@@ -16,21 +16,25 @@ pub struct DWConfiguration {
     pub num_of_mutations: u64,
     pub mutate_method: DWMethod,
     pub additional_fitness_threshold: Option<f64>,
+    pub reset_limit: Option<u64>,
 }
 
 impl Default for DWConfiguration {
     fn default() -> Self {
         DWConfiguration {
+            // Server config:
             num_of_individuals: 20,
             fitness_limit: 1.0,
             export_file_name: "best_population".to_string(),
             save_new_best_individual: false,
             file_format: DWFileFormat::JSON,
 
+            // Node config:
             num_of_iterations: 1000,
             num_of_mutations: 10,
             mutate_method: DWMethod::Simple,
             additional_fitness_threshold: None,
+            reset_limit: None,
         }
     }
 }

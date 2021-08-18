@@ -21,20 +21,16 @@ sleep 2
 
 target/release/tsp3 --ip $IP -m 1 -i 1000 -o $POPULATION --method simple &
 sleep $DELAY
+target/release/tsp3 --ip $IP -m 1 -r 20 -i 1000 -o $POPULATION --method simple &
+sleep $DELAY
 target/release/tsp3 --ip $IP -m 2 -i 1000 -o $POPULATION --method simple &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 4 -i 1000 -o $POPULATION --method simple &
+target/release/tsp3 --ip $IP -m 10 -i 100 -o $POPULATION --method only_best &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 1 -i 1000 -o $POPULATION --method reset &
+target/release/tsp3 --ip $IP -m 10 -r 20 -i 100 -o $POPULATION --method only_best &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 2 -i 1000 -o $POPULATION --method reset &
-sleep $DELAY
-target/release/tsp3 --ip $IP -m 4 -i 1000 -o $POPULATION --method reset &
+target/release/tsp3 --ip $IP -m 100 -i 100 -o $POPULATION --method only_best &
 sleep $DELAY
 target/release/tsp3 --ip $IP -m 10 -i 10000 -o $POPULATION --method random_delete &
 sleep $DELAY
 target/release/tsp3 --ip $IP -m 100 -i 10000 -o $POPULATION --method random_delete &
-sleep $DELAY
-target/release/tsp3 --ip $IP -m 10 -i 100 -o $POPULATION --method only_best &
-sleep $DELAY
-target/release/tsp3 --ip $IP -m 100 -i 100 -o $POPULATION --method only_best &

@@ -21,7 +21,6 @@ pub enum DWMethod {
     OnlyBest,
     LowMem,
     Keep,
-    Reset,
     RandomDelete,
 }
 
@@ -41,9 +40,6 @@ impl FromStr for DWMethod {
             }
             "keep" => {
                 Ok(DWMethod::Keep)
-            }
-            "reset" => {
-                Ok(DWMethod::Reset)
             }
             "random_delete" => {
                 Ok(DWMethod::RandomDelete)
@@ -73,9 +69,6 @@ impl TryFrom<u8> for DWMethod {
                 Ok(DWMethod::Keep)
             }
             4 => {
-                Ok(DWMethod::Reset)
-            }
-            5 => {
                 Ok(DWMethod::RandomDelete)
             }
             _ => {
@@ -100,9 +93,6 @@ impl Display for DWMethod {
             DWMethod::Keep => {
                 write!(f, "keep")
             }
-            DWMethod::Reset => {
-                write!(f, "reset")
-            }
             DWMethod::RandomDelete => {
                 write!(f, "random_delete")
             }
@@ -122,7 +112,8 @@ pub struct DWNode<T> {
     fitness_limit: f64,
     additional_fitness_threshold: Option<f64>,
     reset_individual: DWIndividualWrapper<T>,
-    reset_counter: u8,
+    reset_counter: u64,
+    reset_limit: Option<u64>,
     rng: ThreadRng,
 }
 
@@ -143,7 +134,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
 
         let best_fitness = population[0].get_fitness();
 
-        let reset_individual = population[0].clone();
+        let reset_individual = initial;
 
         Self {
             population,
@@ -158,6 +149,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
             additional_fitness_threshold: dw_configuration.additional_fitness_threshold,
             reset_individual,
             reset_counter: 0,
+            reset_limit: dw_configuration.reset_limit,
             rng: thread_rng(),
         }
     }
@@ -179,9 +171,38 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
         }
     }
 
+    fn maybe_reset(&mut self) -> bool {
+        match self.reset_limit {
+            Some(limit) => {
+                if self.population[0].get_fitness() == self.reset_individual.get_fitness() {
+                    self.reset_counter += 1;
+                    debug!("Reset counter increased: {}", self.reset_counter);
+
+                    if self.reset_counter >= limit {
+                        debug!("Reset counter max reached, resetting population with random_reset()");
+                        self.reset_counter = 0;
+                        self.best_counter = 0;
+
+                        for individual in self.population.iter_mut() {
+                            individual.random_reset();
+                            individual.calculate_fitness();
+                        }
+                    }
+                } else {
+                    self.reset_counter = 0;
+                    self.reset_individual = self.population[0].clone();
+                }
+
+                true
+            }
+            None => {
+                false
+            }
+        }
+    }
+
     fn clean(&mut self) {
         self.population.sort();
-        //self.population.dedup();
 
         let mut new_population = Vec::new();
         let first = self.population[0].clone();
@@ -234,10 +255,10 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
         let individual: DWIndividualWrapper<T> = nc_decode_data(&data)?;
         debug!("Individual from server, fitness: '{}'", individual.get_fitness());
-        self.population.push(individual);
 
-        // TODO: Maybe use a sorted data structure
-        // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
+        if !self.maybe_reset() {
+            self.population.push(individual);
+        }
 
         match self.mutate_method {
             DWMethod::Simple => {
@@ -319,47 +340,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         individual.calculate_fitness();
                     }
 
-                    self.clean();
-
-                    if self.job_done() {
-                        break
-                    }
-                }
-            }
-            DWMethod::Reset => {
-                // Discard new best individual from server
-                self.population.pop();
-
-                if self.population[0].get_fitness() == self.reset_individual.get_fitness() {
-                    self.reset_counter += 1;
-                    debug!("Reset counter increased: {}", self.reset_counter);
-
-                    if self.reset_counter == 10 {
-                        debug!("Reset counter max reached, resetting population with random_reset()");
-                        self.reset_counter = 0;
-
-                        for individual in self.population.iter_mut() {
-                            individual.random_reset();
-                            individual.calculate_fitness();
-                        }
-                    }
-                } else {
-                    self.reset_counter = 0;
-                    self.reset_individual = self.population[0].clone();
-                }
-
-                for _ in 0..self.num_of_iterations {
-                    let mut original = self.population.clone();
-                    let other = self.random_individual().clone();
-
-                    for individual in self.population.iter_mut() {
-                        for _ in 0..self.num_of_mutations {
-                            individual.mutate(&other);
-                        }
-                        individual.calculate_fitness();
-                    }
-
-                    self.population.append(&mut original);
                     self.clean();
 
                     if self.job_done() {

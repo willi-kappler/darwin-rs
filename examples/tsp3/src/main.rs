@@ -34,6 +34,8 @@ pub struct TSP3Opt {
     input_file: String,
     #[structopt(long = "method", default_value = "only_best")]
     method: DWMethod,
+    #[structopt(short = "r", long = "reset", default_value = "0")]
+    reset_limit: u64,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -267,6 +269,7 @@ fn main() {
         num_of_iterations: options.num_of_iterations,
         num_of_mutations: options.num_of_mutations,
         mutate_method: options.method,
+        reset_limit: if options.reset_limit == 0 { None } else { Some(options.reset_limit) },
         ..Default::default()
     };
 

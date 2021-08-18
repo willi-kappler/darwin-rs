@@ -16,19 +16,18 @@ POPULATION=100
 # Mutation method
 METHOD=simple
 
-target/release/tsp3 --ip $IP -m 1 -i 1000 -o $POPULATION --method $METHOD &
+target/release/tsp3 --ip $IP -m 1 -r 20 -i 1000 -o $POPULATION --method $METHOD &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 2 -i 1000 -o $POPULATION --method $METHOD &
+target/release/tsp3 --ip $IP -m 2 -r 20 -i 1000 -o $POPULATION --method $METHOD &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 4 -i 1000 -o $POPULATION --method $METHOD &
+target/release/tsp3 --ip $IP -m 4 -r 20 -i 1000 -o $POPULATION --method $METHOD &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 8 -i 1000 -o $POPULATION --method $METHOD &
+target/release/tsp3 --ip $IP -m 8 -r 20 -i 1000 -o $POPULATION --method $METHOD &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 1 -i 10000 -o $POPULATION --method $METHOD &
+target/release/tsp3 --ip $IP -m 1 -r 20 -i 10000 -o $POPULATION --method $METHOD &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 2 -i 10000 -o $POPULATION --method $METHOD &
+target/release/tsp3 --ip $IP -m 2 -r 20 -i 10000 -o $POPULATION --method $METHOD &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 4 -i 10000 -o $POPULATION --method $METHOD &
+target/release/tsp3 --ip $IP -m 4 -r 20 -i 10000 -o $POPULATION --method $METHOD &
 sleep $DELAY
-target/release/tsp3 --ip $IP -m 8 -i 10000 -o $POPULATION --method $METHOD &
-
+target/release/tsp3 --ip $IP -m 8 -r 20 -i 10000 -o $POPULATION --method $METHOD &
