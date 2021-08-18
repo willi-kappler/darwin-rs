@@ -168,6 +168,12 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
         self.individual_file_counter += 1;
         Ok(())
     }
+
+    fn get_random_individual(&self) -> &DWIndividualWrapper<T> {
+        let mut rng = thread_rng();
+        let index = rng.gen_range(0..self.population.len());
+        &self.population[index]
+    }
 }
 
 impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NCServer for DWServer<T> {
@@ -177,9 +183,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
         if self.is_job_done() {
             Ok(NCJobStatus::Finished)
         } else {
-            let mut rng = thread_rng();
-            let index = rng.gen_range(0..self.population.len());
-            let individual = &self.population[index];
+            let individual = self.get_random_individual();
 
             match nc_encode_data(individual) {
                 Ok(data) => {
