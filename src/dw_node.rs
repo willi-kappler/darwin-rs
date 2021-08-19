@@ -20,6 +20,8 @@ pub enum DWMethod {
     Simple,
     OnlyBest,
     LowMem,
+    RandomDelete1,
+    RandomDelete2,
 }
 
 impl FromStr for DWMethod {
@@ -35,6 +37,12 @@ impl FromStr for DWMethod {
             }
             "low_mem" => {
                 Ok(DWMethod::LowMem)
+            }
+            "random_delete1" => {
+                Ok(DWMethod::RandomDelete1)
+            }
+            "random_delete2" => {
+                Ok(DWMethod::RandomDelete2)
             }
             _ => {
                 Err(DWError::ParseDWMethodError(s.to_string()))
@@ -57,6 +65,12 @@ impl TryFrom<u8> for DWMethod {
             2 => {
                 Ok(DWMethod::LowMem)
             }
+            3 => {
+                Ok(DWMethod::RandomDelete1)
+            }
+            4 => {
+                Ok(DWMethod::RandomDelete2)
+            }
             _ => {
                 Err(DWError::ConvertDWMethodError(value))
             }
@@ -75,6 +89,12 @@ impl Display for DWMethod {
             }
             DWMethod::LowMem => {
                 write!(f, "low_mem")
+            }
+            DWMethod::RandomDelete1 => {
+                write!(f, "random_delete1")
+            }
+            &DWMethod::RandomDelete2 => {
+                write!(f, "random_delete1")
             }
         }
     }
@@ -165,6 +185,12 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                         break
                     }
                 }
+            }
+            DWMethod::RandomDelete1 => {
+                todo!();
+            }
+            DWMethod::RandomDelete2 => {
+                todo!();
             }
         }
 
