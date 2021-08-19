@@ -161,7 +161,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
         (best_fitness, worst_fitness)
     }
 
-    fn get_average_fitness(&self) -> f64 {
+    fn get_median_fitness(&self) -> f64 {
         let (best_fitness, worst_fitness) = self.get_best_and_worst_fitness();
         (best_fitness + worst_fitness) / 2.0
     }
@@ -237,7 +237,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
     }
 
     pub(crate) fn random_delete(&mut self) {
-        let mut average_fitness = self.get_average_fitness();
+        let mut average_fitness = self.get_median_fitness();
 
         while self.collection.len() > self.max_population_size {
             let index = self.random_index();
@@ -245,7 +245,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
 
             if fitness >= average_fitness {
                 self.collection.swap_remove(index);
-                average_fitness = self.get_average_fitness();
+                average_fitness = self.get_median_fitness();
             }
         }
     }
