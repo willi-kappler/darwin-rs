@@ -223,8 +223,8 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
         while self.collection.len() > self.max_population_size {
             let index = self.random_index();
             let fitness = self.collection[index].get_fitness();
+            let probability = if fitness < average_fitness {0.01} else {0.8};
             let dice = self.rng.gen::<f64>();
-            let probability = if fitness < average_fitness {0.1} else {0.9};
 
             if dice < probability {
                 self.collection.swap_remove(index);
