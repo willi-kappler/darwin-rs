@@ -71,8 +71,9 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
                     individual.random_reset();
                     individual.calculate_fitness();
                 }
+            } else {
+                self.add_individual(individual);
             }
-            self.add_individual(individual);
         } else {
             self.reset_fitness = fitness;
             self.reset_counter = 0;
