@@ -72,6 +72,44 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
         index2
     }
 
+    fn index_of_best(&self) -> usize {
+        let mut best_fitness = self.collection[0].get_fitness();
+        let mut best_index = 0;
+
+        for index in 1..self.collection.len() {
+            let fitness = self.collection[index].get_fitness();
+            if fitness < best_fitness {
+                best_fitness = fitness;
+                best_index = index;
+            }
+        }
+
+        best_index
+    }
+
+    fn index_of_2_best(&self) -> (usize, usize) {
+        let mut fitness1 = f64::MAX;
+        let mut fitness2 = f64::MAX;
+        let mut index1 = 0;
+        let mut index2 = 0;
+
+        for index in 0..self.collection.len() {
+            let fitness = self.collection[index].get_fitness();
+
+            if fitness < fitness2 {
+                if fitness <= fitness1 {
+                    fitness1 = fitness;
+                    index1 = index;
+                } else {
+                    fitness2 = fitness;
+                    index2 = index;
+                }
+            }
+        }
+
+        (index1, index2)
+    }
+
     pub(crate) fn is_job_done(&self) -> bool {
         self.get_best_fitness() < self.fitness_limit
     }
@@ -87,19 +125,6 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
         }
 
         best_fitness
-    }
-
-    fn get_worst_fitness(&self) -> f64 {
-        let mut worst_fitness = self.collection[0].get_fitness();
-
-        for index in 1..self.collection.len() {
-            let fitness = self.collection[index].get_fitness();
-            if fitness > worst_fitness {
-                worst_fitness = fitness;
-            }
-        }
-
-        worst_fitness
     }
 
     pub(crate) fn log_fitness(&mut self) -> () {
@@ -152,17 +177,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
     }
 
     pub(crate) fn get_best_individual(&self) -> &DWIndividualWrapper<T> {
-        let mut best_fitness = self.collection[0].get_fitness();
-        let mut best_index = 0;
-
-        for index in 1..self.collection.len() {
-            let fitness = self.collection[index].get_fitness();
-            if fitness < best_fitness {
-                best_fitness = fitness;
-                best_index = index;
-            }
-        }
-
+        let best_index = self.index_of_best();
         &self.collection[best_index]
     }
 
@@ -219,36 +234,25 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
     pub(crate) fn random_delete(&mut self) {
         let (best_fitness, worst_fitness) = self.get_best_and_worst_fitness();
         let average_fitness = (best_fitness + worst_fitness) / 2.0;
-        let dice_max: u32 = 10000;
-        let delete_limit: u32 = dice_max * 9 / 10;
 
         while self.collection.len() > self.max_population_size {
             let index = self.random_index();
             let fitness = self.collection[index].get_fitness();
-            let dice = self.rng.gen_range(0..dice_max);
 
-            if fitness < average_fitness {
-                if dice == 0 {
-                    self.collection.swap_remove(index);
-                }
-            } else {
-                if dice < delete_limit {
-                    self.collection.swap_remove(index);
-                }
+            if fitness >= average_fitness {
+                self.collection.swap_remove(index);
             }
         }
     }
 
-    pub(crate) fn sort_delete(&mut self) {
-        self.collection.sort_unstable_by(|i1, i2| {
-            let f1 = i1.get_fitness();
-            let f2 = i2.get_fitness();
-
-            f1.partial_cmp(&f2).unwrap()
-        });
+    pub(crate) fn keep_best_delete_others(&mut self) {
+        // Save best individual to first two positions
+        let (index1, index2) = self.index_of_2_best();
+        self.collection.swap(0, index1);
+        self.collection.swap(1, index2);
 
         while self.collection.len() > self.max_population_size {
-            let index = self.random_index_from(1);
+            let index = self.random_index_from(2);
             self.collection.swap_remove(index);
         }
     }
@@ -259,7 +263,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
                 self.random_delete();
             }
             1 => {
-                self.sort_delete()
+                self.keep_best_delete_others()
             }
             _ => {
                 panic!("Unknown delete method: {}", self.delete_method);
