@@ -219,15 +219,22 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
     pub(crate) fn random_delete(&mut self) {
         let (best_fitness, worst_fitness) = self.get_best_and_worst_fitness();
         let average_fitness = (best_fitness + worst_fitness) / 2.0;
+        let dice_max: u32 = 10000;
+        let delete_limit: u32 = dice_max * 9 / 10;
 
         while self.collection.len() > self.max_population_size {
             let index = self.random_index();
             let fitness = self.collection[index].get_fitness();
-            let probability = if fitness < average_fitness {fitness * 0.0001} else {fitness * 0.8};
-            let dice = self.rng.gen::<f64>();
+            let dice = self.rng.gen_range(0..dice_max);
 
-            if dice < probability {
-                self.collection.swap_remove(index);
+            if fitness < average_fitness {
+                if dice == 0 {
+                    self.collection.swap_remove(index);
+                }
+            } else {
+                if dice < delete_limit {
+                    self.collection.swap_remove(index);
+                }
             }
         }
     }
