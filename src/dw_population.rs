@@ -12,7 +12,7 @@ pub(crate) struct DWPopulation<T> {
     num_of_mutations: u64,
     fitness_limit: f64,
     new_best_fitness: f64,
-    probability_factor: f64,
+    delete_method: u8,
     rng: StdRng,
 }
 
@@ -40,7 +40,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
             num_of_mutations,
             fitness_limit,
             new_best_fitness: f64::MAX,
-            probability_factor: 4.0,
+            delete_method: 0,
             rng: SeedableRng::from_entropy(),
         }
     }
@@ -170,18 +170,6 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
         self.collection.push(new_individual);
     }
 
-    /*
-    pub(crate) fn mutate_random_single(&mut self) {
-        for _ in 0..self.num_of_mutations {
-            let index1 = self.random_index();
-            let index2 = self.random_index_new(index1);
-
-            let individual = &self.collection[index2];
-            self.collection[index1].mutate(individual);
-        }
-    }
-    */
-
     pub(crate) fn mutate_random_single_clone(&mut self) {
         for _ in 0..self.num_of_mutations {
             let index1 = self.random_index();
@@ -194,19 +182,6 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
             self.collection.push(new_individual);
         }
     }
-
-    /*
-    pub(crate) fn mutate_all(&mut self) {
-        for index1 in 0..self.collection.len() {
-            for _ in 0..self.num_of_mutations {
-                let index2 = self.random_index_new(index1);
-
-                let individual = &self.collection[index2];
-                self.collection[index1].mutate(individual);
-            }
-        }
-    }
-    */
 
     pub(crate) fn mutate_all_clone(&mut self) {
         for index1 in 0..self.collection.len() {
@@ -242,35 +217,55 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
     }
 
     pub(crate) fn random_delete(&mut self) {
-        /*/
+        let (best_fitness, worst_fitness) = self.get_best_and_worst_fitness();
+        let average_fitness = (best_fitness + worst_fitness) / 2.0;
+
+        while self.collection.len() > self.max_population_size {
+            let index = self.random_index();
+            let fitness = self.collection[index].get_fitness();
+            let dice = self.rng.gen::<f64>();
+            let probability = if fitness < average_fitness {0.1} else {0.9};
+
+            if dice < probability {
+                self.collection.swap_remove(index);
+            }
+        }
+    }
+
+    pub(crate) fn sort_delete(&mut self) {
         self.collection.sort_unstable_by(|i1, i2| {
             let f1 = i1.get_fitness();
             let f2 = i2.get_fitness();
 
             f1.partial_cmp(&f2).unwrap()
         });
-        self.collection.truncate(self.max_population_size);
-        return;
-        */
 
-        let worst_fitness = self.get_worst_fitness();
-
-        let mut index = 0;
         while self.collection.len() > self.max_population_size {
-            let dice = self.rng.gen::<f64>();
-            let probability = self.collection[index].get_fitness() / worst_fitness;
-            let probability = probability.powf(self.probability_factor);
+            let index = self.random_index_from(1);
+            self.collection.swap_remove(index);
+        }
+    }
 
-            if dice < probability {
-                self.collection.swap_remove(index);
+    pub(crate) fn delete(&mut self) {
+        match self.delete_method {
+            0 => {
+                self.random_delete();
             }
-
-            index += 1;
-            if index >= self.collection.len() {
-                index = 0;
+            1 => {
+                self.sort_delete()
+            }
+            _ => {
+                panic!("Unknown delete method: {}", self.delete_method);
             }
         }
+    }
 
+    pub(crate) fn select_delete_method(&mut self) {
+        self.delete_method = self.rng.gen_range(0..2);
+    }
+
+    pub(crate) fn get_delete_method(&self) -> u8 {
+        self.delete_method
     }
 
     pub(crate) fn get_random_individual(&mut self) -> &DWIndividualWrapper<T> {
@@ -280,9 +275,5 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
 
     pub(crate) fn reseed_rng(&mut self) {
         self.rng = SeedableRng::from_entropy();
-    }
-
-    pub(crate) fn get(&self, index: usize) -> &DWIndividualWrapper<T> {
-        &self.collection[index]
     }
 }

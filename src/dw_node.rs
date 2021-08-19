@@ -132,12 +132,15 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         debug!("Individual from server, fitness: '{}'", individual.get_fitness());
 
         self.population.add_individual(individual);
+        self.population.reseed_rng();
+        self.population.select_delete_method();
+        debug!("Delete method: '{}'", self.population.get_delete_method());
 
         match self.mutate_method {
             DWMethod::Simple => {
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_all_clone();
-                    self.population.random_delete();
+                    self.population.delete();
 
                     if self.population.is_job_done() {
                         break
@@ -148,7 +151,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_all_only_best();
-                    self.population.random_delete();
+                    self.population.delete();
 
                     if self.population.is_job_done() {
                         break
@@ -158,7 +161,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             DWMethod::LowMem => {
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_random_single_clone();
-                    self.population.random_delete();
+                    self.population.delete();
 
                     if self.population.is_job_done() {
                         break
