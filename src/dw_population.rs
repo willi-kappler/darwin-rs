@@ -120,7 +120,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
         self.new_best_fitness
     }
 
-    pub(crate) fn get_fitness_difference(&self) -> f64 {
+    pub(crate) fn get_best_and_worst_fitness(&self) -> (f64, f64) {
         let mut best_fitness = self.collection[0].get_fitness();
         let mut worst_fitness = best_fitness;
 
@@ -133,7 +133,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
             }
         }
 
-        worst_fitness - best_fitness
+        (best_fitness, worst_fitness)
     }
 
     pub(crate) fn calc_new_best_individual(&mut self) {

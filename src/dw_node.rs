@@ -168,12 +168,11 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         }
 
         self.population.log_fitness();
-        debug!("Difference between best and worst fitness: {}", self.population.get_fitness_difference());
+        let (best_fitness, worst_fitness) = self.population.get_best_and_worst_fitness();
+        debug!("Difference between best and worst fitness: '{}', ratio: '{}'", worst_fitness - best_fitness, best_fitness / worst_fitness);
 
         let has_new_best_individual = self.population.has_new_best_individual();
         let best_individual = self.population.get_best_individual();
-
-        debug!("best individual: '{}', population[0]: '{}'", best_individual.get_fitness(), self.population.get(0).get_fitness());
 
         if has_new_best_individual {
             let new_best_fitness = self.population.get_new_best_fitness();
