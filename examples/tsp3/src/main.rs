@@ -23,11 +23,11 @@ pub struct TSP3Opt {
     #[structopt(short = "p", long = "port", default_value = "2020")]
     port: u16,
     #[structopt(short = "o", long = "population", default_value = "20")]
-    population: usize,
+    max_population_size: usize,
     #[structopt(short = "l", long = "limit", default_value = "1.0")]
     limit: f64,
     #[structopt(short = "i", long = "iter", default_value = "1000")]
-    max_population_size: u64,
+    num_of_iterations: u64,
     #[structopt(short = "m", long = "mutate", default_value = "10")]
     num_of_mutations: u64,
     #[structopt(short = "f", long = "file", default_value = "att532.txt")]
@@ -264,9 +264,9 @@ fn main() {
     };
 
     let dw_configuration = DWConfiguration {
-        num_of_individuals: options.population,
-        fitness_limit: options.limit,
         max_population_size: options.max_population_size,
+        fitness_limit: options.limit,
+        num_of_iterations: options.num_of_iterations,
         num_of_mutations: options.num_of_mutations,
         mutate_method: options.method,
         reset_limit: options.reset_limit,
