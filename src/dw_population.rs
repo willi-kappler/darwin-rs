@@ -5,6 +5,14 @@ use crate::{DWConfiguration, DWIndividual, dw_individual::DWIndividualWrapper};
 use rand::{Rng, rngs::StdRng, SeedableRng};
 use log::{debug};
 
+use std::cmp::Ordering;
+
+fn compare_individual<T: DWIndividual>(i1: &DWIndividualWrapper<T>, i2: &DWIndividualWrapper<T>) -> Ordering {
+    let f1 = i1.get_fitness();
+    let f2 = i2.get_fitness();
+
+    f1.partial_cmp(&f2).unwrap()
+}
 
 pub(crate) struct DWPopulation<T> {
     collection: Vec<DWIndividualWrapper<T>>,
@@ -12,17 +20,19 @@ pub(crate) struct DWPopulation<T> {
     num_of_mutations: u64,
     fitness_limit: f64,
     new_best_fitness: f64,
-    delete_method: u8,
+    reset_counter: u64,
+    reset_fitness: f64,
+    max_reset: u64,
     rng: StdRng,
 }
 
 impl<T: DWIndividual + Clone> DWPopulation<T> {
     pub(crate) fn new(initial: DWIndividualWrapper<T>, dw_configuration: &DWConfiguration) -> Self {
-        let max_population_size = dw_configuration.num_of_individuals;
+        let max_population_size = dw_configuration.max_population_size;
         let fitness_limit = dw_configuration.fitness_limit;
         let num_of_mutations = dw_configuration.num_of_mutations;
 
-        // TODO: Use a sorted data structure
+        // TODO: Maybe use a sorted data structure
         // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
 
         let mut collection = Vec::new();
@@ -34,14 +44,41 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
             collection.push(new_individual);
         }
 
+        collection.sort_unstable_by(compare_individual);
+
         Self {
             collection,
             max_population_size,
             num_of_mutations,
             fitness_limit,
             new_best_fitness: f64::MAX,
-            delete_method: 0,
+            reset_counter: 0,
+            reset_fitness: 0.0,
+            max_reset: 100,
             rng: SeedableRng::from_entropy(),
+        }
+    }
+
+    pub(crate) fn check_reset(&mut self, individual: DWIndividualWrapper<T>) {
+        let fitness = self.get_best_fitness();
+        if self.reset_fitness == fitness {
+            self.reset_counter += 1;
+            debug!("Reset counter increased: '{}'", self.reset_counter);
+            if self.reset_counter >= self.max_reset {
+                debug!("Max reset reached, population will be randomly reset");
+                self.reset_counter = 0;
+                for individual in self.collection.iter_mut() {
+                    individual.random_reset();
+                    individual.calculate_fitness();
+                }
+            }
+            self.add_individual(individual);
+        } else {
+            self.reset_fitness = fitness;
+            self.reset_counter = 0;
+            if individual.get_fitness() > fitness {
+                self.add_individual(individual);
+            }
         }
     }
 
@@ -72,73 +109,18 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
         index2
     }
 
-    fn index_of_best(&self) -> usize {
-        let mut best_fitness = self.collection[0].get_fitness();
-        let mut best_index = 0;
-
-        for index in 1..self.collection.len() {
-            let fitness = self.collection[index].get_fitness();
-            if fitness < best_fitness {
-                best_fitness = fitness;
-                best_index = index;
-            }
-        }
-
-        best_index
-    }
-
-    fn index_of_2_best(&self) -> (usize, usize) {
-        let mut fitness1 = f64::MAX;
-        let mut fitness2 = f64::MAX;
-        let mut index1 = 0;
-        let mut index2 = 0;
-
-        for index in 0..self.collection.len() {
-            let fitness = self.collection[index].get_fitness();
-
-            if fitness < fitness2 {
-                if fitness <= fitness1 {
-                    fitness1 = fitness;
-                    index1 = index;
-                } else {
-                    fitness2 = fitness;
-                    index2 = index;
-                }
-            }
-        }
-
-        (index1, index2)
-    }
-
     pub(crate) fn is_job_done(&self) -> bool {
         self.get_best_fitness() < self.fitness_limit
     }
 
     pub(crate) fn get_best_fitness(&self) -> f64 {
-        let mut best_fitness = self.collection[0].get_fitness();
-
-        for index in 1..self.collection.len() {
-            let fitness = self.collection[index].get_fitness();
-            if fitness < best_fitness {
-                best_fitness = fitness;
-            }
-        }
-
-        best_fitness
+        self.collection[0].get_fitness()
     }
 
     pub(crate) fn log_fitness(&mut self) -> () {
-        self.collection.sort_unstable_by(|individual1, individual2| {
-            let fitness1 = individual1.get_fitness();
-            let fitness2 = individual2.get_fitness();
-
-            fitness1.partial_cmp(&fitness2).unwrap()
-        });
-
         for individual in self.collection.iter() {
             debug!("Fitness: '{}'", individual.get_fitness());
         }
-
     }
 
     pub(crate) fn get_new_best_fitness(&self) -> f64 {
@@ -146,28 +128,10 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
     }
 
     pub(crate) fn get_best_and_worst_fitness(&self) -> (f64, f64) {
-        let mut best_fitness = self.collection[0].get_fitness();
-        let mut worst_fitness = best_fitness;
-
-        for index in 1..self.collection.len() {
-            let fitness = self.collection[index].get_fitness();
-            if fitness < best_fitness {
-                best_fitness = fitness;
-            } else if fitness > worst_fitness {
-                worst_fitness = fitness;
-            }
-        }
+        let best_fitness = self.collection[0].get_fitness();
+        let worst_fitness = self.collection[self.collection.len() - 1].get_fitness();
 
         (best_fitness, worst_fitness)
-    }
-
-    fn get_fitness_limit(&self) -> f64 {
-        let (best_fitness, worst_fitness) = self.get_best_and_worst_fitness();
-        (best_fitness + worst_fitness) / 2.0
-    }
-
-    pub(crate) fn calc_new_best_individual(&mut self) {
-        self.new_best_fitness = self.get_best_fitness();
     }
 
     pub(crate) fn has_new_best_individual(&mut self) -> bool {
@@ -182,8 +146,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
     }
 
     pub(crate) fn get_best_individual(&self) -> &DWIndividualWrapper<T> {
-        let best_index = self.index_of_best();
-        &self.collection[best_index]
+        &self.collection[0]
     }
 
     pub(crate) fn add_individual(&mut self, new_individual: DWIndividualWrapper<T>) {
@@ -236,52 +199,13 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
         }
     }
 
-    pub(crate) fn random_delete(&mut self) {
-        let mut fitness_limit = self.get_fitness_limit();
-
-        while self.collection.len() > self.max_population_size {
-            let index = self.random_index();
-            let fitness = self.collection[index].get_fitness();
-
-            if fitness >= fitness_limit {
-                self.collection.swap_remove(index);
-                fitness_limit = self.get_fitness_limit();
-            }
-        }
+    pub(crate) fn sort(&mut self) {
+        self.collection.sort_unstable_by(compare_individual);
     }
 
-    pub(crate) fn keep_best_delete_others(&mut self) {
-        // Save best individual to first two positions
-        let (index1, index2) = self.index_of_2_best();
-        self.collection.swap(0, index1);
-        self.collection.swap(1, index2);
-
-        while self.collection.len() > self.max_population_size {
-            let index = self.random_index_from(2);
-            self.collection.swap_remove(index);
-        }
-    }
-
-    pub(crate) fn delete(&mut self) {
-        match self.delete_method {
-            0 => {
-                self.random_delete();
-            }
-            1 => {
-                self.keep_best_delete_others()
-            }
-            _ => {
-                panic!("Unknown delete method: {}", self.delete_method);
-            }
-        }
-    }
-
-    pub(crate) fn select_delete_method(&mut self) {
-        self.delete_method = self.rng.gen_range(0..2);
-    }
-
-    pub(crate) fn get_delete_method(&self) -> u8 {
-        self.delete_method
+    pub(crate) fn clean(&mut self) {
+        self.sort();
+        self.collection.truncate(self.max_population_size);
     }
 
     pub(crate) fn get_random_individual(&mut self) -> &DWIndividualWrapper<T> {

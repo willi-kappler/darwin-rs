@@ -27,17 +27,15 @@ pub struct TSP3Opt {
     #[structopt(short = "l", long = "limit", default_value = "1.0")]
     limit: f64,
     #[structopt(short = "i", long = "iter", default_value = "1000")]
-    num_of_iterations: u64,
+    max_population_size: u64,
     #[structopt(short = "m", long = "mutate", default_value = "10")]
     num_of_mutations: u64,
     #[structopt(short = "f", long = "file", default_value = "att532.txt")]
     input_file: String,
     #[structopt(long = "method", default_value = "only_best")]
     method: DWMethod,
-    #[structopt(short = "r", long = "reset", default_value = "0")]
+    #[structopt(short = "r", long = "reset", default_value = "100")]
     reset_limit: u64,
-    #[structopt(short = "d", long = "delete", default_value = "0.999")]
-    delete_limit: f64,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -268,11 +266,10 @@ fn main() {
     let dw_configuration = DWConfiguration {
         num_of_individuals: options.population,
         fitness_limit: options.limit,
-        num_of_iterations: options.num_of_iterations,
+        max_population_size: options.max_population_size,
         num_of_mutations: options.num_of_mutations,
         mutate_method: options.method,
-        reset_limit: if options.reset_limit == 0 { None } else { Some(options.reset_limit) },
-        delete_limit: options.delete_limit,
+        reset_limit: options.reset_limit,
         ..Default::default()
     };
 

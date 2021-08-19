@@ -33,13 +33,12 @@ pub struct DWServer<T> {
 impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DWServer<T> {
     pub fn new(initial: T, dw_configuration: DWConfiguration, nc_configuration: NCConfiguration) -> Self {
         let initial = DWIndividualWrapper::new(initial);
-        let max_population_size = dw_configuration.num_of_individuals;
+        let max_population_size = dw_configuration.max_population_size;
         let fitness_limit = dw_configuration.fitness_limit;
-        let mut population = DWPopulation::new(initial, &dw_configuration);
-        population.calc_new_best_individual();
+        let population = DWPopulation::new(initial, &dw_configuration);
 
         debug!("Max population size: '{}' fitness limit: '{}', initial best fitness: '{}'",
-            max_population_size, fitness_limit, population.get_new_best_fitness());
+            max_population_size, fitness_limit, population.get_best_fitness());
 
         Self {
             population,
@@ -185,18 +184,17 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
 
         match nc_decode_data::<DWIndividualWrapper<T>>(node_data) {
             Ok(individual) => {
-                debug!("Fitness: '{}'", individual.get_fitness());
+                debug!("Fitness from node: '{}'", individual.get_fitness());
 
                 self.population.add_individual(individual);
-                self.population.random_delete();
+                self.population.clean();
 
                 if self.population.has_new_best_individual() {
                     let new_best_fitness = self.population.get_new_best_fitness();
                     debug!("New best individual found: '{}', node id: '{}'", new_best_fitness, node_id);
                     // let counter = self.node_score.entry(node_id).or_insert(0);
                     // *counter += 1;
-                    let individual = self.population.get_best_individual();
-                    individual.new_best_individual();
+                    self.population.get_best_individual().new_best_individual();
 
                     if self.save_new_best_individual {
                         if let Err(e) = self.save_best_individual() {

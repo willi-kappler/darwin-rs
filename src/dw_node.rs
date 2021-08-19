@@ -91,7 +91,7 @@ pub struct DWNode<T> {
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
     pub fn new(initial: T, dw_configuration: DWConfiguration, nc_configuration: NCConfiguration) -> Self {
         let initial = DWIndividualWrapper::new(initial);
-        let max_population_size = dw_configuration.num_of_individuals;
+        let max_population_size = dw_configuration.max_population_size;
         let fitness_limit = dw_configuration.fitness_limit;
         let num_of_mutations = dw_configuration.num_of_mutations;
         let population = DWPopulation::new(initial, &dw_configuration);
@@ -131,16 +131,14 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         let individual: DWIndividualWrapper<T> = nc_decode_data(&data)?;
         debug!("Individual from server, fitness: '{}'", individual.get_fitness());
 
-        self.population.add_individual(individual);
+        self.population.check_reset(individual);
         self.population.reseed_rng();
-        self.population.select_delete_method();
-        debug!("Delete method: '{}'", self.population.get_delete_method());
 
         match self.mutate_method {
             DWMethod::Simple => {
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_all_clone();
-                    self.population.delete();
+                    self.population.clean();
 
                     if self.population.is_job_done() {
                         break
@@ -151,7 +149,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_all_only_best();
-                    self.population.delete();
+                    self.population.clean();
 
                     if self.population.is_job_done() {
                         break
@@ -161,7 +159,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             DWMethod::LowMem => {
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_random_single_clone();
-                    self.population.delete();
+                    self.population.clean();
 
                     if self.population.is_job_done() {
                         break
@@ -172,7 +170,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
 
         self.population.log_fitness();
         let (best_fitness, worst_fitness) = self.population.get_best_and_worst_fitness();
-        debug!("Difference between best and worst fitness: '{}', ratio: '{}'", worst_fitness - best_fitness, best_fitness / worst_fitness);
+        debug!("Difference between best and worst fitness: '{}', ratio: '{}', median: '{}'",
+            worst_fitness - best_fitness, best_fitness / worst_fitness, (best_fitness + worst_fitness) / 2.0);
 
         let has_new_best_individual = self.population.has_new_best_individual();
         let best_individual = self.population.get_best_individual();
