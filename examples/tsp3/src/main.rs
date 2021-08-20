@@ -1,6 +1,6 @@
 
 
-use darwin_rs::{DWNode, DWServer, DWIndividual, DWMethod, NCConfiguration, DWConfiguration};
+use darwin_rs::{DWNode, DWServer, DWIndividual, DWMutateMethod, DWDeleteMethod, NCConfiguration, DWConfiguration};
 
 use rand::{thread_rng, Rng};
 use rand::seq::SliceRandom;
@@ -33,9 +33,11 @@ pub struct TSP3Opt {
     #[structopt(short = "f", long = "file", default_value = "att532.txt")]
     input_file: String,
     #[structopt(long = "method", default_value = "only_best")]
-    method: DWMethod,
+    mutate_method: DWMutateMethod,
     #[structopt(short = "r", long = "reset", default_value = "100")]
     reset_limit: u64,
+    #[structopt(long = "delete", default_value = "sort_unique")]
+    delete_method: DWDeleteMethod,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -268,8 +270,9 @@ fn main() {
         fitness_limit: options.limit,
         num_of_iterations: options.num_of_iterations,
         num_of_mutations: options.num_of_mutations,
-        mutate_method: options.method,
+        mutate_method: options.mutate_method,
         reset_limit: options.reset_limit,
+        delete_method: options.delete_method,
         ..Default::default()
     };
 

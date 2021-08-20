@@ -1,17 +1,79 @@
 
 
-use crate::{DWConfiguration, DWIndividual, dw_individual::DWIndividualWrapper};
+use crate::dw_config::DWConfiguration;
+use crate::dw_individual::{DWIndividual, DWIndividualWrapper};
+use crate::dw_error::DWError;
 
 use rand::{Rng, rngs::StdRng, SeedableRng};
 use log::{debug};
 
-use std::cmp::Ordering;
+use std::convert::TryFrom;
+use std::fmt::Display;
+use std::str::FromStr;
 
-fn compare_individual<T: DWIndividual>(i1: &DWIndividualWrapper<T>, i2: &DWIndividualWrapper<T>) -> Ordering {
-    let f1 = i1.get_fitness();
-    let f2 = i2.get_fitness();
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DWDeleteMethod {
+    SortKeep,
+    SortUnique,
+    RandomBest3,
+}
 
-    f1.partial_cmp(&f2).unwrap()
+impl FromStr for DWDeleteMethod {
+    type Err = DWError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "sort_keep" => {
+                Ok(DWDeleteMethod::SortKeep)
+            }
+            "sort_unique" => {
+                Ok(DWDeleteMethod::SortUnique)
+            }
+            "random_best3" => {
+                Ok(DWDeleteMethod::RandomBest3)
+            }
+            _ => {
+                Err(DWError::ParseDWDeleteMethodError(s.to_string()))
+            }
+        }
+    }
+}
+
+impl TryFrom<u8> for DWDeleteMethod {
+    type Error = DWError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => {
+                Ok(DWDeleteMethod::SortKeep)
+            }
+            1 => {
+                Ok(DWDeleteMethod::SortUnique)
+            }
+            2 => {
+                Ok(DWDeleteMethod::RandomBest3)
+            }
+            _ => {
+                Err(DWError::ConvertDWDeleteMethodError(value))
+            }
+        }
+    }
+}
+
+impl Display for DWDeleteMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DWDeleteMethod::SortKeep => {
+                write!(f, "simple")
+            }
+            DWDeleteMethod::SortUnique => {
+                write!(f, "only_best")
+            }
+            DWDeleteMethod::RandomBest3 => {
+                write!(f, "low_mem")
+            }
+        }
+    }
 }
 
 pub(crate) struct DWPopulation<T> {
@@ -23,14 +85,13 @@ pub(crate) struct DWPopulation<T> {
     reset_counter: u64,
     reset_fitness: f64,
     max_reset: u64,
+    delete_method: DWDeleteMethod,
     rng: StdRng,
 }
 
 impl<T: DWIndividual + Clone> DWPopulation<T> {
     pub(crate) fn new(initial: DWIndividualWrapper<T>, dw_configuration: &DWConfiguration) -> Self {
         let max_population_size = dw_configuration.max_population_size;
-        let fitness_limit = dw_configuration.fitness_limit;
-        let num_of_mutations = dw_configuration.num_of_mutations;
 
         // TODO: Maybe use a sorted data structure
         // Maybe BTreeSet: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
@@ -44,17 +105,18 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
             collection.push(new_individual);
         }
 
-        collection.sort_unstable_by(compare_individual);
+        collection.sort_unstable();
 
         Self {
             collection,
             max_population_size,
-            num_of_mutations,
-            fitness_limit,
+            num_of_mutations: dw_configuration.num_of_mutations,
+            fitness_limit: dw_configuration.fitness_limit,
             new_best_fitness: f64::MAX,
             reset_counter: 0,
             reset_fitness: 0.0,
             max_reset: 100,
+            delete_method: dw_configuration.delete_method,
             rng: SeedableRng::from_entropy(),
         }
     }
@@ -200,13 +262,27 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
         }
     }
 
-    pub(crate) fn sort(&mut self) {
-        self.collection.sort_unstable_by(compare_individual);
-    }
+    pub(crate) fn delete(&mut self) {
+        match self.delete_method {
+            DWDeleteMethod::SortKeep => {
+                self.collection.sort_unstable();
+                self.collection.truncate(self.max_population_size);
+            }
+            DWDeleteMethod::SortUnique => {
+                self.collection.sort_unstable();
+                self.collection.dedup();
+                self.collection.truncate(self.max_population_size);
+            }
+            DWDeleteMethod::RandomBest3 => {
+                self.collection.sort_unstable();
+                self.collection.dedup();
 
-    pub(crate) fn clean(&mut self) {
-        self.sort();
-        self.collection.truncate(self.max_population_size);
+                while self.collection.len() > self.max_population_size {
+                    let index = self.random_index_from(3);
+                    self.collection.swap_remove(index);
+                }
+            }
+        }
     }
 
     pub(crate) fn get_random_individual(&mut self) -> &DWIndividualWrapper<T> {

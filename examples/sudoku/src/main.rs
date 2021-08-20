@@ -1,6 +1,6 @@
 
 
-use darwin_rs::{DWNode, DWServer, DWIndividual, DWMethod, NCConfiguration, DWConfiguration};
+use darwin_rs::{DWNode, DWServer, DWIndividual, DWMutateMethod, NCConfiguration, DWConfiguration};
 
 use rand::{thread_rng, Rng};
 use structopt::StructOpt;
@@ -27,7 +27,7 @@ pub struct SudokuOpt {
     #[structopt(short = "m", long = "mutate", default_value = "10")]
     num_of_mutations: u64,
     #[structopt(long = "method", default_value = "only_best")]
-    method: DWMethod,
+    mutate_method: DWMutateMethod,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -169,11 +169,11 @@ fn main() {
     };
 
     let dw_configuration = DWConfiguration {
-        num_of_individuals: options.population,
+        max_population_size: options.population,
         fitness_limit: options.limit,
         num_of_iterations: options.num_of_iterations,
         num_of_mutations: options.num_of_mutations,
-        mutate_method: options.method,
+        mutate_method: options.mutate_method,
         ..Default::default()
     };
 

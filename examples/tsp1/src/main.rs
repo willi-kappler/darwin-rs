@@ -105,7 +105,7 @@ fn main() {
     };
 
     let dw_configuration = DWConfiguration {
-        num_of_individuals: options.population,
+        max_population_size: options.population,
         fitness_limit: options.limit,
         num_of_iterations: options.num_of_iterations,
         num_of_mutations: options.num_of_mutations,

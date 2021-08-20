@@ -12,12 +12,26 @@ use serde_json;
 
 use std::fs::File;
 use std::io::{Write, Read};
-// use std::collections::HashMap;
+use std::collections::HashMap;
+use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DWFileFormat {
     Binary,
     JSON,
+}
+
+impl Display for DWFileFormat {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            DWFileFormat::Binary => {
+                write!(f, "binary")
+            }
+            DWFileFormat::JSON => {
+                write!(f, "json")
+            }
+        }
+    }
 }
 
 pub struct DWServer<T> {
@@ -27,18 +41,17 @@ pub struct DWServer<T> {
     save_new_best_individual: bool,
     individual_file_counter: u64,
     file_format: DWFileFormat,
-    // node_score: HashMap<NodeID, u64>,
+    node_score: HashMap<NodeID, u64>,
 }
 
 impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DWServer<T> {
     pub fn new(initial: T, dw_configuration: DWConfiguration, nc_configuration: NCConfiguration) -> Self {
         let initial = DWIndividualWrapper::new(initial);
-        let max_population_size = dw_configuration.max_population_size;
-        let fitness_limit = dw_configuration.fitness_limit;
         let population = DWPopulation::new(initial, &dw_configuration);
 
-        debug!("Max population size: '{}' fitness limit: '{}', initial best fitness: '{}'",
-            max_population_size, fitness_limit, population.get_best_fitness());
+        debug!("DW Configuration: {}", dw_configuration);
+        debug!("NC Configuration: {}", nc_configuration);
+        debug!("Initial best fitness: '{}'", population.get_best_fitness());
 
         Self {
             population,
@@ -47,7 +60,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
             save_new_best_individual: dw_configuration.save_new_best_individual,
             individual_file_counter: 0,
             file_format: dw_configuration.file_format,
-            // node_score: HashMap::new(),
+            node_score: HashMap::new(),
         }
     }
 
@@ -187,14 +200,16 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
                 debug!("Fitness from node: '{}'", individual.get_fitness());
 
                 self.population.add_individual(individual);
-                self.population.clean();
+                self.population.delete();
 
                 if self.population.has_new_best_individual() {
                     let new_best_fitness = self.population.get_new_best_fitness();
-                    debug!("New best individual found: '{}', node id: '{}'", new_best_fitness, node_id);
-                    // let counter = self.node_score.entry(node_id).or_insert(0);
-                    // *counter += 1;
                     self.population.get_best_individual().new_best_individual();
+
+                    let counter = self.node_score.entry(node_id).or_insert(0);
+                    *counter += 1;
+
+                    debug!("New best individual found: '{}', node id: '{}', counter: '{}'", new_best_fitness, node_id, counter);
 
                     if self.save_new_best_individual {
                         if let Err(e) = self.save_best_individual() {

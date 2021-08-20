@@ -1,6 +1,8 @@
 
 use serde::{Serialize, Deserialize};
 
+use std::cmp::Ordering;
+
 pub trait DWIndividual {
     fn mutate(&mut self, other: &Self);
 
@@ -53,5 +55,25 @@ impl<T: DWIndividual> DWIndividualWrapper<T> {
 
     pub fn new_best_individual(&self) {
         self.individual.new_best_individual();
+    }
+}
+
+impl<T> PartialEq for DWIndividualWrapper<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.fitness == other.fitness
+    }
+}
+
+impl<T> Eq for DWIndividualWrapper<T> {}
+
+impl<T> PartialOrd for DWIndividualWrapper<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.fitness.partial_cmp(&other.fitness)
+    }
+}
+
+impl<T> Ord for DWIndividualWrapper<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).expect("Fitness of individual is NaN")
     }
 }

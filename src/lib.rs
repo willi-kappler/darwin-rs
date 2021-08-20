@@ -18,7 +18,8 @@ pub mod dw_population;
 
 pub use dw_individual::DWIndividual;
 pub use dw_server::{DWServer, DWFileFormat};
-pub use dw_node::{DWNode, DWMethod};
+pub use dw_node::{DWNode, DWMutateMethod};
+pub use dw_population::DWDeleteMethod;
 pub use dw_config::DWConfiguration;
 
 pub use node_crunch::NCConfiguration;

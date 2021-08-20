@@ -16,33 +16,25 @@ use std::str::FromStr;
 
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum DWMethod {
+pub enum DWMutateMethod {
     Simple,
     OnlyBest,
     LowMem,
-    RandomDelete1,
-    RandomDelete2,
 }
 
-impl FromStr for DWMethod {
+impl FromStr for DWMutateMethod {
     type Err = DWError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "simple" => {
-                Ok(DWMethod::Simple)
+                Ok(DWMutateMethod::Simple)
             }
             "only_best" => {
-                Ok(DWMethod::OnlyBest)
+                Ok(DWMutateMethod::OnlyBest)
             }
             "low_mem" => {
-                Ok(DWMethod::LowMem)
-            }
-            "random_delete1" => {
-                Ok(DWMethod::RandomDelete1)
-            }
-            "random_delete2" => {
-                Ok(DWMethod::RandomDelete2)
+                Ok(DWMutateMethod::LowMem)
             }
             _ => {
                 Err(DWError::ParseDWMethodError(s.to_string()))
@@ -51,50 +43,38 @@ impl FromStr for DWMethod {
     }
 }
 
-impl TryFrom<u8> for DWMethod {
+impl TryFrom<u8> for DWMutateMethod {
     type Error = DWError;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             0 => {
-                Ok(DWMethod::Simple)
+                Ok(DWMutateMethod::Simple)
             }
             1 => {
-                Ok(DWMethod::OnlyBest)
+                Ok(DWMutateMethod::OnlyBest)
             }
             2 => {
-                Ok(DWMethod::LowMem)
-            }
-            3 => {
-                Ok(DWMethod::RandomDelete1)
-            }
-            4 => {
-                Ok(DWMethod::RandomDelete2)
+                Ok(DWMutateMethod::LowMem)
             }
             _ => {
-                Err(DWError::ConvertDWMethodError(value))
+                Err(DWError::ConvertDWMutateMethodError(value))
             }
         }
     }
 }
 
-impl Display for DWMethod {
+impl Display for DWMutateMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DWMethod::Simple => {
+            DWMutateMethod::Simple => {
                 write!(f, "simple")
             }
-            DWMethod::OnlyBest => {
+            DWMutateMethod::OnlyBest => {
                 write!(f, "only_best")
             }
-            DWMethod::LowMem => {
+            DWMutateMethod::LowMem => {
                 write!(f, "low_mem")
-            }
-            DWMethod::RandomDelete1 => {
-                write!(f, "random_delete1")
-            }
-            &DWMethod::RandomDelete2 => {
-                write!(f, "random_delete1")
             }
         }
     }
@@ -104,19 +84,18 @@ pub struct DWNode<T> {
     population: DWPopulation<T>,
     nc_configuration: NCConfiguration,
     num_of_iterations: u64,
-    mutate_method: DWMethod,
+    mutate_method: DWMutateMethod,
     best_counter: u64,
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
     pub fn new(initial: T, dw_configuration: DWConfiguration, nc_configuration: NCConfiguration) -> Self {
         let initial = DWIndividualWrapper::new(initial);
-        let max_population_size = dw_configuration.max_population_size;
-        let fitness_limit = dw_configuration.fitness_limit;
-        let num_of_mutations = dw_configuration.num_of_mutations;
         let population = DWPopulation::new(initial, &dw_configuration);
 
-        debug!("Max population size: '{}' fitness limit: '{}', mutations: '{}'", max_population_size, fitness_limit, num_of_mutations);
+        debug!("DW Configuration: {}", dw_configuration);
+        debug!("NC Configuration: {}", nc_configuration);
+        debug!("Initial best fitness: {}", population.get_best_fitness());
 
         Self {
             population,
@@ -128,8 +107,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
     }
 
     pub fn run(self) {
-        debug!("Start node with config: iterations: '{}', method: '{}'", self.num_of_iterations, self.mutate_method);
-        debug!("Starting with best fitness: {}", self.population.get_best_fitness());
 
         let mut node_starter = NCNodeStarter::new(self.nc_configuration.clone());
 
@@ -155,42 +132,36 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
         self.population.reseed_rng();
 
         match self.mutate_method {
-            DWMethod::Simple => {
+            DWMutateMethod::Simple => {
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_all_clone();
-                    self.population.clean();
+                    self.population.delete();
 
                     if self.population.is_job_done() {
                         break
                     }
                 }
             }
-            DWMethod::OnlyBest => {
+            DWMutateMethod::OnlyBest => {
 
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_all_only_best();
-                    self.population.clean();
+                    self.population.delete();
 
                     if self.population.is_job_done() {
                         break
                     }
                 }
             }
-            DWMethod::LowMem => {
+            DWMutateMethod::LowMem => {
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_random_single_clone();
-                    self.population.clean();
+                    self.population.delete();
 
                     if self.population.is_job_done() {
                         break
                     }
                 }
-            }
-            DWMethod::RandomDelete1 => {
-                todo!();
-            }
-            DWMethod::RandomDelete2 => {
-                todo!();
             }
         }
 
