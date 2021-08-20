@@ -64,13 +64,13 @@ impl Display for DWDeleteMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DWDeleteMethod::SortKeep => {
-                write!(f, "simple")
+                write!(f, "sort_keep")
             }
             DWDeleteMethod::SortUnique => {
-                write!(f, "only_best")
+                write!(f, "sort_unique")
             }
             DWDeleteMethod::RandomBest3 => {
-                write!(f, "low_mem")
+                write!(f, "random_best3")
             }
         }
     }

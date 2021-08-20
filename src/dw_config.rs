@@ -52,7 +52,7 @@ impl Display for DWConfiguration {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "Common: max population size: '{}', fitness limit: '{}'\n\
                    Server: export file name: '{}', save new best individual: '{}', file format: '{}'\n\
-                   Node:num of iterations: '{}', num of mutations: '{}', reset limit: '{}',\n\
+                   Node: num of iterations: '{}', num of mutations: '{}', reset limit: '{}',\n\
                    mutate method: '{}', delete method: '{}'",
            self.max_population_size, self.fitness_limit, self.export_file_name, self.save_new_best_individual,
            self.file_format, self.num_of_iterations, self.num_of_mutations, self.reset_limit,
