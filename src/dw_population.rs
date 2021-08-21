@@ -115,7 +115,7 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
             new_best_fitness: f64::MAX,
             reset_counter: 0,
             reset_fitness: 0.0,
-            max_reset: 100,
+            max_reset: dw_configuration.reset_limit,
             delete_method: dw_configuration.delete_method,
             rng: SeedableRng::from_entropy(),
         }
