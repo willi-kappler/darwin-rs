@@ -49,8 +49,8 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> DW
         let initial = DWIndividualWrapper::new(initial);
         let population = DWPopulation::new(initial, &dw_configuration);
 
-        debug!("DW Configuration: {}", dw_configuration);
-        debug!("NC Configuration: {}", nc_configuration);
+        debug!("DW Configuration:\n{}", dw_configuration);
+        debug!("NC Configuration:\n{}", nc_configuration);
         debug!("Initial best fitness: '{}'", population.get_best_fitness());
 
         Self {
@@ -210,6 +210,7 @@ impl<T: 'static + DWIndividual + Clone + Send + Serialize + DeserializeOwned> NC
                     *counter += 1;
 
                     debug!("New best individual found: '{}', node id: '{}', counter: '{}'", new_best_fitness, node_id, counter);
+                    self.population.log_fitness();
 
                     if self.save_new_best_individual {
                         if let Err(e) = self.save_best_individual() {

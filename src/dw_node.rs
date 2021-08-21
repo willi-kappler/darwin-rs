@@ -93,8 +93,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
         let initial = DWIndividualWrapper::new(initial);
         let population = DWPopulation::new(initial, &dw_configuration);
 
-        debug!("DW Configuration: {}", dw_configuration);
-        debug!("NC Configuration: {}", nc_configuration);
+        debug!("DW Configuration:\n{}", dw_configuration);
+        debug!("NC Configuration:\n{}", nc_configuration);
         debug!("Initial best fitness: {}", population.get_best_fitness());
 
         Self {
