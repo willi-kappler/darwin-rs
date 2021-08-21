@@ -5,7 +5,7 @@ use crate::dw_config::DWConfiguration;
 use crate::dw_error::DWError;
 use crate::dw_population::DWPopulation;
 
-use node_crunch::{NCNode, NCConfiguration, NCError,
+use node_crunch::{NCNode, NCConfiguration, NCError, NodeID,
     NCNodeStarter, nc_decode_data, nc_encode_data};
 use log::{debug, info, error};
 use serde::{Serialize, de::DeserializeOwned};
@@ -122,6 +122,11 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T> {
+    fn set_initial_data(&mut self, node_id: NodeID, _initial_data: Option<Vec<u8>>) -> Result<(), NCError> {
+        debug!("Got new node id: {}", node_id);
+        Ok(())
+    }
+
     fn process_data_from_server(&mut self, data: &[u8]) -> Result<Vec<u8>, NCError> {
         debug!("SimulationNode::process_data_from_server, new message received");
 
@@ -143,7 +148,6 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
                 }
             }
             DWMutateMethod::OnlyBest => {
-
                 for _ in 0..self.num_of_iterations {
                     self.population.mutate_all_only_best();
                     self.population.delete();

@@ -135,12 +135,14 @@ impl<T: DWIndividual + Clone> DWPopulation<T> {
                 }
             } else {
                 self.add_individual(individual);
+                debug!("Individual from server accepted");
             }
         } else {
             self.reset_fitness = fitness;
             self.reset_counter = 0;
             if individual.get_fitness() > fitness {
                 self.add_individual(individual);
+                debug!("Individual from server accepted");
             }
         }
     }
