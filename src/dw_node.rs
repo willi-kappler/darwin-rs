@@ -13,6 +13,8 @@ use serde::{Serialize, de::DeserializeOwned};
 use std::convert::TryFrom;
 use std::fmt::Display;
 use std::str::FromStr;
+use std::fs::File;
+use std::io::Write;
 
 
 #[derive(Debug, Clone, PartialEq)]
@@ -86,6 +88,8 @@ pub struct DWNode<T> {
     num_of_iterations: u64,
     mutate_method: DWMutateMethod,
     best_counter: u64,
+    save_new_best_individual: bool,
+    best_individual_filename: String,
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
@@ -103,6 +107,8 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
             num_of_iterations: dw_configuration.num_of_iterations,
             mutate_method: dw_configuration.mutate_method,
             best_counter: 0,
+            save_new_best_individual: dw_configuration.save_new_best_individual,
+            best_individual_filename: String::new(),
         }
     }
 
@@ -124,6 +130,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T> {
     fn set_initial_data(&mut self, node_id: NodeID, _initial_data: Option<Vec<u8>>) -> Result<(), NCError> {
         debug!("Got new node id: {}", node_id);
+        self.best_individual_filename = format!("best_individual_{}.json", node_id);
         Ok(())
     }
 
@@ -182,6 +189,11 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             self.best_counter += 1;
             debug!("New best individual found: '{}', counter: '{}'", new_best_fitness, self.best_counter);
             best_individual.new_best_individual();
+            if self.save_new_best_individual {
+                let mut file = File::create(&self.best_individual_filename)?;
+                let data = serde_json::ser::to_vec(&best_individual).map_err(|_e| NCError::Custom(1))?;
+                file.write_all(&data)?;
+            }
         }
 
         Ok(nc_encode_data(best_individual)?)
