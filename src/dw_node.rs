@@ -4,6 +4,7 @@ use crate::dw_individual::{DWIndividual, DWIndividualWrapper};
 use crate::dw_config::DWConfiguration;
 use crate::dw_error::DWError;
 use crate::dw_population::DWPopulation;
+use crate::dw_server::DWFileFormat;
 
 use node_crunch::{NCNode, NCConfiguration, NCError, NodeID,
     NCNodeStarter, nc_decode_data, nc_encode_data};
@@ -90,6 +91,7 @@ pub struct DWNode<T> {
     best_counter: u64,
     save_new_best_individual: bool,
     best_individual_filename: String,
+    file_format: DWFileFormat,
 }
 
 impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
@@ -109,6 +111,7 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> DWNode<T> {
             best_counter: 0,
             save_new_best_individual: dw_configuration.save_new_best_individual,
             best_individual_filename: String::new(),
+            file_format: DWFileFormat::JSON,
         }
     }
 
@@ -191,7 +194,16 @@ impl<T: DWIndividual + Clone + Serialize + DeserializeOwned> NCNode for DWNode<T
             best_individual.new_best_individual();
             if self.save_new_best_individual {
                 let mut file = File::create(&self.best_individual_filename)?;
-                let data = serde_json::ser::to_vec(&best_individual).map_err(|_e| NCError::Custom(1))?;
+
+                let data: Vec<u8> = match self.file_format {
+                    DWFileFormat::Binary => {
+                        nc_encode_data(self.population.to_vec())?
+                    }
+                    DWFileFormat::JSON => {
+                        serde_json::ser::to_vec(self.population.to_vec()).map_err(|_e| NCError::Custom(1))?
+                    }
+                };
+
                 file.write_all(&data)?;
             }
         }
