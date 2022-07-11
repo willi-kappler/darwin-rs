@@ -157,7 +157,7 @@ impl<T: Individual + Clone> PopulationBuilder<T> {
     /// where found.
     pub fn finalize(self) -> Result<Population<T>> {
         match self.population {
-            Population { num_of_individuals: 0...2, ..} => {
+            Population { num_of_individuals: 0..=2, ..} => {
                 Err(ErrorKind::IndividualsTooLow.into())
             }
             Population { reset_limit_start: start,

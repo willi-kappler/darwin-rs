@@ -133,7 +133,7 @@ impl<T: Individual + Send + Sync> SimulationBuilder<T> {
     /// where found.
     pub fn finalize(self) -> Result<Simulation<T>> {
         match self.simulation {
-            Simulation { type_of_simulation: SimulationType::EndIteration(0...9), .. } => {
+            Simulation { type_of_simulation: SimulationType::EndIteration(0..=9), .. } => {
                 Err(ErrorKind::EndIterationTooLow.into())
             }
             _ => Ok(self.simulation),
