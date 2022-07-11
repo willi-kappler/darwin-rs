@@ -7,8 +7,8 @@ authors = ["Willi Kappler, grandor@gmx.de"]
 time = "0.1"
 rand = "0.3"
 log = "0.3"
-image = "0.14"
-imageproc = "0.9"
+image = "0.24.2"
+imageproc = "0.23.0"
 rusttype = "0.2"
 simplelog = "0.4"
 

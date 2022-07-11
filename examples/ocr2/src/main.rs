@@ -306,7 +306,8 @@ fn draw_text_line(canvas: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
                 let x = (x as i32) + bb.min.x + pos_x;
                 let y = (y as i32) + bb.min.y + pos_y;
                 if x >=0 && y >= 0 && x < canvas.width() as i32 && y < canvas.height() as i32 {
-                    canvas.put_pixel(x as u32, y as u32, Luma::<u8>{ data: [(v * 255.0) as u8] } );
+                    let value = [(v * 255.0) as u8];
+                    canvas.put_pixel(x as u32, y as u32, value.into());
                 } else {
                     result = false;
                     return;
